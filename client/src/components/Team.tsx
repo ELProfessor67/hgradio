@@ -13,18 +13,23 @@ const Team = () => {
     {
       img: Team1,
       name: "Pastor Ben Cha Me",
+      link: "/studio-engineers/Pastor-Ben-Cha-Me"
+
     },
     {
       img: Team2,
       name: "Pastor J'on Harris and Voices",
+      link: "/studio-engineers/Pastor-Harris-and-Voices"
     },
     {
       img: Team3,
       name: "Apostle Gary L. Wyatt",
+      link: "/studio-engineers/Apostle-Gary-Wyatt",
     },
     {
       img: Team4,
       name: "Dr Edwards",
+      link: "/studio-engineers/Dr-Edwards"
     },
   ];
 
@@ -56,27 +61,29 @@ const Team = () => {
 
         <div className=" grid md:grid-cols-2 grid-cols-1 lg:grid-cols-4 gap-3 ">
           {items.map((item, idx) => (
-            <div key={idx} className=" relative   overflow-hidden group ">
-              <Image
-                src={item.img}
-                alt="Team Image"
-                className=" group-hover:scale-110 h-[30rem] object-cover transition-all duration-300 ease-in-out "
-              />
-              <div
-                className="absolute bottom-0 left-0 w-full bg-black/80 text-white text-[1.2rem] text-center py-3 
-                  transform translate-y-full opacity-0 
-                  group-hover:translate-y-0 group-hover:opacity-100 
-                  transition-all duration-500 ease-in-out"
-              >
-                {item.name}
-              </div>{" "}
-            </div>
+            <Link href={item.link} key={idx} className=" relative   overflow-hidden group ">
+              <div key={idx} className=" relative   overflow-hidden group ">
+                <Image
+                  src={item.img}
+                  alt="Team Image"
+                  className=" group-hover:scale-110 h-[30rem] object-cover transition-all duration-300 ease-in-out "
+                />
+                <div
+                  className="absolute bottom-0 left-0 w-full bg-black/80 text-white text-[1.2rem] text-center py-3 
+                transform translate-y-full opacity-0 
+                group-hover:translate-y-0 group-hover:opacity-100 
+                transition-all duration-500 ease-in-out"
+                >
+                  {item.name}
+                </div>{" "}
+              </div>
+            </Link>
           ))}
         </div>
 
         <div className=" flex justify-center mt-[2rem] ">
           <Link
-            href={`#`}
+            href={`/studio-engineers`}
             className=" px-8 py-3 text-[#000] bg-second font-medium "
           >
             Explore More

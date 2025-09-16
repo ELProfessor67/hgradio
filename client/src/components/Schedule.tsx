@@ -1,5 +1,5 @@
 "use client";
-import Image from "next/image";
+import Image, { StaticImageData } from "next/image";
 import React, { useState, useEffect } from "react";
 import bglefttop from "@/assets/left-plus.png";
 import bgrighttop from "@/assets/about-circle2.png";
@@ -16,6 +16,8 @@ import s4 from "@/assets/s4.jpg";
 import s5 from "@/assets/s5.jpg";
 import s6 from "@/assets/s6.jpg";
 import s7 from "@/assets/s33.jpg";
+import { useData } from "@/context/Context";
+import Link from "next/link";
 const days = [
   "Saturday",
   "Sunday",
@@ -268,8 +270,12 @@ const showsData = {
   ],
 };
 
+
+
 const Schedule = () => {
   const pathname = usePathname();
+  
+
   const [selectedDay, setSelectedDay] = useState<string>(() => {
     const todayIndex: number = new Date().getDay();
     const days: string[] = [
@@ -283,6 +289,7 @@ const Schedule = () => {
     ];
     return days[todayIndex];
   });
+  const {showsData} = useData()
 
   const itemsPerPage = 6;
   const shows = showsData[selectedDay as keyof typeof showsData] || [];
@@ -363,8 +370,8 @@ const Schedule = () => {
           <div className="flex-1">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {currentShows.map((show, index) => (
-                // <Link href={"/show-details"} key={startIndex + "-" + index}>
-                  <div key={startIndex + "-" + index} className="relative   w-full md:w-[350px] h-[260px] overflow-hidden   group cursor-pointer">
+                <Link href={`/programs/${show.id}`} key={show.id}>
+                  <div  className="relative   w-full md:w-[350px] h-[260px] overflow-hidden   group cursor-pointer">
                     <Image
                       src={s7.src}
                       width={s7.width}
@@ -397,7 +404,7 @@ const Schedule = () => {
                       </div>
                     </div>
                   </div>
-                // </Link>
+                </Link>
               ))}
             </div>
 
