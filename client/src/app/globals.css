@@ -223,3 +223,57 @@ input[type="number"] {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #000000 !important;
 }
+
+.animate-left {
+  animation: slideLeftLoop 10s ease-in-out infinite;
+}
+
+.animate-right {
+  animation: slideRightLoop 10s ease-in-out infinite;
+}
+
+@keyframes slideLeftLoop {
+  0% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  10% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  40% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes slideRightLoop {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  10% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  40% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}

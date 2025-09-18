@@ -34,7 +34,7 @@ const Team = () => {
   ];
 
   return (
-    <div className=" relative py-[8rem] bg-[#121416] ">
+    <div className=" relative py-[2rem] bg-[#121416] ">
       <div className=" absolute right-0 bottom-0 ">
         <Image
           src={HAbout4}
@@ -50,11 +50,11 @@ const Team = () => {
         />
       </div>
       <div className=" max-w-[1500px] mx-auto px-3 py-[1rem] ">
-        <div className=" text-center leading-tight mb-[5rem] ">
-          <div className="text-[2rem] font-semibold text-second mb-2 ">
+        <div className=" text-center leading-tight mb-[3rem] ">
+          <div className="text-[1.4rem] font-semibold text-second mb-2 ">
             Studio Engineers
           </div>
-          <h2 className="text-[3rem] font-bold mb-6 text-[#fff] ">
+          <h2 className="text-[2rem] font-bold mb-6 text-[#fff] ">
             Our Expert RB
           </h2>
         </div>

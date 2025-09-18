@@ -22,89 +22,15 @@ const AboutUs = () => {
           <Image
             src={HAbout1}
             alt="Home about 1"
-            className=" md:w-[16rem] w-[12rem] lg:w-[20rem] object-contain "
+            className=" md:w-[16rem] w-[12rem] lg:w-[12rem] object-contain "
           />
         </div>
-        {/* <div className=" max-w-[1500px] mx-auto ">
-          <div className=" flex-1 relative   ">
-            <div className=" absolute -top-[5rem] lg:-top-[12.5rem] right-0 ">
-              <Image
-                src={HAbout3}
-                alt="rotation image"
-                className=" w-[15rem] lg:w-[20rem] object-contain slow-spin "
-              />
-            </div>
-            <Image src={HAbout2} alt="cd image" />
-            <p className=" mt-[1rem] text-[1.3rem] text-yellow-500 text-center ">
-              Come back To Gospel Choice Radio
-            </p>
-          </div>
-          <div className=" text-[#fff] flex-1 flex items-center lg:pl-[5rem] ">
-            <div>
-              <h3 className=" text-second md:text-[1.7rem] text-[1.5rem] lg:text-[2rem] font-semibold ">
-                About Us
-              </h3>
-              <div className=" md:text-[2.5rem] text-[2rem] lg:text-[3rem] font-semibold ">
-                Welcome to HGC Radio Station!
-              </div>
-              <p className=" text-lg my-[2rem] ">
-                If you are searching for hope, you have come to the right place.
-                At Choice Radio, we see ourselves as a platform with a strong
-                mandate to empower people to worship God like never before. We
-                endeavor to make your every encounter with Choice Radio
-                uplifting and encouraging, so please enjoy the station and allow
-                us to be a blessing to you.
-              </p>
-              {
-                !seemore &&
-                <div className="  ">
-                  <button
-                    onClick={() => setseemore(!seemore)}
-                    className="  px-8 py-3 bg-second font-semibold text-[#000] "
-                  >
-                    See More
-                  </button>
-                </div>
-              }
-            </div>
-          </div>
-          {seemore && <>
-            <div className=" text-[#fff] mt-[2rem] space-y-5 text-lg ">
-              <p>
-                It's all about praising God together! This is also a venue to get your
-                ministries heard throughout the region and across the globe, so be sure to
-                contact us to know more about our program schedule and how we can work
-                together.
-              </p>
-              <p>
-                It is no coincidence that you have found us online, and we hope that you
-                also find Choice Radio a place of refuge, faith, love, healing, and
-                deliverance.
-              </p>
-              <div className=" bg-[#1b2846] p-3 flex gap-4 ">
-                <div className=" w-[2px] h-7 bg-second rounded-full " />
-                <p>
-                  He Put A New Song In My Mouth, A Hymn Of Praise To Our God. (- Psalm 40:3)
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <button className="px-8 py-3 bg-second font-semibold text-[#000]" onClick={() => setseemore(false)}>
-                See Less
-              </button>
-            </div>
-
-          </>}
-
-
-        </div> */}
 
 
         <div className=" max-w-[1500px] mx-auto px-3 ">
           <div className=" flex lg:flex-row flex-col py-[1rem] lg:gap-0 gap-[2rem] ">
             <div className=" flex-1 relative   ">
-              <div className=" absolute -top-[5rem] lg:-top-[13rem] right-0 ">
+              <div className=" absolute -top-[5rem] lg:-top-[10rem] right-0 ">
                 <Image
                   src={HAbout3}
                   alt="rotation image"
@@ -116,7 +42,7 @@ const AboutUs = () => {
                 Come back To Gospel Choice Radio
               </p>
             </div>
-            <div className=" text-[#fff] flex-1 flex laptop:items-center items-start lg:pl-[2rem] ">
+            <div className=" text-[#fff] flex-1 flex laptop:items-center items-start lg:pl-[2rem] -translate-y-8">
               <div>
                 <h3 className=" text-second md:text-[1.7rem] text-[1.5rem] lg:text-[2rem] font-semibold ">
                   About Us
@@ -197,7 +123,7 @@ import Stat2 from "@/assets/Stat2.png"
 
 export const Stats = () => {
   return (
-    <div className=" bg-[#1f2226] text-[#fff] py-[5rem] md:py-[8rem] relative ">
+    <div className=" bg-[#1f2226] text-[#fff] py-[2rem] md:py-[3rem] relative ">
       <div className=" absolute left-0 bottom-0 ">
         <Image src={Stat2} alt="stat img 2" className=" " />
       </div>

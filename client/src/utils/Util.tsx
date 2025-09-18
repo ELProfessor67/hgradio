@@ -97,7 +97,7 @@ export const HeroTextBox: React.FC<HeroTextBoxProps> = ({
       initial="hidden"
       animate="visible"
       className={`absolute md:flex hidden z-50 max-w-[15rem] h-full w-full top-0 ${
-        direction === "left" ? "left-5" : "right-5"
+        direction === "left" ? "left-5 animate-left" : "right-5 animate-right"
       } h-full flex items-center`}
     >
       {/* border-4 border-transparent */}

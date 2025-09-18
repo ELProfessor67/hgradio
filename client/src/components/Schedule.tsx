@@ -317,7 +317,7 @@ const Schedule = () => {
   };
 
   return (
-    <div className="relative bg-[#0c1c3d] z-20 text-white min-h-screen py-10 overflow-hidden">
+    <div className="relative bg-[#0c1c3d] z-20 text-white h-fit py-10 overflow-hidden">
       <Image src={bglefttop} alt="corner" className="absolute top-8 left-8" />
       {pathname !== "/" ? (
         <Image
@@ -343,8 +343,8 @@ const Schedule = () => {
         alt="corner"
         className="absolute bottom-0 right-0 z-[-1]"
       />
-      <div className="text-center py-16">
-        <h2 className="text-3xl md:text-7xl z-50 font-extrabold">
+      <div className="text-center pt-4 pb-14">
+        <h2 className="text-3xl md:text-5xl z-50 font-extrabold">
           Scheduled Programs
         </h2>
       </div>
