@@ -136,7 +136,7 @@ export const HomeAds = () => {
 };
 
 export const Accordian = () => {
-  const [isOpen, setIsOpen] = useState<number | null>(null);
+  const [isOpen, setIsOpen] = useState<number | null>(0);
   const dataArr = [
     {
       title: "Hallelujah Gospel Globally",
@@ -177,7 +177,7 @@ export const Accordian = () => {
   return (
     <div className=" w-full ">
       {dataArr.map((PerAccordion, idx) => (
-        <div key={idx} className="my-2  bg-[#0b1834] text-[#fff] px-6 py-7  ">
+        <div key={idx} className="my-2 bg-[#0b1834] text-white !py-8 px-4 laptop:py-7">
           <button
             onClick={() => toggle(idx)}
             className="flex h-full w-full items-center justify-between font-medium text-[#fff] outline-none text-[1.3rem] "

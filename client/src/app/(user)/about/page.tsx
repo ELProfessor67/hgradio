@@ -20,7 +20,7 @@ const page = () => {
     { videoSrc: "/vid1.mp4", link: "/contact" },
     { videoSrc: "/vid2.mp4", link: "/contact" },
     { videoSrc: "/vid3.mp4", link: "/contact" },
-   
+
   ];
 
   return (
@@ -38,16 +38,16 @@ const page = () => {
 export default page;
 
 const Daily = () => {
-  return(
+  return (
     <div className=" bg-[#000000e0] py-[5rem] relative ">
 
       <div className=" absolute right-0 bottom-0 ">
-          <Image
-            src={HAbout4}
-            alt="Home about 1"
-            className=" w-[5rem] object-contain "
-          />
-        </div>
+        <Image
+          src={HAbout4}
+          alt="Home about 1"
+          className=" w-[5rem] object-contain "
+        />
+      </div>
 
       <div className=" text-center leading-tight mb-[5rem] ">
         <div className="text-[2rem] font-semibold text-second mb-2 ">
@@ -58,9 +58,105 @@ const Daily = () => {
         </h2>
       </div>
 
-      <div className=" max-w-[1400px] mx-auto px-3 text-[#fff] text-lg min-h-[30rem] ">
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Ipsam reiciendis voluptatem voluptatum aliquam sunt vel minus vitae. Assumenda, asperiores alias. Rerum, ex aut veritatis itaque saepe dignissimos placeat iure eos!
+      <div className=" max-w-[1400px] mx-auto px-3 text-[#fff] md:text-xl min-h-[30rem] ">
+        <h3 className=" text-[1.5rem] font-semibold ">Philippians 4:1-9 (NIV)</h3>
+        <div className=" mt-2 text-gray-300 space-y-1 ">
+          <p>
+            1. Therefore, my brothers and sisters, you whom I love and long for, my
+            joy and crown, stand firm in the Lord in this way, dear friends!
+          </p>
+          <p>
+            2. I plead with Euodia and I plead with Syntyche to be of the same mind in
+            the Lord.
+          </p>
+          <p>
+            3. Yes, and I ask you, my true companion, help these women since they have
+            contended at my side in the cause of the gospel, along with Clement and
+            the rest of my co-workers, whose names are in the book of life.
+          </p>
+          <p>4. Rejoice in the Lord always. I will say it again: Rejoice!</p>
+          <p>5. Let your gentleness be evident to all. The Lord is near.</p>
+          <p>
+            6. Do not be anxious about anything, but in every situation, by prayer and
+            petition, with thanksgiving, present your requests to God.
+          </p>
+          <p>
+            7. And the peace of God, which transcends all understanding, will guard
+            your hearts and your minds in Christ Jesus.
+          </p>
+          <p>
+            8. Finally, brothers and sisters, whatever is true, whatever is noble,
+            whatever is right, whatever is pure, whatever is lovely, whatever is
+            admirable—if anything is excellent or praiseworthy—think about such
+            things.
+          </p>
+          <p>
+            9. Whatever you have learned or received or heard from me, or seen in
+            me—put it into practice. And the God of peace will be with you.
+          </p>
+          <p className=" text-[1.3rem] font-semibold ">Reflection:</p>
+          <p className=" text-[1.3rem] font-semibold ">
+            Stand Firm in the Lord (Verse 1):
+          </p>
+          <p>
+            Paul begins by encouraging us to stand firm in our faith. In a world full
+            of challenges and distractions, it's essential to remain steadfast in our
+            relationship with Christ. Remember, our strength comes from the Lord.{" "}
+          </p>
+          <p className=" text-[1.3rem] font-semibold ">
+            Unity and Reconciliation (Verses 2-3):
+          </p>
+          <p>
+            Paul addresses a conflict between two women, Euodia and Syntyche, urging
+            them to reconcile. This teaches us the importance of unity within the
+            church. We are called to resolve our differences and work together for the
+            sake of the gospel.{" "}
+          </p>
+          <p className=" text-[1.3rem] font-semibold ">
+            Joy and Gentleness (Verses 4-5):
+          </p>
+          <p>
+            We are reminded to rejoice always and to let our gentleness be evident to
+            all. Joy in the Lord is not dependent on our circumstances but on our
+            relationship with Him. Our gentleness is a testimony of God's love in us.{" "}
+          </p>
+          <p className=" text-[1.3rem] font-semibold ">
+            Overcoming Anxiety (Verses 6-7):
+          </p>
+          <p>
+            Paul instructs us not to be anxious but to present our requests to God
+            with thanksgiving. In doing so, we receive the peace of God that
+            transcends all understanding. This peace guards our hearts and minds,
+            keeping us centered in Christ.{" "}
+          </p>
+          <p className=" text-[1.3rem] font-semibold ">
+            Focus on the Positive (Verse 8):
+          </p>
+          <p>
+            We are encouraged to focus our thoughts on what is true, noble, right,
+            pure, lovely, and admirable. In a world filled with negativity, focusing
+            on the positive helps us maintain a godly perspective.{" "}
+          </p>
+          <p className=" text-[1.3rem] font-semibold ">
+            Practice What You've Learned (Verse 9):
+          </p>
+          <p>
+            Paul urges us to put into practice what we have learned from his teachings
+            and example. Living out our faith daily brings the peace of God into our
+            lives and influences those around us.{" "}
+          </p>
+          <p className=" text-[1.3rem] font-semibold ">Prayer:</p>
+          <p>
+            Heavenly Father, thank You for Your word that encourages and strengthens
+            us. Help us to stand firm in our faith, seeking unity and reconciliation
+            in our relationships. Fill our hearts with Your joy and gentleness. Teach
+            us to present our anxieties to You and to focus on the good things in
+            life. May we practice what we have learned and experience Your peace in
+            our daily walk. In Jesus' name, Amen.{" "}
+          </p>
+        </div>
       </div>
+
 
     </div>
   )

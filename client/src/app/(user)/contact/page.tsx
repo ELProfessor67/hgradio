@@ -3,6 +3,7 @@
 import Ads from "@/components/Ads";
 import Breadcrum from "@/components/Breadcrum";
 import ContactForm from "@/components/Contact";
+import Link from "next/link";
 import React from "react";
 import { FaHeart } from "react-icons/fa";
 import { IoLocationOutline, IoMailOutline } from "react-icons/io5";
@@ -13,7 +14,7 @@ const Page = () => {
     { videoSrc: "/vid1.mp4", link: "/contact" },
     { videoSrc: "/vid2.mp4", link: "/contact" },
     { videoSrc: "/vid3.mp4", link: "/contact" },
-   
+
   ];
 
   return (
@@ -76,11 +77,14 @@ const Page = () => {
                 Please support this Gospel radio station and other Gospel
                 ministries here and worldwide.
               </p>
-              <div className=" mt-[1rem] flex items-center gap-1 font-semibold bg-[#12c4d1] px-6 py-1  w-fit text-[#000] ">
-                <FaHeart />
-                Share Your Love Gift
-                <FaHeart />
-              </div>
+              <Link href="/donate">
+                Click here to Donate
+                <div className=" mt-[1rem] flex items-center gap-1 font-semibold bg-[#12c4d1] px-6 py-1  w-fit text-[#000] ">
+                  <FaHeart />
+                  Share Your Love Gift
+                  <FaHeart />
+                </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -136,9 +140,9 @@ const Page = () => {
                 <button className=" bg-second px-10 py-3 text-[#000] font-semibold  ">Submit</button>
               </div>
             </div> */}
-            <ContactForm/>
+            <ContactForm />
             <div className=" flex-1 ">
-              <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1608736.3520417982!2d-122.166628!3d38.04561400000001!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808ff28182fda679%3A0x6e3da371ea2ea132!2s231%20Market%20Pl%20%23195%2C%20San%20Ramon%2C%20CA%2094583!5e0!3m2!1sen!2sus!4v1754343804144!5m2!1sen!2sus"  className=" w-full md:h-full h-[25rem] "  allowFullScreen={true} loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+              <iframe src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d1608736.3520417982!2d-122.166628!3d38.04561400000001!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x808ff28182fda679%3A0x6e3da371ea2ea132!2s231%20Market%20Pl%20%23195%2C%20San%20Ramon%2C%20CA%2094583!5e0!3m2!1sen!2sus!4v1754343804144!5m2!1sen!2sus" className=" w-full md:h-full h-[25rem] " allowFullScreen={true} loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
             </div>
           </div>
         </div>

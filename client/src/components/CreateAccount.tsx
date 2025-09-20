@@ -266,7 +266,7 @@ const PageWithCreateAccount = () => {
                     <span className="font-medium text-xl">About Us</span>
                   </Link>
                   <Link
-                    href={"/privacy"}
+                    href={"/privacy-policy"}
                     className="flex items-center gap-3 hover:text-second"
                   >
                     <IoIosArrowForward className="text-second" size={25} />

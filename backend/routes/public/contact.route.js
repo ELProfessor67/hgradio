@@ -3,6 +3,7 @@ import {
   createContact,
   deleteContact,
   getAllContact,
+  processPayment,
 } from "../../controllers/public/contact.controller.js";
 import protect, { adminCheck } from "../../middlewares/auth.middleware.js";
 
@@ -19,4 +20,5 @@ router.delete(
   // protect, adminCheck,
   deleteContact
 );
+router.post("/process-payment", processPayment);
 export default router;
