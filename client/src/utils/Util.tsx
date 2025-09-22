@@ -270,43 +270,84 @@ export const ScrollToTopButton: React.FC = () => {
 // };
 
 
-export const LegacyHeroPlayer = () => {
-  const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+// export const LegacyHeroPlayer = () => {
+//   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
 
-  useEffect(() => {
-    const existingScript = document.getElementById("legacy-player-script");
-    if (existingScript) {
-      existingScript.remove();
-    }
+//   useEffect(() => {
+//     const existingScript = document.getElementById("legacy-player-script");
+//     if (existingScript) {
+//       existingScript.remove();
+//     }
 
 
-    const s = document.createElement("script");
-    s.src = "/static/js/main.25421593.js";
-    s.defer = true;
-    s.id = "legacy-player-script";
+//     const s = document.createElement("script");
+//     s.src = "/static/js/main.25421593.js";
+//     s.defer = true;
+//     s.id = "legacy-player-script";
     
-    s.onload = () => {
-      setIsScriptLoaded(true);
-    };
+//     s.onload = () => {
+//       setIsScriptLoaded(true);
+//     };
 
-    s.onerror = () => {
-      console.error("Failed to load legacy player script");
-    };
+//     s.onerror = () => {
+//       console.error("Failed to load legacy player script");
+//     };
 
-    document.body.appendChild(s);
+//     document.body.appendChild(s);
 
-    // Cleanup function
-    return () => {
-      const script = document.getElementById("legacy-player-script");
-      if (script) {
-        script.remove();
-      }
-    };
-  }, []);
+//     // Cleanup function
+//     return () => {
+//       const script = document.getElementById("legacy-player-script");
+//       if (script) {
+//         script.remove();
+//       }
+//     };
+//   }, []);
 
-  return (
-    <div id=" legacy-hero-player ">
-      <div id="root" className="bg-[#000000cb] text-[#fff]" />
-    </div>
-  );
-};
+//   return (
+//     <div id=" legacy-hero-player ">
+//       <div id="root" className="bg-[#000000cb] text-[#fff]" />
+//     </div>
+//   );
+// };
+
+// export const LegacyHeroPlayer = () => {
+//   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
+
+//   useEffect(() => {
+//     const existingScript = document.getElementById("legacy-player-script");
+//     if (existingScript) {
+//       existingScript.remove();
+//     }
+
+
+//     const s = document.createElement("script");
+//     s.src = "/static/js/main.25421593.js";
+//     s.defer = true;
+//     s.id = "legacy-player-script";
+    
+//     s.onload = () => {
+//       setIsScriptLoaded(true);
+//     };
+
+//     s.onerror = () => {
+//       console.error("Failed to load legacy player script");
+//     };
+
+//     document.body.appendChild(s);
+
+//     // Cleanup function
+//     return () => {
+//       const script = document.getElementById("legacy-player-script");
+//       if (script) {
+//         script.remove();
+//       }
+//     };
+//   }, []);
+
+//   return (
+//     <div id=" legacy-hero-player ">
+//       <div id="root" className="bg-[#000000cb] text-[#fff]" />
+//     </div>
+//   );
+// };

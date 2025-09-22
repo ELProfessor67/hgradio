@@ -1,7 +1,7 @@
 import React from "react";
 import HeroImg from "@/assets/HeroImg.jpg";
-import { HeroTextBox, LegacyHeroPlayer } from "@/utils/Util";
-
+import { HeroTextBox } from "@/utils/Util";
+import LegacyHeroPlayer from "@/components/LagacyHeroPlayer";
 
 const Hero = () => {
   return (
