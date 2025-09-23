@@ -20,36 +20,12 @@ const page = () => {
 
   const engineers = [
     {
-      id: "Pastor-Ben-Cha-Me",
-      img: Team1,
-      name: "Pastor Ben Cha Me",
-      bio: "Jesus Christ alone can save the World but Jesus cannot save the World alone! Being a former missionary, p. Ben firmly believes that Lost people matters to God and so should we. And I believe that it is a great SIN when you've found water in the middle of the desert and not share it. P. Ben received his seminary degree from Talbot Theological Seminary and Th.M from Fuller. and he serves as the Mission/outreach pastor at Christian Layman Church in Oakland. He is married to one wife Ruth; son Joshua and daughter Rebekah! ..",
+      id: "Pastor-Larry",
+      img: Team8,
+      name: "Pastor Larry Austin",
+      bio: "Pastor Larry Austin, widely known as PLA, is a devoted servant of Christ who walks boldly in his calling as both a local pastor and an international urban missionary. He answered the call to ministry on March 21, 1995, while pursuing a career in professional football. Since that pivotal moment, he has faithfully preached the Gospel and ministered through Christian rap. PLA serves as a pastor at Elevate Gospel Outreach in West Oakland, California every Sunday at 1PM on the corner of 14th & Mandela Parkway. PLA also serves the Body of Christ as an International Mission Motivator under the banner of In The Huddle with PLA, a movement harnesses the power of music to reach the lost and equip churches to fulfill the mission of Jesus.PLA shares his life with his high school sweetheart, Michelle, and together they have three daughters: Amani, Brandy, and Faith. They are also proud grandparents to twin girls, Madisyn and Lexington. Surrounded by strong women, PLA often reflects on how their love continually teaches him the depth of Christ’s love for His Church the Bride of Christ.",
       location: "United States",
-      email: "pastor.ben@hgcradio.com",
-    },
-    {
-      id: "Pastor-Harris-and-Voices",
-      img: Team2,
-      name: "Pastor J'on Harris and Voices",
-      bio: "J'on Harris and Voices is a dynamic ensemble of multi-cultural youth from all over the greater Sacramento area. Formed in the spring of 2001 in a small school called Hiram Johnson High School, Voices transformed from being a regular high school choir to a community choir whose music and ministry range from the east to the west. What started as a little performance at a black history program, the group had no idea that God was building them up for a greater calling. After their performance, the high school principal asked if Mr. Harris could help teach the choir class, because the regular choir teacher had become ill and could not finish out the school year. J'on Harris gladly accepted the adventure and began teaching the class the only music he knew - gospel. Toward the end of the school year, the students had developed a love and passion for music and a relationship with God. Friday rehearsals during that summer further united the group. They began singing at different events and eventually became J'on Harris and Voices. Their journey also saw them form a non-profit called EMBRACE where they regularly collaborate with different high schools in the Sacramento area and form after-school choirs all over the city. Through this platform, many of the youth have been saved and built a relationship with God. Over the years, J'on Harris and voices has recorded 3 full lengths CDs. Two of them, Changed and Another level, were played on radio stations from Sacramento to Louisiana. Voices has also recorded over 6 singles and sold over 35,000 CDs all over the country. In 2003, this group embarked on their first Taking Back Our Streets Tour where they traveled for 21 days across the country singing at different churches, events, street corners, and concerts. Voices has sung for gospel artists such as John P. Kee, Shirley Caesar and Kirk Franklin. They have been featured on Good Morning Sacramento KTXL, Channel 10, FOX 40 and in The Sacramento Bee. Today, Voices represents a vast cultural diversity spanning 4 continents, 8 languages and 17 countries worldwide. This group plans to share the Gospel for many years to come both here and abroad and will stop at nothing to fulfill God's purpose",
-      location: "United States",
-      email: "jon.harris@hgcradio.com",
-    },
-    {
-      id: "Apostle-Gary-Wyatt",
-      img: Team3,
-      name: "Apostle Gary L. Wyatt",
-      bio: "Heaven's Harmony invites you to a celestial experience of worship and inspiration. Delight in a curated selection of uplifting gospel music, moving testimonies, and spiritual insights that resonate with divine harmony. Join us as we celebrate faith and foster a deep connection with God through a harmonious blend of praise and worship.",
-      location: "United States",
-      email: "gary.wyatt@hgcradio.com",
-    },
-    {
-      id: "Dr-Edwards",
-      img: Team4,
-      name: "Dr Edwards",
-      bio: "Dr. Edwards is the Pastoral Leader, and Chief Executive Officer for Save The Youth Incorporated, a non-profit ministry where he provides oversight for education, youth programs, and parental counseling. Minister Edwards is part of the pastoral team at churches in the state of Alabama where he is an Associate Pastor and/or Pulpit Conductor for Revivals & Special Programs.Dr. Edwards has many patents/inventions; numerous journal papers; and was coauthor of two books on Nanotechnology.",
-      location: "United States",
-      email: "edwards@hgcradio.com",
+      email: "pastor.larry@hgcradio.com",
     },
     {
       id: "Kenny-Andrews",
@@ -60,12 +36,44 @@ const page = () => {
       email: "kenny.andrews@hgcradio.com",
     },
     {
+      id: "Apostle-Gary-Wyatt",
+      img: Team3,
+      name: "Apostle Gary L. Wyatt",
+      bio: "Heaven's Harmony invites you to a celestial experience of worship and inspiration. Delight in a curated selection of uplifting gospel music, moving testimonies, and spiritual insights that resonate with divine harmony. Join us as we celebrate faith and foster a deep connection with God through a harmonious blend of praise and worship.",
+      location: "United States",
+      email: "gary.wyatt@hgcradio.com",
+    },
+    {
+      id: "Pastor-Ben-Cha-Me",
+      img: Team1,
+      name: "Pastor Ben Cha Me",
+      bio: "Jesus Christ alone can save the World but Jesus cannot save the World alone! Being a former missionary, p. Ben firmly believes that Lost people matters to God and so should we. And I believe that it is a great SIN when you've found water in the middle of the desert and not share it. P. Ben received his seminary degree from Talbot Theological Seminary and Th.M from Fuller. and he serves as the Mission/outreach pastor at Christian Layman Church in Oakland. He is married to one wife Ruth; son Joshua and daughter Rebekah! ..",
+      location: "United States",
+      email: "pastor.ben@hgcradio.com",
+    },
+    {
       id: "Gregory-Franklin",
       img: Team6,
       name: "Gregory Franklin",
       bio: "Everything in life starts with a seed, and it was many decades ago when God first gave G. Franklin a vision to believe in and pray for. The burden of reaching the lost and sharing the hope of Jesus Christ began to sit upon his soul and take root. Seeing that the world was in desperate need of the Truth, he envisioned God using his life to equip other Christians and create a worship-driven culture and lifestyle. Armed with confidence that he could do all things through Christ who strengthened him (Philippians 4:13), he laid out on paper the blueprint and initial steps he needed to take to realize the daunting task before him.In the years since, fervent prayer and a sense of purpose had enabled G. Franklin to finally see the vision begin to unfurl in living reality with his team of builders. With untiring perseverance, he communicated the goal to inspire and motivate others and thus small pieces came together to form the big picture. Consequently, Hallelujah Gospel Globally was born.  “If it seems slow in coming, wait patiently, for it will surely take place. It will not be delayed.” (Habakkuk 2:3)Just like strong bodies, strong teams are comprised of interdependent members fulfilling precise tasks. It is no accident that you are holding this book in your hand right now. When you selected it to read, you also opened a special doorway to that dream and what it presents. You have become a significant part of it.Now is the time for the vision to come to pass. Today marks the commencement of G. Franklin's tangible pledge to impact lives for eternity, to see Christ remain preeminent, and to become a good steward of God's resources he has been entrusted with. From the shores of the United States to the ends of the earth, “let everything that has breath praise the Lord.” (Psalm 150:6   ",
       location: "United States",
       email: "greg@hgcradio.com",
+    },
+    {
+      id: "Dr-Edwards",
+      img: Team4,
+      name: "Dr Edwards",
+      bio: "Dr. Edwards is the Pastoral Leader, and Chief Executive Officer for Save The Youth Incorporated, a non-profit ministry where he provides oversight for education, youth programs, and parental counseling. Minister Edwards is part of the pastoral team at churches in the state of Alabama where he is an Associate Pastor and/or Pulpit Conductor for Revivals & Special Programs.Dr. Edwards has many patents/inventions; numerous journal papers; and was coauthor of two books on Nanotechnology.",
+      location: "United States",
+      email: "edwards@hgcradio.com",
+    },
+    {
+      id: "Pastor-Harris-and-Voices",
+      img: Team2,
+      name: "Pastor J'on Harris and Voices",
+      bio: "J'on Harris and Voices is a dynamic ensemble of multi-cultural youth from all over the greater Sacramento area. Formed in the spring of 2001 in a small school called Hiram Johnson High School, Voices transformed from being a regular high school choir to a community choir whose music and ministry range from the east to the west. What started as a little performance at a black history program, the group had no idea that God was building them up for a greater calling. After their performance, the high school principal asked if Mr. Harris could help teach the choir class, because the regular choir teacher had become ill and could not finish out the school year. J'on Harris gladly accepted the adventure and began teaching the class the only music he knew - gospel. Toward the end of the school year, the students had developed a love and passion for music and a relationship with God. Friday rehearsals during that summer further united the group. They began singing at different events and eventually became J'on Harris and Voices. Their journey also saw them form a non-profit called EMBRACE where they regularly collaborate with different high schools in the Sacramento area and form after-school choirs all over the city. Through this platform, many of the youth have been saved and built a relationship with God. Over the years, J'on Harris and voices has recorded 3 full lengths CDs. Two of them, Changed and Another level, were played on radio stations from Sacramento to Louisiana. Voices has also recorded over 6 singles and sold over 35,000 CDs all over the country. In 2003, this group embarked on their first Taking Back Our Streets Tour where they traveled for 21 days across the country singing at different churches, events, street corners, and concerts. Voices has sung for gospel artists such as John P. Kee, Shirley Caesar and Kirk Franklin. They have been featured on Good Morning Sacramento KTXL, Channel 10, FOX 40 and in The Sacramento Bee. Today, Voices represents a vast cultural diversity spanning 4 continents, 8 languages and 17 countries worldwide. This group plans to share the Gospel for many years to come both here and abroad and will stop at nothing to fulfill God's purpose",
+      location: "United States",
+      email: "jon.harris@hgcradio.com",
     },
     {
       id: "Adia-Adia",
@@ -75,14 +83,7 @@ const page = () => {
       location: "United States",
       email: "adia.adia@hgcradio.com",
     },
-    {
-      id: "Pastor-Larry",
-      img: Team8,
-      name: "Pastor Larry",
-      bio: "Pastor Larry 'PLA' Austin is a humble yet bold servant of Jesus Christ, walking daily in the strength, love, and grace of his Savior. Known for his passionate heart and fearless voice—both in the streets and through the airwaves—PLA answered the call to ministry on March 21, 1995, while pursuing a professional football career. That divine interruption shifted the entire course of his life, igniting a holy fire that still burns brighter with time. Since then, PLA has surrendered his gifts, pain, and passion to God, becoming a vessel of truth, restoration, and revival. He currently serves as the Lead Pastor of Elevate Gospel Outreach in West Oakland, California, where every Sunday at 1PM on the corner of 14th & Mandela Parkway, the uncompromised Gospel is preached with boldness, compassion, and power. PLA is also the founder of In The Huddle with PLA, an international outreach movement using music, testimony, and media to awaken purpose in the Body of Christ and bring the Gospel to places often overlooked. Now, that mission has expanded globally through radio. In his latest assignment, Pastor Larry has stepped into the role of DJ and Studio Engineer for HGC Radio (www.hgcradio.com), Hallelujah Gospel Globally radio network reaching souls across continents. Behind the mic and at the mixing board, he crafts Spirit-led programming that blends Word-based music, Christ-centered conversation, and prophetic sound with technical excellence. With every playlist he curates and every mix he engineers, PLA is on a mission to elevate Jesus through sound, creating an atmosphere where healing, deliverance, and worship collide. A former athlete turned Kingdom warrior, PLA continues to use his testimony, prophetic insight, and love for urban gospel and Christian hip-hop as a tool of evangelism—not entertainment. His studio work is not just technical—it's ministry in motion. He carries the weight of his calling into every broadcast, with the same fire that fuels his preaching. Alongside his high school sweetheart and best friend, Michelle, PLA finds joy and stability in family. Together, they have raised three beautiful daughters—Amani, Brandy, and Faith—and now pour into their twin granddaughters, Madisyn and Lexington, with the same love and purpose. Surrounded by powerful women of God, Pastor Larry daily experiences the richness of Christ's love through their encouragement and grace. Whether preaching on a corner, rapping on a stage, producing in a studio, or broadcasting across the globe, Pastor Larry 'PLA' Austin is growing stronger—not for fame, but for His Glory Alone. His life is proof that God can turn pain into purpose and passion into a platform for eternal impact. He is not just a pastor, artist, or engineer—he is a brother, a servant, a missionary, and a witness to the unstoppable power of grace. By His Grace, For His Glory Alone, Pastor Larry 'PLA' Austin.",
-      location: "United States",
-      email: "pastor.larry@hgcradio.com",
-    },
+   
   ];
 
 
