@@ -1,9 +1,29 @@
 'use client'
 import React, { useEffect, useState } from 'react'
-
+import { useData } from '@/context/Context';
 const Popup = () => {
     const [hide,setHide] = useState(true);
-    
+    const {currentDJ} = useData();
+
+    function utcToLocalAmPm(utcTime:any) {
+        if (!utcTime) return "";
+      
+        // Split hours and minutes
+        const [hours, minutes] = utcTime.split(":").map(Number);
+      
+        // Create a UTC date with that time
+        const utcDate = new Date(Date.UTC(2025, 0, 1, hours, minutes));
+      
+        // Convert to local time string
+        const localTime = utcDate.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: true,
+        });
+      
+        return localTime;
+      }
+      
 
 
     useEffect(() => {
@@ -22,7 +42,7 @@ const Popup = () => {
                     <img alt="Dj Image" loading="lazy" src='/SongFallback.jpg'/>
 
                     </div>
-                <div className="text-gray-800 text-sm leading-relaxed"><span className="font-semibold">Bro Walter Palmer</span> is inviting you to listen to the radio <span className="font-semibold">station</span> starting at <span className="font-semibold">9:12 PM</span> Los Angeles.</div>
+                <div className="text-gray-800 text-sm leading-relaxed"><span className="font-semibold text-black">{currentDJ?.dj?.name}</span> is inviting you to listen to the radio <span className="font-semibold">station</span> starting at <span className="font-semibold text-black">{utcToLocalAmPm(currentDJ?.dj?.djStartTime)}</span> Los Angeles.</div>
             </div>
         </div>
     )

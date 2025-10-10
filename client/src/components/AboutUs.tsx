@@ -153,7 +153,7 @@ export const Stats = () => {
             <div className=" text-[1.4rem] ">Experience</div>
           </div>
           <div className="  ">
-            <Image src={Stat1} alt="stamp icon" className=" w-[9rem] mx-auto object-contain " />
+            <Image src={Stat1} alt="stamp icon" className=" w-[9rem] mx-auto object-contain hover:scale-110 transition-all duration-300 " />
           </div>
         </div>
       </div>

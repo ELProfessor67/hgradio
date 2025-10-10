@@ -1,6 +1,6 @@
 "use client";
 
-import { convertToShowsData } from "@/utils/generateDjsSchedule";
+import { convertToShowsData, getCurrentOrNextDJ } from "@/utils/generateDjsSchedule";
 import axios from "axios";
 import { StaticImageData } from "next/image";
 import React, {
@@ -33,6 +33,7 @@ interface FormContextType {
   logout: () => void;
   showsData: IShowsData;
   getDetails: (id: string) => IDetailsData | undefined;
+  currentDJ: any;
 }
 
 const FormContext = createContext<FormContextType | undefined>(undefined);
@@ -91,6 +92,8 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
     Saturday: []
   });
 
+  const [currentDJ,setCurrentDJ] = useState<any>(null);
+
   const [details,setDetails] = useState<IDetails>({});
 
 
@@ -132,6 +135,8 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
     const res = await axios.get("https://backend.hgdjlive.com/api/v1/all-djs");
     const data = res.data;
     const {showsData, details} = convertToShowsData(data);
+    const currentDJ = getCurrentOrNextDJ(data.teams);
+    setCurrentDJ(currentDJ);
     setSowsData(showsData);
     setDetails(details);
   }
@@ -145,7 +150,7 @@ export const FormProvider: React.FC<FormProviderProps> = ({ children }) => {
   },[details])
 
   return (
-    <FormContext.Provider value={{ userData, setUserData, logout,showsData,getDetails }}>
+    <FormContext.Provider value={{ userData, setUserData, logout,showsData,getDetails,currentDJ }}>
       {children}
     </FormContext.Provider>
   );

@@ -82,3 +82,54 @@ export function convertToShowsData(data:any) {
 
   return {showsData, details};
 }
+
+
+export function getCurrentOrNextDJ(djs:any) {
+  const now = new Date(); // current time in local
+  const nowUTC = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes())
+  );
+
+  // Helper: convert "HH:mm" to Date (UTC)
+  const getUTCDate = (timeStr:any) => {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    const d = new Date();
+    d.setUTCHours(hours, minutes, 0, 0);
+    return d;
+  };
+
+  let currentDJ = null;
+  let upcomingDJ = null;
+  let minDiff = Infinity;
+
+  for (const dj of djs) {
+    if (!dj.djStartTime || !dj.djEndTime) continue;
+
+    const start = getUTCDate(dj.djStartTime);
+    const end = getUTCDate(dj.djEndTime);
+
+    // Handle end before start (spanning midnight)
+    if (end < start) end.setUTCDate(end.getUTCDate() + 1);
+
+    if (nowUTC >= start && nowUTC <= end) {
+      currentDJ = dj;
+      break;
+    } else if (start > nowUTC) {
+      const diff = (start as any) - (nowUTC as any);
+      if (diff < minDiff) {
+        minDiff = diff;
+        upcomingDJ = dj;
+      }
+    }
+  }
+
+  if (currentDJ) return { status: "live", dj: currentDJ };
+  if (upcomingDJ) return { status: "upcoming", dj: upcomingDJ };
+  return { status: "none", dj: null };
+}
+
+
+
+
+
+
