@@ -238,7 +238,7 @@ const Page: React.FC<PageProps> = ({ params }) => {
                   <span>Buy Album Now</span>
                 </button>
                 <Link
-                  href={`#`}
+                  href={`/donate`}
                   className=" w-[13rem] bg-[#139ff2] py-2 text-[#fff] flex items-center justify-center gap-2 "
                 >
                   <FaGift />
