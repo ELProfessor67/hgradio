@@ -3,14 +3,14 @@ import { MdStarRate } from "react-icons/md";
 
 const Message = ({ message, name, isOwner }) => {
   return (
-    <div class="chat-message other">
+    <div class="other flex items-center gap-2 justify-start mt-2 mb-2">
       <div class="avatar">{name?.slice(0,2)?.toUpperCase()}</div>
       <div class="w-100">
-        <div class="d-flex align-items-center">
-          <div class="fw-bold text-gray-900">{isOwner && <MdStarRate size={20} color='yellow'/>} {name}</div>
-          <div class="message-info">June 1 2024, 10:30 AM</div>
+        <div class="d-flex align-items-center flex items-center gap-2 justify-start">
+          <div class="fw-bold text-gray-900/80 flex items-center gap-1">{isOwner && <span className='text-yellow-500'>⭐</span>} {name}</div>
+          <div class="message-info text-gray-400 text-xs flex items-center gap-1">June 1 2024, 10:30 AM</div>
         </div>
-        <div class="message-bubble">
+        <div class="w-full">
           <div class="message-content text-black/90">{message}</div>
         </div>
       </div>

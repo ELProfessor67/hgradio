@@ -150,7 +150,7 @@ export default function App() {
 	return (
 		<>
 			{
-				true &&
+				IsTonePlayingMessage &&
 				<div className='absolute top-[50%] -translate-y-[50%] left-[50%] -translate-x-[50%] p-2 bg-black/40 rounded-md z-[100000000000000000000000]'>
 					{IsTonePlayingMessage}
 				</div>

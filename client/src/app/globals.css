@@ -464,3 +464,21 @@ input[type="range"]::-webkit-slider-thumb {
 .modal-content {
   color: #343a40;
 }
+
+
+
+.scrollbar-hide::-webkit-scrollbar {
+  width: 1px;
+}
+
+.scrollbar-hide::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background: #888;
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb:hover {
+  background: #55555562;
+}
