@@ -143,7 +143,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 
 	function handleReceiveMessage(data) {
-		setMessageList(prev => [...prev, { ...data }]);
+		setMessageList(prev => [...prev, { ...data,date: new Date(Date.now()) }]);
 	}
 
 
