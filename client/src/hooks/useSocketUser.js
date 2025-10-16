@@ -299,7 +299,11 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 	// }
 
 
-	const createPeerConnection = async () => {
+	const createPeerConnection = async (retry = 0) => {
+		if(retry > 3){
+			console.log('retry failed');
+			return;
+		}
 		peerRef.current = new RTCPeerConnection(peerConfig);
 
 		//on ice candidate
@@ -330,8 +334,14 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 		}
 
 		//on connection state changed
-		peerRef.current.onconnectionstatechange = () => {
+		peerRef.current.onconnectionstatechange = async () => {
 			console.log("Connection State Changed:", peerRef.current.connectionState);
+			if(peerRef.current.connectionState == 'disconnected' || peerRef.current.connectionState == 'failed'){
+				await peerRef.current?.close();
+				console.log('retrying...');
+				await sleep(1000);
+				createPeerConnection(retry + 1);
+			}
 		}
 
 		//on negotiation needed
