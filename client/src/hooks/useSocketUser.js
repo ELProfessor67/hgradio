@@ -1,6 +1,7 @@
 import { io } from 'socket.io-client';
 import { useRef, useEffect, useState } from 'react';
 import { REACT_PUBLIC_SOCKET_URL, REACT_PUBLIC_HLS_SERVER_HOST, NEXT_PUBLIC_ICE_CAST_SERVER } from '../constants';
+import { useLive } from '../context/LiveContext';
 
 const sleep = ms => new Promise(r => window.setTimeout(r, ms))
 
@@ -110,9 +111,9 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 	const peerRef = useRef({});
 	const [owner, setOwner] = useState({});
 	const ownerRef = useRef();
-	const [roomActive, setRoomActive] = useState(false);
+	const { setIsLive, setRoomActive, isLive, roomActive } = useLive();
 	const [scheduleActive, setScheduleActive] = useState(false);
-	const [isLive, setIsLive] = useState(false);
+	
 	const [autodj, setAutoDj] = useState(false);
 	const [messageList, setMessageList] = useState([]);
 	const [nextSong, setNextSong] = useState({});
@@ -416,7 +417,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			}
 			ownerRef.current = data?.user;
 
-			createPeerConnection();
+			// createPeerConnection();
 
 			// if (data?.user?.welcomeTone && !data.tonePlayed) {
 			// 	console.log('tones played')
@@ -438,99 +439,165 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			// }
 		});
 
+		// socketRef.current.on('play-welcome-tone', (data) => {
+		// 	const isSheduled = data.isSheduled;
+		// 	setSchedulePlaying(isSheduled);
+
+
+		// 	if (data?.welcomeTone) {
+		// 		console.log('welcome tone started')
+		// 		const song = new Audio(`${REACT_PUBLIC_SOCKET_URL}${data?.welcomeTone}`);
+		// 		if (!isSheduled) {
+		// 			song.volume = 0.3;
+		// 		}
+
+		// 		song.addEventListener("canplaythrough", () => {
+		// 			console.log("Audio loaded successfully");
+
+
+		// 			if (!isLiveRef.current) {
+		// 				audioRef.current.pause();
+		// 			}
+		// 			//load song
+		// 			setTimeout(() => {
+		// 				if (isSheduled) {
+		// 					console.log("Prepare Schedule");
+		// 					if (audioRef.current.srcObject) {
+		// 						audioRef.current.srcObject = null;
+		// 						audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
+		// 						audioRef.current.load();
+		// 					};
+
+		// 					if (audioRef.current.src != `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`) {
+		// 						audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
+		// 						audioRef.current.load();
+		// 					}
+		// 				}
+		// 			}, (song.duration - 8) * 1000)
+
+		// 			song.play().then(() => {
+		// 				setDisabledPlayBtn(true)
+		// 				console.log("Audio started playing");
+		// 				setIsTonePlayingMessage("Welcome Tone");
+
+		// 			}).catch((error) => {
+		// 				console.error("Error playing audio:", error);
+		// 			});
+		// 		});
+		// 		song.addEventListener("ended", () => {
+		// 			setDisabledPlayBtn(false)
+		// 			setIsTonePlayingMessage(null)
+		// 			audioRef.current.play();
+		// 			console.log("Audio has finished playing");
+		// 		});
+		// 	}
+		// });
+
+
+
 		socketRef.current.on('play-welcome-tone', (data) => {
 			const isSheduled = data.isSheduled;
 			setSchedulePlaying(isSheduled);
 
+			setDisabledPlayBtn(true)
+			console.log("Audio started playing");
+			setIsTonePlayingMessage("Welcome Tone");
 
-			if (data?.welcomeTone) {
-				console.log('welcome tone started')
-				const song = new Audio(`${REACT_PUBLIC_SOCKET_URL}${data?.welcomeTone}`);
-				if (!isSheduled) {
-					song.volume = 0.3;
-				}
-
-				song.addEventListener("canplaythrough", () => {
-					console.log("Audio loaded successfully");
+			audioRef.current.pause();
+			audioRef.current.volume = 0;
 
 
-					if (!isLiveRef.current) {
-						audioRef.current.pause();
-					}
-					//load song
-					setTimeout(() => {
-						if (isSheduled) {
-							console.log("Prepare Schedule");
-							if (audioRef.current.srcObject) {
-								audioRef.current.srcObject = null;
-								audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
-								audioRef.current.load();
-							};
-
-							if (audioRef.current.src != `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`) {
-								audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
-								audioRef.current.load();
-							}
+			const song = new Audio(`${REACT_PUBLIC_SOCKET_URL}${data?.welcomeTone}`);
+			song.addEventListener("canplaythrough", () => {
+				setTimeout(() => {
+					if (isSheduled) {
+						console.log("Prepare Schedule");
+						if (audioRef.current.srcObject) {
+							audioRef.current.srcObject = null;
+							audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
+							audioRef.current.load();
+						};
+				
+						if (audioRef.current.src != `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`) {
+							audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
+							audioRef.current.load();
 						}
-					}, (song.duration - 8) * 1000)
-
-					song.play().then(() => {
-						setDisabledPlayBtn(true)
-						console.log("Audio started playing");
-						setIsTonePlayingMessage("Welcome Tone");
-
-					}).catch((error) => {
-						console.error("Error playing audio:", error);
-					});
-				});
-				song.addEventListener("ended", () => {
-					setDisabledPlayBtn(false)
-					setIsTonePlayingMessage(null)
-					audioRef.current.play();
-					console.log("Audio has finished playing");
-				});
-			}
-		});
-
-		socketRef.current.on('play-ending-tone', (data) => {
-			if (data?.endingTone) {
-				console.log('ending tone started')
-				const song = new Audio(`${REACT_PUBLIC_SOCKET_URL}${data?.endingTone}`);
-				const volume = audioRef.current.volume
-				song.addEventListener("canplaythrough", () => {
-					console.log("Audio loaded successfully");
-
-					if (!isLiveRef.current) {
-						audioRef.current.pause();
-						audioRef.current.volume = 0;
-
 					}
+				}, (song.duration - 8) * 1000);
+			});
+		})
 
-					
-					song.play().then(() => {
-						setDisabledPlayBtn(true)
-						setIsTonePlayingMessage("Ending Tone")
-						console.log("Audio started playing");
-					}).catch((error) => {
-						console.error("Error playing audio:", error);
-					});
 
-				});
-
-				song.addEventListener("ended", () => {
-					setDisabledPlayBtn(false);
-					setIsTonePlayingMessage(null);
-					
-					// audioRef.current.srcObject = null;
-					// audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
-					// audioRef.current.load();
-					// audioRef.current.volume = volume;
-					// audioRef.current.play();
-
-					window.location.reload();
-				});
-			}
+		socketRef.current.on('welcome-tone-played', (data) => {
+			setTimeout(() => {
+				setDisabledPlayBtn(false);
+				setIsTonePlayingMessage(null);
+				if(!isLiveRef.current){
+					audioRef.current.play();
+					audioRef.current.volume = 1;
+				}
+			}, 3000);
 		});
+
+		// socketRef.current.on('play-ending-tone', (data) => {
+		// 	if (data?.endingTone) {
+		// 		console.log('ending tone started')
+		// 		const song = new Audio(`${REACT_PUBLIC_SOCKET_URL}${data?.endingTone}`);
+		// 		const volume = audioRef.current.volume
+		// 		song.addEventListener("canplaythrough", () => {
+		// 			console.log("Audio loaded successfully");
+
+		// 			if (!isLiveRef.current) {
+		// 				audioRef.current.pause();
+		// 				audioRef.current.volume = 0;
+
+		// 			}
+
+					
+		// 			song.play().then(() => {
+		// 				setDisabledPlayBtn(true)
+		// 				setIsTonePlayingMessage("Ending Tone")
+		// 				console.log("Audio started playing");
+		// 			}).catch((error) => {
+		// 				console.error("Error playing audio:", error);
+		// 			});
+
+		// 		});
+
+		// 		song.addEventListener("ended", () => {
+		// 			setDisabledPlayBtn(false);
+		// 			setIsTonePlayingMessage(null);
+					
+		// 			// audioRef.current.srcObject = null;
+		// 			// audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
+		// 			// audioRef.current.load();
+		// 			// audioRef.current.volume = volume;
+		// 			// audioRef.current.play();
+
+		// 			window.location.reload();
+		// 		});
+		// 	}
+		// });
+
+        socketRef.current.on('play-ending-tone', (data) => {
+		
+			console.log('ending tone started')
+			if (!isLiveRef.current) {
+				audioRef.current.pause();
+				audioRef.current.volume = 0;
+			}
+
+			setDisabledPlayBtn(true)
+			setIsTonePlayingMessage("Ending Tone")			
+		});
+
+		socketRef.current.on('ending-tone-played', (data) => {
+			setTimeout(() => {
+				setDisabledPlayBtn(false);
+				setIsTonePlayingMessage(null);
+				window.location.reload();
+			}, 3000);
+		})
 
 
 		socketRef.current.on('room-unactive', async (data) => {
@@ -602,11 +669,13 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			if (nextSong) {
 				setNextSong(nextSong)
 			}
+
 			if (currentSong) {
 				setcurrentSong(currentSong)
 			}
+
 			ownerRef.current = user;
-			createPeerConnection();
+			// createPeerConnection();
 		});
 
 

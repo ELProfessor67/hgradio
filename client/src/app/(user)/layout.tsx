@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { ScrollToTopButton } from "@/utils/Util";
 import Popup from "@/components/Popup";
 import { RadioProvider } from "@/context/RadioContext";
+import { LiveProvider } from "@/context/LiveContext";
 
 export const metadata: Metadata = {
   title: "Radio Station",
@@ -17,16 +18,19 @@ export default function RootLayout({
 }>) {
   return (
     <div>
-      <RadioProvider>
-      {/* <head>
+      <LiveProvider>
+
+        <RadioProvider>
+          {/* <head>
         
-      </head> */}
-      <Header />
-      {children}
-      <Footer />
-      <Popup/>
-      <ScrollToTopButton />
-      </RadioProvider>
+        </head> */}
+          <Header />
+          {children}
+          <Footer />
+          <Popup />
+          <ScrollToTopButton />
+        </RadioProvider>
+      </LiveProvider>
     </div>
   );
 }

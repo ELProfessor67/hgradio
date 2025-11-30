@@ -3,7 +3,7 @@ import { createContext, useContext } from "react";
 import { useSocketUser } from '@/hooks'
 import { REACT_PUBLIC_SOCKET_URL } from '@/constants';
 import { useState, useEffect, useRef } from 'react';
-
+import { useLive } from './LiveContext';
 
 import axios from 'axios';
 import { usePathname } from "next/navigation";
@@ -65,7 +65,7 @@ function getNextDJ(djs) {
 }
 
 
-const params = {
+export const params = {
     streamId: "655347b59c00a7409d9181c3"
 }
 
@@ -73,7 +73,7 @@ export const RadioProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [schediles, setSchedules] = useState([]);
     const [songs, setSongs] = useState([]);
-    const [isPlay, setIsPlay] = useState(false);
+    const { isPlay, setIsPlay } = useLive();
     const [message, setMessage] = useState('');
     const [name, setName] = useState('');
     const [location, setLocation] = useState('');
@@ -104,10 +104,16 @@ export const RadioProvider = ({ children }) => {
     const handlePlay = () => {
         console.log(audioRef.current.src)
         if (isPlay) {
-            audioRef.current.pause();
+            const audioElements = document.querySelectorAll('audio');
+            audioElements.forEach(audio => {
+                audio.pause();
+            });
             setIsPlay(false);
         } else {
-            audioRef.current.play();
+            const audioElements = document.querySelectorAll('audio');
+            audioElements.forEach(audio => {
+                audio.play();
+            });
             setIsPlay(true);
         }
     }
@@ -268,7 +274,7 @@ export const RadioProvider = ({ children }) => {
     }, [pathname])
     return (
         <RadioContext.Provider value={value}>
-            <audio ref={audioRef} controls className="w-full bg-none hidden" onEnded={() => handleEnded(isPlay)} onPlay={() => setIsPlay(true)} autoPlay onPause={() => setIsPlay(false)}></audio>
+            <audio ref={audioRef} controls className="w-full bg-none hidden" onEnded={() => handleEnded(isPlay)} onPlay={() => setIsPlay(true)} autoPlay onPause={() => setIsPlay(false)} id="auto-dj"></audio>
 
             {
                 pathname !== "/" &&
