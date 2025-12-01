@@ -11,6 +11,7 @@ export const LiveProvider = ({ children }) => {
     const [isLive, setIsLive] = useState(false);
     const [roomActive, setRoomActive] = useState(false);
     const [isPlay, setIsPlay] = useState(false);
+    const [IsTonePlayingMessage, setIsTonePlayingMessage] = useState(null);
 
 
     useEffect(() => {
@@ -30,6 +31,11 @@ export const LiveProvider = ({ children }) => {
         roomRef.current.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
             console.log('Track subscribed:', track.kind, participant.identity);
 
+
+            if(participant.identity === 'tone-player-bot'){
+                setIsTonePlayingMessage("Welcome Tone Playing");
+            }
+
             if(participant.identity === 'admin' && track.source == Track.Source.Microphone){
                 setIsLive(true);
                 setRoomActive(true);
@@ -42,6 +48,10 @@ export const LiveProvider = ({ children }) => {
 
         roomRef.current.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
             console.log('Track unsubscribed:', track.kind, participant.identity);
+
+            if(participant.identity === 'tone-player-bot'){
+                setIsTonePlayingMessage(null);
+            }
 
             if(participant.identity === 'admin' && track.source == Track.Source.Microphone){
                 setIsLive(false);
@@ -70,7 +80,7 @@ export const LiveProvider = ({ children }) => {
     }, []);
 
     return (
-        <LiveContext.Provider value={{ isConnected, roomRef, isLive, setIsLive, roomActive, setRoomActive, isPlay, setIsPlay }}>
+        <LiveContext.Provider value={{ isConnected, roomRef, isLive, setIsLive, roomActive, setRoomActive, isPlay, setIsPlay, IsTonePlayingMessage, setIsTonePlayingMessage }}>
             {children}
         </LiveContext.Provider>
     )

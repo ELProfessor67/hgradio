@@ -111,7 +111,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 	const peerRef = useRef({});
 	const [owner, setOwner] = useState({});
 	const ownerRef = useRef();
-	const { setIsLive, setRoomActive, isLive, roomActive } = useLive();
+	const { setIsLive, setRoomActive, isLive, roomActive, IsTonePlayingMessage, setIsTonePlayingMessage } = useLive();
 	const [scheduleActive, setScheduleActive] = useState(false);
 	
 	const [autodj, setAutoDj] = useState(false);
@@ -127,7 +127,6 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 	const myStreamRef = useRef();
 	const hlsSetAlreadyRef = useRef(false);
 	const hlsRef = useRef();
-	const [IsTonePlayingMessage, setIsTonePlayingMessage] = useState(null);
 	const [schedulePlaying, setSchedulePlaying] = useState(false);
 
 	useEffect(() => {
