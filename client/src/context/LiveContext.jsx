@@ -33,6 +33,9 @@ export const LiveProvider = ({ children }) => {
 
             if(participant.identity === 'tone-player-bot'){
                 setIsTonePlayingMessage("Welcome Tone Playing");
+                handleTrackSubscribed(track,()=>{
+                    setIsPlay(true);
+                });
             }
 
             if(participant.identity === 'admin' && track.source == Track.Source.Microphone){
@@ -41,8 +44,11 @@ export const LiveProvider = ({ children }) => {
                 const audioRef = document.getElementById('auto-dj');
                 audioRef.pause();
                 audioRef.volume = 0;
+                setIsPlay(true);
+                handleTrackSubscribed(track,()=>{
+                    setIsPlay(true);
+                });
             }
-            handleTrackSubscribed(track);
         });
 
         roomRef.current.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
@@ -65,9 +71,10 @@ export const LiveProvider = ({ children }) => {
     }, [roomRef.current]);
 
 
-    function handleTrackSubscribed(track) {
+    function handleTrackSubscribed(track,cb) {
         const audioElement = document.createElement('audio');
         audioElement.autoplay = true;
+        audioElement.addEventListener('play', cb);
         track.attach(audioElement);
         document.body.appendChild(audioElement);
     }
