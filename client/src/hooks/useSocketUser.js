@@ -255,7 +255,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 	}
 
 	const userJoin = () => {
-		socketRef.current.emit('user-join', { roomId: streamId });
+		socketRef.current.emit('user-join', { roomId: streamId },(data) => {});
 	}
 
 	// const createPeerConnection = () => {

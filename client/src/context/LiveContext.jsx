@@ -25,7 +25,6 @@ export const LiveProvider = ({ children }) => {
 
         roomRef.current.on(RoomEvent.ParticipantDisconnected, (participant) => {
             console.log('Participant disconnected:', participant.identity);
-            setParticipantCount(roomRef.current.numParticipants - 1);
         });
 
         roomRef.current.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
