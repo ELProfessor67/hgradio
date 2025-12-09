@@ -32,7 +32,7 @@ export const LiveProvider = ({ children }) => {
 
 
             if(participant.identity === 'tone-player-bot'){
-                setIsTonePlayingMessage("Welcome Tone Playing");
+                setIsTonePlayingMessage("Tone Is Playing...");
                 handleTrackSubscribed(track,()=>{
                     setIsPlay(true);
                 });

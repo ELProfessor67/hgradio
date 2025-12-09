@@ -500,7 +500,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 			setDisabledPlayBtn(true)
 			console.log("Audio started playing");
-			setIsTonePlayingMessage("Welcome Tone");
+			setIsTonePlayingMessage("Tone Is Playing...");
 
 			audioRef.current.pause();
 			audioRef.current.volume = 0;
@@ -587,7 +587,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			}
 
 			setDisabledPlayBtn(true)
-			setIsTonePlayingMessage("Ending Tone")			
+			setIsTonePlayingMessage("Tone Is Playing...")			
 		});
 
 		socketRef.current.on('ending-tone-played', (data) => {
