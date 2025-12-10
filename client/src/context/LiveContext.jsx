@@ -48,7 +48,15 @@ export const LiveProvider = ({ children }) => {
                 handleTrackSubscribed(track,()=>{
                     setIsPlay(true);
                 });
+            } 
+
+
+            if(participant.identity === 'admin' && track.source !== Track.Source.Microphone){
+                handleTrackSubscribed(track,()=>{
+                    setIsPlay(true);
+                });
             }
+             
         });
 
         roomRef.current.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
