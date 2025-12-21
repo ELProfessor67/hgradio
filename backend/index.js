@@ -6,10 +6,12 @@ import dbConnect from "./utils/dbConnect.js";
 import userAuthRoutes from "./routes/user/auth.route.js"
 import userRoutes from "./routes/user/user.route.js"
 import adminAuthRoutes from "./routes/admin/auth.route.js"
+import adminWithdrawRoutes from "./routes/admin/withdraw.route.js";
 import userContactRoutes from "./routes/public/contact.route.js";
 import SponsorRoutes from "./routes/public/sponsor.route.js";
 import publicAlbumRoutes from "./routes/public/album.route.js";
 import commentRoutes from "./routes/comment/comment.route.js";
+import userWithdrawRoutes from "./routes/user/withdraw.route.js";
 const app = express();
 dotenv.config();
 
@@ -37,8 +39,10 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/admin/auth", adminAuthRoutes);
+app.use("/api/admin/withdraw", adminWithdrawRoutes);
 app.use("/api/user/auth", userAuthRoutes);
 app.use("/api/user/", userRoutes);
+app.use("/api/user/withdraw-requests", userWithdrawRoutes);
 
 // New Added
 app.use("/api/contact", userContactRoutes);

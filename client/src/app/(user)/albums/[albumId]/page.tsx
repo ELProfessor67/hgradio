@@ -14,7 +14,9 @@ import SongNumber from "@/assets/SongNumber.jpg";
 import Comment from "@/components/Comment";
 import Ads from "@/components/Ads";
 import { PageLoading } from "@/utils/Loading";
-import BuyAlbumForm from "@/components/BuyAlbumForm";
+import { useData } from "@/context/Context";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
  const videoAds = [
     { videoSrc: "/vid1.mp4", link: "/contact" },
@@ -65,11 +67,15 @@ export type CommentType = {
 
 const Page: React.FC<PageProps> = ({ params }) => {
   const { albumId } = React.use(params);
+  const { userData } = useData();
+  const router = useRouter();
   const [comments, setComments] = useState<CommentType[] | []>([]);
   const [album, setAlbum] = useState<AlbumType | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showBuyForm, setShowBuyForm] = useState(false);
+  const [isPurchased, setIsPurchased] = useState(false);
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [upsellSongName, setUpsellSongName] = useState<string>("");
 
   const fetchAlbum = async () => {
     setLoading(true);
@@ -118,6 +124,38 @@ const Page: React.FC<PageProps> = ({ params }) => {
       fetchComments();
     }
   }, [albumId]);
+
+  useEffect(() => {
+    const checkPurchase = async () => {
+      if (!albumId) return;
+      if (!userData?.token) {
+        setIsPurchased(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/albums/${albumId}/purchase-status`,
+          {
+            headers: {
+              Authorization: `Bearer ${userData.token}`,
+            },
+          }
+        );
+        const data = await res.json();
+        if (res.ok) setIsPurchased(Boolean(data?.purchased));
+        else setIsPurchased(false);
+      } catch {
+        setIsPurchased(false);
+      }
+    };
+
+    checkPurchase();
+  }, [albumId, userData?.token]);
+
+  useEffect(() => {
+    if (isPurchased) setShowUpsell(false);
+  }, [isPurchased]);
   const formatDuration = (duration: number) => {
     const totalSeconds = Math.floor(duration); // remove decimals
     const hours = Math.floor(totalSeconds / 3600);
@@ -133,15 +171,22 @@ const Page: React.FC<PageProps> = ({ params }) => {
     }
   };
 
-  const handleBuyAlbum = (userData: any) => {
-    // Navigate to payment page with user data
-    const queryParams = new URLSearchParams({
-      albumTitle: album?.title || "",
-      albumPrice: album?.price?.toString() || "0",
-      userData: encodeURIComponent(JSON.stringify(userData)),
-    });
-    
-    window.location.href = `/payment?${queryParams.toString()}`;
+  const handleBuyAlbum = () => {
+    if (!userData?._id || !userData?.token) {
+      toast.error("Please login to purchase this album.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      router.push("/login");
+      return;
+    }
+
+    router.push(`/payment?albumId=${albumId}`);
+  };
+
+  const handlePreviewEnded = (songName?: string) => {
+    if (isPurchased) return;
+    setUpsellSongName(songName || "");
+    setShowUpsell(true);
   };
 
   // const [currentSongIndex, setCurrentSongIndex] = useState<number | null>(null);
@@ -231,11 +276,11 @@ const Page: React.FC<PageProps> = ({ params }) => {
 
               <div className=" space-y-2 text-[1.1rem] ">
                 <button
-                  onClick={() => setShowBuyForm(true)}
+                  onClick={handleBuyAlbum}
                   className=" w-[13rem] bg-[#ff9743] py-2 text-[#fff] flex items-center justify-center gap-2 hover:bg-[#e8863a] transition-colors"
                 >
                   <LuShoppingCart />
-                  <span>Buy Album Now</span>
+                  <span>{isPurchased ? "Purchased" : "Buy Album Now"}</span>
                 </button>
                 <Link
                   href={`/donate`}
@@ -311,10 +356,18 @@ const Page: React.FC<PageProps> = ({ params }) => {
                       Sample
                     </div>
                   </div>
-                  <div>{formatDuration(Number(song.duration) / 2)}</div>
+                  <div>
+                    {isPurchased
+                      ? formatDuration(Number(song.duration))
+                      : formatDuration(10)}
+                  </div>
                 </div>
 
-                <SongPlayerRow songUrl={song.url} index={idx} />
+                <SongPlayerRow
+                  songUrl={song.url}
+                  isPurchased={isPurchased}
+                  onPreviewEnded={() => handlePreviewEnded(song.name)}
+                />
               </div>
             </div>
           ))}
@@ -329,16 +382,41 @@ const Page: React.FC<PageProps> = ({ params }) => {
         />
       )}
       <Ads items={videoAds} />
-      
-      {/* Buy Album Form Modal */}
-      {album && (
-        <BuyAlbumForm
-          isOpen={showBuyForm}
-          onClose={() => setShowBuyForm(false)}
-          albumTitle={album.title}
-          albumPrice={album.price}
-          onSubmit={handleBuyAlbum}
-        />
+
+      {/* Upsell popup when preview ends */}
+      {showUpsell && !isPurchased && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-lg rounded-lg bg-[#0B1834] p-6 text-white shadow-xl border border-white/10">
+            <h3 className="text-xl font-semibold mb-2">
+              Listen to the full song
+            </h3>
+            <p className="text-gray-300">
+              {upsellSongName
+                ? `Preview ended for "${upsellSongName}".`
+                : "Preview ended."}{" "}
+              To listen to the full song, please buy this album.
+            </p>
+            <div className="mt-5 flex flex-col sm:flex-row gap-3 sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setShowUpsell(false)}
+                className="px-4 py-2 rounded bg-white/10 hover:bg-white/15 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowUpsell(false);
+                  handleBuyAlbum();
+                }}
+                className="px-4 py-2 rounded bg-second text-black font-semibold hover:bg-second/90 transition-colors"
+              >
+                Buy Now
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -348,23 +426,50 @@ export default Page;
 
 interface SongPlayerRowProps {
   songUrl: string;
-  index: number;
+  isPurchased: boolean;
+  onPreviewEnded?: () => void;
 }
 
-const SongPlayerRow: React.FC<SongPlayerRowProps> = ({ songUrl }) => {
+const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
+  songUrl,
+  isPurchased,
+  onPreviewEnded,
+}) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // percentage
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const maxPlayTimeRef = useRef(0);
+  const previewPromptedRef = useRef(false);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    const d = audioRef.current.duration;
+    if (isPurchased && Number.isFinite(d) && d > 0) {
+      maxPlayTimeRef.current = d;
+      previewPromptedRef.current = false;
+      return;
+    }
+
+    if (!isPurchased) {
+      maxPlayTimeRef.current = 10;
+      if (audioRef.current.currentTime > 10) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        setIsPlaying(false);
+        setProgress(0);
+      }
+    }
+  }, [isPurchased]);
 
   const handlePlayPause = () => {
     if (!audioRef.current) {
       const audio = new Audio(songUrl);
       audioRef.current = audio;
+      previewPromptedRef.current = false;
 
       audio.addEventListener("loadedmetadata", () => {
-        // maxPlayTimeRef.current = audio.duration * 0.5;
-        maxPlayTimeRef.current = 45; // 45 seconds
+        maxPlayTimeRef.current = isPurchased ? audio.duration : 10; // 10s preview unless purchased
       });
 
       audio.addEventListener("timeupdate", () => {
@@ -376,6 +481,10 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({ songUrl }) => {
           audio.currentTime = 0;
           setIsPlaying(false);
           setProgress(0);
+          if (!isPurchased && !previewPromptedRef.current) {
+            previewPromptedRef.current = true;
+            onPreviewEnded?.();
+          }
           return;
         }
 

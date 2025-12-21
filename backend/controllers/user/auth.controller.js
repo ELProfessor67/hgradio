@@ -12,11 +12,79 @@ export const generateToken = (userId) => {
 
 export const registerUser = async (req, res) => {
   try {
-    const userExists = await User.findOne({ email: req.body.email });
+    const {
+      name,
+      email,
+      password,
+      country,
+      city,
+      state,
+      zipCode,
+      // Consent / release form fields
+      initialGrantAuthorization,
+      initialOwnershipRepresentation,
+      initialLicensingProtection,
+      initialAffiliateUse,
+      initialWaiverCompensation,
+      initialWarranties,
+      initialIndemnification,
+      initialPublicityPromotion,
+      initialLimitationLiability,
+      initialArbitrationVenue,
+      initialGoverningLaw,
+      initialCoverageFullWorks,
+      initialEntireAgreement,
+      copyrightOwnerName,
+      copyrightOwnerSignature,
+      copyrightOwnerDate,
+      labelRepresentativeName,
+      labelRepresentativeSignature,
+      labelRepresentativeDate,
+    } = req.body || {};
+
+    if (!name || !email || !password) {
+      return res.status(400).send({
+        error: "Name, email, and password are required",
+      });
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
+    const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
       return res.status(400).send({ error: "User already exists" });
     }
-    const user = await User.create(req.body);
+
+    const user = await User.create({
+      name: String(name).trim(),
+      email: normalizedEmail,
+      password,
+      country,
+      city,
+      state,
+      zipCode,
+      role: "User",
+
+      initialGrantAuthorization,
+      initialOwnershipRepresentation,
+      initialLicensingProtection,
+      initialAffiliateUse,
+      initialWaiverCompensation,
+      initialWarranties,
+      initialIndemnification,
+      initialPublicityPromotion,
+      initialLimitationLiability,
+      initialArbitrationVenue,
+      initialGoverningLaw,
+      initialCoverageFullWorks,
+      initialEntireAgreement,
+      copyrightOwnerName,
+      copyrightOwnerSignature,
+      copyrightOwnerDate,
+      labelRepresentativeName,
+      labelRepresentativeSignature,
+      labelRepresentativeDate,
+    });
 
     const token = generateToken(user._id);
 

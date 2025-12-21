@@ -13,6 +13,7 @@ import { HiUsers } from "react-icons/hi2";
 import { FiSettings } from "react-icons/fi";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
+import { FaMoneyBillWave } from "react-icons/fa";
 
 interface SidebarProps {
   id: string;
@@ -43,20 +44,25 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
       path: `/admin-panel/${id}/contact-list`,
     },
     {
-      name: "Sponsor List",
-      icon: <LuBookOpen />,
-      path: `/admin-panel/${id}/sponsor-list`,
+      name: "Widthraw Requests",
+      icon: <FaMoneyBillWave />,
+      path: `/admin-panel/${id}/widthraw-requests`,
     },
-    {
-      name: "Requested Users",
-      icon: <HiUsers />,
-      path: `/admin-panel/${id}/requested-users`,
-    },
-    {
-      name: "Approved Users",
-      icon: <HiUsers />,
-      path: `/admin-panel/${id}/approved-users`,
-    }
+    // {
+    //   name: "Sponsor List",
+    //   icon: <LuBookOpen />,
+    //   path: `/admin-panel/${id}/sponsor-list`,
+    // },
+    // {
+    //   name: "Requested Users",
+    //   icon: <HiUsers />,
+    //   path: `/admin-panel/${id}/requested-users`,
+    // },
+    // {
+    //   name: "Approved Users",
+    //   icon: <HiUsers />,
+    //   path: `/admin-panel/${id}/approved-users`,
+    // }
   ];
 
   const items2 = [

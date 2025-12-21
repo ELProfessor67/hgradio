@@ -17,6 +17,10 @@ const albumSchema = new mongoose.Schema(
     description: { type: String, required: true },
     coverImg: { type: String, required: true },
     songs: { type: [audioSchema], default: [] },
+    // Sales metrics (updated on successful purchase)
+    salesCount: { type: Number, default: 0 },
+    totalRevenue: { type: Number, default: 0 },
+    lastSaleAt: { type: Date },
   },
   {
     timestamps: true,

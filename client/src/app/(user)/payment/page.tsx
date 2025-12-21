@@ -3,85 +3,122 @@ import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FaCreditCard, FaLock, FaShieldAlt } from "react-icons/fa";
 import { toast } from "sonner";
+import { useData } from "@/context/Context";
 
-interface PaymentData {
-  albumTitle: string;
-  albumPrice: number;
-  userData: {
-    fullName: string;
-    email: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-    consentForm: {
-      artistName: string;
-      songName: string;
-      album: string;
-      genre: string;
-      independentLabel: string;
-      initials: Record<string, string>;
-      copyrightOwnerName: string;
-      copyrightOwnerSignature: string;
-      copyrightOwnerDate: string;
-      labelRepresentativeName: string;
-      labelRepresentativeSignature: string;
-      labelRepresentativeDate: string;
-      agreedToTerms: boolean;
-    };
-  };
+interface AlbumType {
+  _id: string;
+  title: string;
+  price: number;
+  coverImg: string;
 }
 
 const PaymentPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [paymentData, setPaymentData] = useState<PaymentData | null>(null);
+  const { userData } = useData();
+  const [album, setAlbum] = useState<AlbumType | null>(null);
+  const [albumId, setAlbumId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    // Get data from URL params (in a real app, this would come from a secure session)
-    const albumTitle = searchParams.get("albumTitle");
-    const albumPrice = searchParams.get("albumPrice");
-    const userData = searchParams.get("userData");
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiry, setExpiry] = useState(""); // MM/YY or MM/YYYY
+  const [cvv, setCvv] = useState("");
+  const [cardholderName, setCardholderName] = useState("");
 
-    if (albumTitle && albumPrice && userData) {
+  useEffect(() => {
+    const id = searchParams.get("albumId");
+
+    if (!userData?.token) {
+      router.push("/login");
+      return;
+    }
+
+    if (!id) {
+      router.push("/albums");
+      return;
+    }
+
+    setAlbumId(id);
+
+    (async () => {
       try {
-        setPaymentData({
-          albumTitle,
-          albumPrice: parseFloat(albumPrice),
-          userData: JSON.parse(decodeURIComponent(userData)),
-        });
-      } catch (error) {
-        console.error("Error parsing payment data:", error);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/album/${id}`
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.message || "Failed to load album");
+        setAlbum(data);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : "Failed to load album";
+        toast.error(msg, { duration: 4000 });
         router.push("/albums");
       }
-    } else {
-      router.push("/albums");
-    }
+    })();
   }, [searchParams, router]);
 
   const handlePayment = async () => {
     setLoading(true);
-    
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    setLoading(false);
-    
-    // Show success toast
-    toast.success("Payment successful! Your album is ready for download.", {
-      duration: 4000,
-    });
 
-    // Navigate back to main page after a short delay
-    setTimeout(() => {
-      router.push("/");
-    }, 2000);
+    try {
+      if (!userData?.token) {
+        toast.error("Please login first.", { duration: 3000 });
+        router.push("/login");
+        return;
+      }
+
+      if (!albumId) {
+        toast.error("Missing album id.", { duration: 3000 });
+        return;
+      }
+
+      const exp = expiry.trim();
+      const [mmRaw, yyRaw] = exp.split("/");
+      const expiryMonth = (mmRaw || "").trim();
+      let expiryYear = (yyRaw || "").trim();
+      if (expiryYear.length === 2) expiryYear = `20${expiryYear}`;
+
+      if (!cardNumber.trim() || !expiryMonth || !expiryYear || !cvv.trim()) {
+        toast.error("Please fill card number, expiry, and CVV.", {
+          duration: 3000,
+        });
+        return;
+      }
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/albums/${albumId}/purchase`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userData.token}`,
+          },
+          body: JSON.stringify({
+            cardNumber: cardNumber.replace(/\s+/g, ""),
+            expiryMonth,
+            expiryYear,
+            cvv,
+            cardholderName,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result?.message || "Payment failed", { duration: 4000 });
+        return;
+      }
+
+      toast.success("Payment successful! Album unlocked.", { duration: 4000 });
+      router.push(`/albums/${albumId}`);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "Payment failed";
+      toast.error(msg, { duration: 4000 });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (!paymentData) {
+  if (!album) {
     return (
       <div className="min-h-screen bg-[#071022] flex items-center justify-center">
         <div className="text-white text-xl">Loading payment details...</div>
@@ -120,6 +157,8 @@ const PaymentPage = () => {
                     <input
                       type="text"
                       placeholder="1234 5678 9012 3456"
+                      value={cardNumber}
+                      onChange={(e) => setCardNumber(e.target.value)}
                       className="w-full px-3 py-2 bg-[#28344C] border border-gray-600 rounded focus:outline-none focus:border-[#66FCF1]"
                     />
                   </div>
@@ -130,6 +169,8 @@ const PaymentPage = () => {
                     <input
                       type="text"
                       placeholder="MM/YY"
+                      value={expiry}
+                      onChange={(e) => setExpiry(e.target.value)}
                       className="w-full px-3 py-2 bg-[#28344C] border border-gray-600 rounded focus:outline-none focus:border-[#66FCF1]"
                     />
                   </div>
@@ -143,6 +184,8 @@ const PaymentPage = () => {
                     <input
                       type="text"
                       placeholder="123"
+                      value={cvv}
+                      onChange={(e) => setCvv(e.target.value)}
                       className="w-full px-3 py-2 bg-[#28344C] border border-gray-600 rounded focus:outline-none focus:border-[#66FCF1]"
                     />
                   </div>
@@ -153,6 +196,8 @@ const PaymentPage = () => {
                     <input
                       type="text"
                       placeholder="John Doe"
+                      value={cardholderName}
+                      onChange={(e) => setCardholderName(e.target.value)}
                       className="w-full px-3 py-2 bg-[#28344C] border border-gray-600 rounded focus:outline-none focus:border-[#66FCF1]"
                     />
                   </div>
@@ -171,7 +216,7 @@ const PaymentPage = () => {
                   ) : (
                     <>
                       <FaLock />
-                      Pay Now - ${paymentData.albumPrice}
+                      Pay Now - ${album.price}
                     </>
                   )}
                 </button>
@@ -202,12 +247,12 @@ const PaymentPage = () => {
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-3 border-b border-gray-600">
                   <span className="text-gray-300">Album:</span>
-                  <span className="font-medium">{paymentData.albumTitle}</span>
+                  <span className="font-medium">{album.title}</span>
                 </div>
                 
                 <div className="flex justify-between items-center pb-3 border-b border-gray-600">
                   <span className="text-gray-300">Price:</span>
-                  <span className="font-medium">${paymentData.albumPrice}</span>
+                  <span className="font-medium">${album.price}</span>
                 </div>
                 
                 <div className="flex justify-between items-center pb-3 border-b border-gray-600">
@@ -217,33 +262,15 @@ const PaymentPage = () => {
                 
                 <div className="flex justify-between items-center text-lg font-bold">
                   <span>Total:</span>
-                  <span className="text-[#66FCF1]">${paymentData.albumPrice}</span>
+                  <span className="text-[#66FCF1]">${album.price}</span>
                 </div>
               </div>
 
               <div className="mt-6 p-4 bg-[#28344C] rounded">
-                <h4 className="font-medium mb-2">Billing Address</h4>
+                <h4 className="font-medium mb-2">Logged in as</h4>
                 <div className="text-sm text-gray-300">
-                  <p>{paymentData.userData.fullName}</p>
-                  <p>{paymentData.userData.address}</p>
-                  <p>{paymentData.userData.city}, {paymentData.userData.state} {paymentData.userData.zipCode}</p>
-                  <p>{paymentData.userData.country}</p>
-                </div>
-              </div>
-
-              {/* Consent Form Summary */}
-              <div className="mt-4 p-4 bg-[#28344C] rounded">
-                <h4 className="font-medium mb-2 text-[#66FCF1]">Consent Form Summary</h4>
-                <div className="text-sm text-gray-300 space-y-1">
-                  <p><span className="font-medium">Artist:</span> {paymentData.userData.consentForm.artistName}</p>
-                  <p><span className="font-medium">Song:</span> {paymentData.userData.consentForm.songName}</p>
-                  <p><span className="font-medium">Album:</span> {paymentData.userData.consentForm.album}</p>
-                  <p><span className="font-medium">Genre:</span> {paymentData.userData.consentForm.genre}</p>
-                  {paymentData.userData.consentForm.independentLabel && (
-                    <p><span className="font-medium">Label:</span> {paymentData.userData.consentForm.independentLabel}</p>
-                  )}
-                  <p><span className="font-medium">Copyright Owner:</span> {paymentData.userData.consentForm.copyrightOwnerName}</p>
-                  <p><span className="font-medium">Date Signed:</span> {paymentData.userData.consentForm.copyrightOwnerDate}</p>
+                  <p>{String(userData?.name || "")}</p>
+                  <p>{String(userData?.email || "")}</p>
                 </div>
               </div>
             </div>

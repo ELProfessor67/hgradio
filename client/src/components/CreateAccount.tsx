@@ -18,6 +18,26 @@ type FormDataType = {
   state: string;
   country: string;
   zipCode: string;
+  initialGrantAuthorization: string;
+  initialOwnershipRepresentation: string;
+  initialLicensingProtection: string;
+  initialAffiliateUse: string;
+  initialWaiverCompensation: string;
+  initialWarranties: string;
+  initialIndemnification: string;
+  initialPublicityPromotion: string;
+  initialLimitationLiability: string;
+  initialArbitrationVenue: string;
+  initialGoverningLaw: string;
+  initialCoverageFullWorks: string;
+  // NOTE: this name exists in the current UI but is used for Song/Album Information
+  initialEntireAgreement: string;
+  copyrightOwnerName: string;
+  copyrightOwnerSignature: string;
+  copyrightOwnerDate: string;
+  labelRepresentativeName: string;
+  labelRepresentativeSignature: string;
+  labelRepresentativeDate: string;
 };
 const PageWithCreateAccount = () => {
   const [showForm, setShowForm] = useState(false);
@@ -32,8 +52,27 @@ const PageWithCreateAccount = () => {
     state: "",
     country: "",
     zipCode: "",
+    initialGrantAuthorization: "",
+    initialOwnershipRepresentation: "",
+    initialLicensingProtection: "",
+    initialAffiliateUse: "",
+    initialWaiverCompensation: "",
+    initialWarranties: "",
+    initialIndemnification: "",
+    initialPublicityPromotion: "",
+    initialLimitationLiability: "",
+    initialArbitrationVenue: "",
+    initialGoverningLaw: "",
+    initialCoverageFullWorks: "",
+    initialEntireAgreement: "",
+    copyrightOwnerName: "",
+    copyrightOwnerSignature: "",
+    copyrightOwnerDate: "",
+    labelRepresentativeName: "",
+    labelRepresentativeSignature: "",
+    labelRepresentativeDate: "",
   });
-  const router = useRouter()
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const { userData, setUserData } = useData();
@@ -279,82 +318,77 @@ const PageWithCreateAccount = () => {
         </div>
       </div>
       {showForm && (
-        <div
-          ref={formRef}
-          className="relative py-20 bg-cover bg-no-repeat"
-          style={{
-            backgroundImage: `url(${bg1.src})`,
-          }}
-        >
-          <div className="absolute inset-0 bg-black/50 z-0" />
-          <div className="text-center  pb-10 relative ">
-            <h2 className="text-2xl md:text-4xl font-extrabold text-second">
-              Create Account
-            </h2>
-          </div>
-
-          <form
-            onSubmit={handleSubmit}
-            className="relative z-10 space-y-5 max-w-[1500px] mx-auto px-3"
+        <form onSubmit={handleSubmit}>
+          <div
+            ref={formRef}
+            className="relative py-20 bg-cover bg-no-repeat"
+            style={{
+              backgroundImage: `url(${bg1.src})`,
+            }}
           >
-            {[
-              { name: "name", placeholder: "Your Full Name", type: "text" },
-              { name: "email", placeholder: "Your Email", type: "email" },
-              { name: "password", placeholder: "Password", type: "password" },
-              {
-                name: "confirmPassword",
-                placeholder: "Confirm Password",
-                type: "password",
-              },
-              { name: "city", placeholder: "City", type: "text" },
-              { name: "state", placeholder: "State", type: "text" },
-              { name: "country", placeholder: "Country", type: "text" },
-              { name: "zipCode", placeholder: "Zip Code", type: "text" },
-            ]
-              .reduce((rows, field, index, array) => {
-                if (index % 2 === 0) rows.push(array.slice(index, index + 2));
-                return rows;
-              }, [] as { name: string; placeholder: string; type: string }[][])
-              .map((row, i) => (
-                <div key={i} className="flex flex-col md:flex-row gap-5">
-                  {row.map(({ name, placeholder, type }) => (
-                    <input
-                      key={name}
-                      type={type}
-                      name={name}
-                      placeholder={placeholder}
-                      value={formData[name as keyof typeof formData] || ""}
-                      onChange={handleChange}
-                      className="w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
-                      required
-                    />
-                  ))}
-                </div>
-              ))}
+            <div className="absolute inset-0 bg-black/50 z-0" />
+            <div className="text-center  pb-10 relative ">
+              <h2 className="text-2xl md:text-4xl font-extrabold text-second">
+                Create Account
+              </h2>
+            </div>
 
-          </form>
-        </div>
-      )}
-
-
-      <div className=" bg-[#071126] text-[#fff] py-[3rem] ">
-        <div className=" max-w-[1500px] mx-auto px-3 ">
-          <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
-            <h2 className=" text-[2.5rem] font-semibold ">
-              Artist’s Original Music Consent and Release Form
-            </h2>
-            <p className=" text-gray-300 ">
-              This form is required for your music to be broadcast or distributed by
-              Hallelujah Gospel Globally.
-            </p>
-            <p className=" text-gray-300 ">
-              The undersigned Artist, Band, Independent Label, Recording Company, or
-              Copyright Holder (“Copyright Owner”) hereby grants Hallelujah Gospel
-              Globally, a California Limited Liability Company, and its affiliates,
-              licensees, successors, and assigns (collectively “Hallelujah Gospel
-              Globally”) the following rights and protections:
-            </p>
+            <div className="relative z-10 space-y-5 max-w-[1500px] mx-auto px-3">
+              {[
+                { name: "name", placeholder: "Your Full Name", type: "text" },
+                { name: "email", placeholder: "Your Email", type: "email" },
+                { name: "password", placeholder: "Password", type: "password" },
+                {
+                  name: "confirmPassword",
+                  placeholder: "Confirm Password",
+                  type: "password",
+                },
+                { name: "city", placeholder: "City", type: "text" },
+                { name: "state", placeholder: "State", type: "text" },
+                { name: "country", placeholder: "Country", type: "text" },
+                { name: "zipCode", placeholder: "Zip Code", type: "text" },
+              ]
+                .reduce((rows, field, index, array) => {
+                  if (index % 2 === 0) rows.push(array.slice(index, index + 2));
+                  return rows;
+                }, [] as { name: string; placeholder: string; type: string }[][])
+                .map((row, i) => (
+                  <div key={i} className="flex flex-col md:flex-row gap-5">
+                    {row.map(({ name, placeholder, type }) => (
+                      <input
+                        key={name}
+                        type={type}
+                        name={name}
+                        placeholder={placeholder}
+                        value={formData[name as keyof typeof formData] || ""}
+                        onChange={handleChange}
+                        className="w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
+                        required
+                      />
+                    ))}
+                  </div>
+                ))}
+            </div>
           </div>
+
+          <div className=" bg-[#071126] text-[#fff] py-[3rem] ">
+            <div className=" max-w-[1500px] mx-auto px-3 ">
+              <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
+                <h2 className=" text-[2.5rem] font-semibold ">
+                  Artist’s Original Music Consent and Release Form
+                </h2>
+                <p className=" text-gray-300 ">
+                  This form is required for your music to be broadcast or distributed by
+                  Hallelujah Gospel Globally.
+                </p>
+                <p className=" text-gray-300 ">
+                  The undersigned Artist, Band, Independent Label, Recording Company, or
+                  Copyright Holder (“Copyright Owner”) hereby grants Hallelujah Gospel
+                  Globally, a California Limited Liability Company, and its affiliates,
+                  licensees, successors, and assigns (collectively “Hallelujah Gospel
+                  Globally”) the following rights and protections:
+                </p>
+              </div>
           <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
             <h3 className=" text-[1.4rem] font-semibold ">
               1. Grant of Authorization
@@ -389,8 +423,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialGrantAuthorization"
+                value={formData.initialGrantAuthorization}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -418,8 +453,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialOwnershipRepresentation"
+                value={formData.initialOwnershipRepresentation}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -464,8 +500,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialLicensingProtection"
+                value={formData.initialLicensingProtection}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -491,8 +528,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialAffiliateUse"
+                value={formData.initialAffiliateUse}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -523,8 +561,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialWaiverCompensation"
+                value={formData.initialWaiverCompensation}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -573,8 +612,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialWarranties"
+                value={formData.initialWarranties}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -595,8 +635,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialIndemnification"
+                value={formData.initialIndemnification}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -624,8 +665,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialPublicityPromotion"
+                value={formData.initialPublicityPromotion}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -647,8 +689,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialLimitationLiability"
+                value={formData.initialLimitationLiability}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -670,8 +713,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialArbitrationVenue"
+                value={formData.initialArbitrationVenue}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -690,8 +734,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialGoverningLaw"
+                value={formData.initialGoverningLaw}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -713,8 +758,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialCoverageFullWorks"
+                value={formData.initialCoverageFullWorks}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -737,8 +783,9 @@ const PageWithCreateAccount = () => {
               <input
                 className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                 type="text"
-                defaultValue=""
                 name="initialEntireAgreement"
+                value={formData.initialEntireAgreement}
+                onChange={handleChange}
               />
             </div>
           </div>
@@ -754,8 +801,10 @@ const PageWithCreateAccount = () => {
                 <input
                   className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                   type="text"
-                  defaultValue=""
                   name="copyrightOwnerName"
+                  value={formData.copyrightOwnerName}
+                  onChange={handleChange}
+                  required
                 />
               </div>
               <div className=" flex items-center gap-2 ">
@@ -765,8 +814,10 @@ const PageWithCreateAccount = () => {
                 <input
                   className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                   type="text"
-                  defaultValue=""
                   name="copyrightOwnerSignature"
+                  value={formData.copyrightOwnerSignature}
+                  onChange={handleChange}
+                  required
                 />
               </div>
               <div className=" flex items-center gap-2 ">
@@ -776,8 +827,10 @@ const PageWithCreateAccount = () => {
                 <input
                   className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                   type="date"
-                  defaultValue=""
                   name="copyrightOwnerDate"
+                  value={formData.copyrightOwnerDate}
+                  onChange={handleChange}
+                  required
                 />
               </div>
             </div>
@@ -793,8 +846,9 @@ const PageWithCreateAccount = () => {
                 <input
                   className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                   type="text"
-                  defaultValue=""
                   name="labelRepresentativeName"
+                  value={formData.labelRepresentativeName}
+                  onChange={handleChange}
                 />
               </div>
               <div className=" flex items-center gap-2 ">
@@ -804,8 +858,9 @@ const PageWithCreateAccount = () => {
                 <input
                   className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                   type="text"
-                  defaultValue=""
                   name="labelRepresentativeSignature"
+                  value={formData.labelRepresentativeSignature}
+                  onChange={handleChange}
                 />
               </div>
               <div className=" flex items-center gap-2 ">
@@ -815,21 +870,27 @@ const PageWithCreateAccount = () => {
                 <input
                   className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
                   type="date"
-                  defaultValue=""
                   name="labelRepresentativeDate"
+                  value={formData.labelRepresentativeDate}
+                  onChange={handleChange}
                 />
               </div>
             </div>
           </div>
-          <button
-            type="submit"
-            className="relative bg-second mt-10 hover:bg-transparent text-black overflow-hidden font-medium text-lg w-[10rem] h-[2.70rem] group"
-          >
-            <span className="relative z-10">Next</span>
-            <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
-          </button>
-        </div>
-      </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="relative bg-second mt-10 hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[10rem] h-[2.70rem] group"
+              >
+                <span className="relative z-10">
+                  {isLoading ? <ButtonLoading /> : "Create Account"}
+                </span>
+                <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
+              </button>
+            </div>
+          </div>
+        </form>
+      )}
 
     </div>
   );

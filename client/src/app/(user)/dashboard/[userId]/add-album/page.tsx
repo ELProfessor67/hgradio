@@ -78,13 +78,130 @@ const Form = () => {
     releaseYear: "",
     songs: [],
   });
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
   const { userData } = useData();
-  const router = useRouter()
+  const router = useRouter();
+
+  const [agreementAccepted, setAgreementAccepted] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+
+  const requestOtp = async () => {
+    if (!agreementAccepted) {
+      toast.error("Please accept the agreement first.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+    if (!userData?.token) {
+      toast.error("Please login first.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setOtpSending(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/album-otp/request`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userData.token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.message || "Failed to send OTP", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      setOtpSent(true);
+      setOtpVerified(false);
+      toast.success("OTP sent to your email.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : "Failed to send OTP";
+      toast.error(msg, {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const verifyOtp = async () => {
+    if (!agreementAccepted) {
+      toast.error("Please accept the agreement first.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    if (!otp || otp.trim().length === 0) {
+      toast.error("Please enter OTP.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setOtpVerifying(true);
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/album-otp/verify`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userData.token}`,
+          },
+          body: JSON.stringify({ otp: otp.trim(), agreementAccepted }),
+        }
+      );
+
+      const result = await response.json();
+      if (!response.ok) {
+        toast.error(result.message || "OTP verification failed", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      setOtpVerified(true);
+      toast.success("OTP verified. You can now add album.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+    } catch (error: unknown) {
+      const msg =
+        error instanceof Error ? error.message : "OTP verification failed";
+      toast.error(msg, {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true)
+
+    if (!agreementAccepted || !otpVerified) {
+      toast.error("Please accept the agreement and verify OTP first.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setLoading(true);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/add-album`,
@@ -129,7 +246,7 @@ const Form = () => {
       });
 
       setTimeout(() => {
-        router.push(`/dashboard/${userData._id}`)
+        router.push(`/dashboard/${userData._id}`);
       }, 2000);
 
     } catch (error: unknown) {
@@ -148,12 +265,14 @@ const Form = () => {
       });
       console.error("Error creating album:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className=" mt-[4rem] space-y-3 ">
+
+
       <ImageUpload formData={formData} setFormData={setFormData} />
 
       <input
@@ -215,8 +334,70 @@ const Form = () => {
       />
       <SongUpload formData={formData} setFormData={setFormData} />
 
+
+      <div className="bg-[#28344cdb] p-4 rounded-md space-y-3">
+        <div className="flex items-start gap-3">
+          <input
+            id="albumAgreement"
+            type="checkbox"
+            checked={agreementAccepted}
+            onChange={(e) => {
+              const checked = e.target.checked;
+              setAgreementAccepted(checked);
+              if (!checked) {
+                setOtpVerified(false);
+                setOtp("");
+                setOtpSent(false);
+              }
+            }}
+            className="mt-1 h-4 w-4 accent-[#66FCF1]"
+          />
+          <label htmlFor="albumAgreement" className="text-sm text-gray-200">
+            I agree to the Agreement. I understand I must verify OTP sent to my
+            email before adding an album.
+          </label>
+        </div>
+
+        <div className="flex flex-col md:flex-row gap-3 md:items-center">
+          <button
+            type="button"
+            disabled={!agreementAccepted || otpSending}
+            onClick={requestOtp}
+            className="bg-second text-[#000] px-4 py-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {otpSending ? "Sending..." : "Send OTP"}
+          </button>
+
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+            disabled={!otpSent || otpVerified}
+            className="text-[1.1rem] py-2 px-4 outline-none bg-[#222222] w-full md:max-w-[18rem] disabled:opacity-60"
+          />
+
+          <button
+            type="button"
+            disabled={!otpSent || otpVerified || otpVerifying}
+            onClick={verifyOtp}
+            className="bg-second text-[#000] px-4 py-2 font-medium disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {otpVerifying ? "Verifying..." : "Verify OTP"}
+          </button>
+
+          {otpVerified && (
+            <span className="text-green-300 font-medium">Verified</span>
+          )}
+        </div>
+      </div>
+
       <div className=" pt-[1rem] ">
-        <button disabled={loading} className=" bg-second w-[10rem] h-[2.7rem] text-[#000] relative ">
+        <button
+          disabled={loading || !agreementAccepted || !otpVerified}
+          className=" bg-second w-[10rem] h-[2.7rem] text-[#000] relative disabled:opacity-60 disabled:cursor-not-allowed "
+        >
           {
             loading ? <ButtonLoading /> : "Add Album"
           }
@@ -294,9 +475,8 @@ const SongUpload: React.FC<DataProps> = ({ formData, setFormData }) => {
         });
         setToastMessage({
           type: "Success",
-          message: `${uploadedSongs.length} song${
-            uploadedSongs.length > 1 ? "s" : ""
-          } uploaded successfully.`,
+          message: `${uploadedSongs.length} song${uploadedSongs.length > 1 ? "s" : ""
+            } uploaded successfully.`,
         });
         setTimeout(() => {
           setToastMessage({
@@ -312,8 +492,8 @@ const SongUpload: React.FC<DataProps> = ({ formData, setFormData }) => {
         error instanceof Error
           ? error.message
           : typeof error === "string"
-          ? error
-          : "An error occurred during song upload.";
+            ? error
+            : "An error occurred during song upload.";
 
       toast.error(errorMessage, {
         style: {
@@ -346,9 +526,8 @@ const SongUpload: React.FC<DataProps> = ({ formData, setFormData }) => {
       <label className="block text-lg font-semibold mb-2">Upload Songs</label>
 
       <div
-        className={`relative border-2 min-h-[13rem] border-dashed rounded-md border-gray-400 p-6 cursor-pointer hover:border-second transition-colors ${
-          loading ? "opacity-60 pointer-events-none" : ""
-        }`}
+        className={`relative border-2 min-h-[13rem] border-dashed rounded-md border-gray-400 p-6 cursor-pointer hover:border-second transition-colors ${loading ? "opacity-60 pointer-events-none" : ""
+          }`}
         onClick={() => document.getElementById("songUploadInput")?.click()}
       >
         {loading ? (
@@ -429,9 +608,8 @@ const SongUpload: React.FC<DataProps> = ({ formData, setFormData }) => {
 
       {toastMessage.message && (
         <p
-          className={`mt-2 text-center ${
-            toastMessage.type === "Error" ? "text-red-600" : "text-green-600"
-          } font-medium`}
+          className={`mt-2 text-center ${toastMessage.type === "Error" ? "text-red-600" : "text-green-600"
+            } font-medium`}
         >
           {toastMessage.message}
         </p>
@@ -510,9 +688,8 @@ const ImageUpload: React.FC<DataProps> = ({ formData, setFormData }) => {
                   coverImg: "",
                 });
               }}
-              className={` ${
-                loading ? "hidden" : ""
-              } cursor-pointer absolute right-3 top-3 p-2 z-40 shadow-inner bg-red-400 rounded-full text-[#fff] w-fit text-[1.5rem] `}
+              className={` ${loading ? "hidden" : ""
+                } cursor-pointer absolute right-3 top-3 p-2 z-40 shadow-inner bg-red-400 rounded-full text-[#fff] w-fit text-[1.5rem] `}
             >
               <FaXmark />
             </div>
@@ -553,9 +730,8 @@ const ImageUpload: React.FC<DataProps> = ({ formData, setFormData }) => {
 
       {toastMessage.type && toastMessage.message && (
         <p
-          className={` mt-1 ${
-            toastMessage.type === "Error" ? "text-red-500" : "text-green-500"
-          } `}
+          className={` mt-1 ${toastMessage.type === "Error" ? "text-red-500" : "text-green-500"
+            } `}
         >
           {toastMessage.message}
         </p>
