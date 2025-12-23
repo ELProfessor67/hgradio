@@ -441,6 +441,20 @@ export const requestAlbumOtp = async (req, res) => {
         .send({ success: false, message: "User not found" });
     }
 
+    if (user.accountType !== "seller") {
+      return res.status(403).send({
+        success: false,
+        message: "Only seller accounts can add albums.",
+      });
+    }
+
+    if (user.sellerApprovalStatus !== "approved") {
+      return res.status(403).send({
+        success: false,
+        message: "Your seller form is not approved yet. Please contact the admin.",
+      });
+    }
+
     // Basic rate limit (60s) to avoid spam
     if (user.albumOtpLastSentAt) {
       const secondsSinceLast =
@@ -508,6 +522,20 @@ export const verifyAlbumOtp = async (req, res) => {
         .send({ success: false, message: "User not found" });
     }
 
+    if (user.accountType !== "seller") {
+      return res.status(403).send({
+        success: false,
+        message: "Only seller accounts can add albums.",
+      });
+    }
+
+    if (user.sellerApprovalStatus !== "approved") {
+      return res.status(403).send({
+        success: false,
+        message: "Your seller form is not approved yet. Please contact the admin.",
+      });
+    }
+
     if (!user.albumOtpHash || !user.albumOtpExpiresAt) {
       return res.status(400).send({
         success: false,
@@ -561,6 +589,23 @@ export const createAlbum = async (req, res) => {
       return res
         .status(404)
         .send({ success: false, message: "User not found" });
+    }
+
+    if (user.accountType !== "seller") {
+      return res.status(403).send({
+        success: false,
+        message: "Only seller accounts can add albums.",
+      });
+    }
+
+    if (user.sellerApprovalStatus !== "approved") {
+      const reason = user.sellerApprovalReason
+        ? ` Reason: ${user.sellerApprovalReason}`
+        : "";
+      return res.status(403).send({
+        success: false,
+        message: `Your seller form is not approved yet. Please contact the admin.${reason}`,
+      });
     }
 
     const verifiedAt = user.albumOtpVerifiedAt

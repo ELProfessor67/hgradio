@@ -80,7 +80,7 @@ const page = () => {
 
     return (
         <div>
-            <Breadcrum mainTitle="Donate" subTitle="Donate" />
+            <Breadcrum mainTitle="Partner With Us" subTitle="Partner With Us" />
             <div className=" bg-[#071126] text-[#fff] py-[3rem] ">
                 <div className=" max-w-[900px] mx-auto px-3 ">
                     <h2 className=" text-[2.2rem] md:text-[2.6rem] font-semibold text-center pb-[1.5rem] ">Share Your Love Gift</h2>
@@ -120,7 +120,7 @@ const page = () => {
 
                         <div className=" flex justify-center pt-[0.5rem] ">
                             <button type="submit" disabled={loading} className=" bg-second relative w-[12rem] h-[2.8rem] text-[#000] font-semibold ">
-                                {loading ? <ButtonLoading /> : "Donate Now"}
+                                {loading ? <ButtonLoading /> : "Partner With Us"}
                             </button>
                         </div>
                     </form>

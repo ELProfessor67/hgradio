@@ -53,11 +53,11 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
     //   icon: <LuBookOpen />,
     //   path: `/admin-panel/${id}/sponsor-list`,
     // },
-    // {
-    //   name: "Requested Users",
-    //   icon: <HiUsers />,
-    //   path: `/admin-panel/${id}/requested-users`,
-    // },
+    {
+      name: "Requested Users",
+      icon: <HiUsers />,
+      path: `/admin-panel/${id}/requested-users`,
+    },
     // {
     //   name: "Approved Users",
     //   icon: <HiUsers />,

@@ -28,6 +28,178 @@ interface FormDataType {
   songs: SongType[];
 }
 
+const formatMaybeDate = (value: unknown) => {
+  if (!value) return "-";
+  const d = new Date(String(value));
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleDateString();
+};
+
+const AgreementField = ({ label, value }: { label: string; value: unknown }) => {
+  const display =
+    value === undefined || value === null || value === "" ? "-" : String(value);
+  return (
+    <div className="border border-white/10 p-3 bg-[#0b1834]/60">
+      <div className="text-xs text-gray-300">{label}</div>
+      <div className="text-sm text-white break-words">{display}</div>
+    </div>
+  );
+};
+
+const AgreementModal = ({
+  open,
+  onClose,
+  userData,
+}: {
+  open: boolean;
+  onClose: () => void;
+  userData: any;
+}) => {
+  if (!open) return null;
+
+  const hasAnyAgreement =
+    Boolean(userData?.initialGrantAuthorization) ||
+    Boolean(userData?.initialOwnershipRepresentation) ||
+    Boolean(userData?.initialLicensingProtection) ||
+    Boolean(userData?.initialAffiliateUse) ||
+    Boolean(userData?.initialWaiverCompensation) ||
+    Boolean(userData?.initialWarranties) ||
+    Boolean(userData?.initialIndemnification) ||
+    Boolean(userData?.initialPublicityPromotion) ||
+    Boolean(userData?.initialLimitationLiability) ||
+    Boolean(userData?.initialArbitrationVenue) ||
+    Boolean(userData?.initialGoverningLaw) ||
+    Boolean(userData?.initialCoverageFullWorks) ||
+    Boolean(userData?.initialEntireAgreement) ||
+    Boolean(userData?.copyrightOwnerName) ||
+    Boolean(userData?.copyrightOwnerSignature) ||
+    Boolean(userData?.copyrightOwnerDate) ||
+    Boolean(userData?.labelRepresentativeName) ||
+    Boolean(userData?.labelRepresentativeSignature) ||
+    Boolean(userData?.labelRepresentativeDate);
+
+  return (
+    <div className="fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center px-3">
+      <div className="w-full max-w-[1000px] bg-[#071126] border border-white/10 p-4 max-h-[85vh] overflow-y-auto text-white">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="text-xl font-semibold">Your Agreement</div>
+            <div className="text-sm text-gray-300">
+              {userData?.name || "-"} — {userData?.email || "-"}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition-all"
+          >
+            X
+          </button>
+        </div>
+
+        {!hasAnyAgreement ? (
+          <div className="mt-6 text-gray-300">
+            No saved agreement found for this account.
+          </div>
+        ) : (
+          <>
+            <div className="mt-5 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <AgreementField label="City" value={userData?.city} />
+              <AgreementField label="State" value={userData?.state} />
+              <AgreementField label="Country" value={userData?.country} />
+              <AgreementField label="Zip Code" value={userData?.zipCode} />
+            </div>
+
+            <div className="mt-6">
+              <div className="text-lg font-semibold">
+                Artist’s Original Music Consent and Release Form
+              </div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <AgreementField
+                  label="1. Grant of Authorization (Initial)"
+                  value={userData?.initialGrantAuthorization}
+                />
+                <AgreementField
+                  label="2. Ownership Representation (Initial)"
+                  value={userData?.initialOwnershipRepresentation}
+                />
+                <AgreementField
+                  label="3. Licensing Protection (Initial)"
+                  value={userData?.initialLicensingProtection}
+                />
+                <AgreementField
+                  label="4. Affiliate Use (Initial)"
+                  value={userData?.initialAffiliateUse}
+                />
+                <AgreementField
+                  label="5. Waiver of Compensation (Initial)"
+                  value={userData?.initialWaiverCompensation}
+                />
+                <AgreementField
+                  label="6. Warranties (Initial)"
+                  value={userData?.initialWarranties}
+                />
+                <AgreementField
+                  label="7. Indemnification (Initial)"
+                  value={userData?.initialIndemnification}
+                />
+                <AgreementField
+                  label="8. Publicity & Promotion (Initial)"
+                  value={userData?.initialPublicityPromotion}
+                />
+                <AgreementField
+                  label="9. Limitation of Liability (Initial)"
+                  value={userData?.initialLimitationLiability}
+                />
+                <AgreementField
+                  label="10. Arbitration / Venue (Initial)"
+                  value={userData?.initialArbitrationVenue}
+                />
+                <AgreementField
+                  label="11. Governing Law (Initial)"
+                  value={userData?.initialGoverningLaw}
+                />
+                <AgreementField
+                  label="12. Coverage of Full Works (Initial)"
+                  value={userData?.initialCoverageFullWorks}
+                />
+                <AgreementField
+                  label="Song/Album Information"
+                  value={userData?.initialEntireAgreement}
+                />
+                <AgreementField
+                  label="Copyright Owner Name"
+                  value={userData?.copyrightOwnerName}
+                />
+                <AgreementField
+                  label="Copyright Owner Signature"
+                  value={userData?.copyrightOwnerSignature}
+                />
+                <AgreementField
+                  label="Copyright Owner Date"
+                  value={formatMaybeDate(userData?.copyrightOwnerDate)}
+                />
+                <AgreementField
+                  label="Label Representative Name"
+                  value={userData?.labelRepresentativeName}
+                />
+                <AgreementField
+                  label="Label Representative Signature"
+                  value={userData?.labelRepresentativeSignature}
+                />
+                <AgreementField
+                  label="Label Representative Date"
+                  value={formatMaybeDate(userData?.labelRepresentativeDate)}
+                />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const Page = () => {
   const { userData } = useData();
 
@@ -82,14 +254,41 @@ const Form = () => {
   const { userData } = useData();
   const router = useRouter();
 
+  const accountType = (userData as any)?.accountType as
+    | "buyer"
+    | "seller"
+    | undefined;
+  const sellerApprovalStatus = (userData as any)?.sellerApprovalStatus as
+    | "not_required"
+    | "pending"
+    | "approved"
+    | "rejected"
+    | undefined;
+  const sellerApprovalReason = (userData as any)?.sellerApprovalReason as string | undefined;
+
   const [agreementAccepted, setAgreementAccepted] = useState(false);
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
+  const [showAgreementModal, setShowAgreementModal] = useState(false);
 
   const requestOtp = async () => {
+    if (accountType !== "seller") {
+      toast.error("Only seller accounts can add albums.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    if (sellerApprovalStatus !== "approved") {
+      toast.error("Your seller form is not approved yet. Please contact the admin.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
     if (!agreementAccepted) {
       toast.error("Please accept the agreement first.", {
         style: { background: "red", border: "none", color: "white" },
@@ -140,6 +339,20 @@ const Form = () => {
   };
 
   const verifyOtp = async () => {
+    if (accountType !== "seller") {
+      toast.error("Only seller accounts can add albums.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    if (sellerApprovalStatus !== "approved") {
+      toast.error("Your seller form is not approved yet. Please contact the admin.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
     if (!agreementAccepted) {
       toast.error("Please accept the agreement first.", {
         style: { background: "red", border: "none", color: "white" },
@@ -193,6 +406,20 @@ const Form = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (accountType !== "seller") {
+      toast.error("Only seller accounts can add albums.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    if (sellerApprovalStatus !== "approved") {
+      toast.error("Your seller form is not approved yet. Please contact the admin.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
 
     if (!agreementAccepted || !otpVerified) {
       toast.error("Please accept the agreement and verify OTP first.", {
@@ -268,6 +495,29 @@ const Form = () => {
       setLoading(false);
     }
   };
+
+  if (accountType !== "seller") {
+    return (
+      <div className="mt-8 bg-[#0b1834]/80 border border-white/10 p-4 text-white">
+        Only seller accounts can add albums.
+      </div>
+    );
+  }
+
+  if (sellerApprovalStatus !== "approved") {
+    return (
+      <div className="mt-8 bg-[#0b1834]/80 border border-yellow-400/30 p-4 text-white">
+        <div className="font-semibold text-yellow-300">
+          Your form is not approved. Please contact the admin.
+        </div>
+        {sellerApprovalStatus === "rejected" && sellerApprovalReason ? (
+          <div className="mt-2 text-sm text-gray-200">
+            <span className="font-medium">Reason:</span> {sellerApprovalReason}
+          </div>
+        ) : null}
+      </div>
+    );
+  }
 
   return (
     <form onSubmit={handleSubmit} className=" mt-[4rem] space-y-3 ">
@@ -352,10 +602,19 @@ const Form = () => {
             }}
             className="mt-1 h-4 w-4 accent-[#66FCF1]"
           />
-          <label htmlFor="albumAgreement" className="text-sm text-gray-200">
-            I agree to the Agreement. I understand I must verify OTP sent to my
-            email before adding an album.
-          </label>
+          <div className="text-sm text-gray-200">
+            <label htmlFor="albumAgreement">
+              I agree to the Agreement. I understand I must verify OTP sent to my
+              email before adding an album.
+            </label>{" "}
+            <button
+              type="button"
+              onClick={() => setShowAgreementModal(true)}
+              className="text-second underline hover:no-underline ml-2"
+            >
+              View Agreement
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-3 md:items-center">
@@ -403,6 +662,12 @@ const Form = () => {
           }
         </button>
       </div>
+
+      <AgreementModal
+        open={showAgreementModal}
+        onClose={() => setShowAgreementModal(false)}
+        userData={userData as any}
+      />
     </form>
   );
 };

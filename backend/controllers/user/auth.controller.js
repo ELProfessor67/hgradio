@@ -3,6 +3,45 @@ import jwt from "jsonwebtoken";
 import { sendEmail } from "../../utils/util.js";
 import crypto from "crypto";
 import { UAParser } from "ua-parser-js";
+import RegistrationOtp from "../../models/registrationOtp.model.js";
+
+const REGISTER_OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
+const REGISTER_OTP_MIN_RESEND_SECONDS = 60;
+
+const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
+
+const generateSixDigitOtp = () => String(Math.floor(100000 + Math.random() * 900000));
+
+const hashRegisterOtp = ({ email, otp }) => {
+  const secret = process.env.JWT_SECRET || "fallback_secret";
+  return crypto
+    .createHash("sha256")
+    .update(`${normalizeEmail(email)}:${String(otp).trim()}:${secret}`)
+    .digest("hex");
+};
+
+const sendOtpEmailViaMailer = async ({ email, otp }) => {
+  // Keep consistent with existing album-otp mailer approach
+  const resp = await fetch("https://mailer.rafikyconnect.net/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email,
+      subject: "Verify OTP",
+      message: `Your OTP is> ${otp}`,
+    }),
+  });
+
+  if (!resp.ok) {
+    let details = "";
+    try {
+      details = await resp.text();
+    } catch {
+      // ignore
+    }
+    throw new Error(`Failed to send OTP email. ${details}`);
+  }
+};
 
 export const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
@@ -20,6 +59,8 @@ export const registerUser = async (req, res) => {
       city,
       state,
       zipCode,
+      accountType,
+      otpToken,
       // Consent / release form fields
       initialGrantAuthorization,
       initialOwnershipRepresentation,
@@ -48,7 +89,31 @@ export const registerUser = async (req, res) => {
       });
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedEmail = normalizeEmail(email);
+
+    const effectiveAccountType =
+      accountType === "seller" || accountType === "buyer" ? accountType : "buyer";
+
+    if (effectiveAccountType === "seller") {
+      if (!otpToken) {
+        return res.status(400).send({
+          error: "OTP verification required for seller registration",
+        });
+      }
+
+      try {
+        const decoded = jwt.verify(otpToken, process.env.JWT_SECRET);
+        if (
+          !decoded ||
+          decoded.purpose !== "register_seller" ||
+          normalizeEmail(decoded.email) !== normalizedEmail
+        ) {
+          return res.status(400).send({ error: "Invalid OTP token" });
+        }
+      } catch (err) {
+        return res.status(400).send({ error: "Invalid or expired OTP token" });
+      }
+    }
 
     const userExists = await User.findOne({ email: normalizedEmail });
     if (userExists) {
@@ -64,6 +129,8 @@ export const registerUser = async (req, res) => {
       state,
       zipCode,
       role: "User",
+      accountType: effectiveAccountType,
+      sellerApprovalStatus: effectiveAccountType === "seller" ? "pending" : "not_required",
 
       initialGrantAuthorization,
       initialOwnershipRepresentation,
@@ -93,6 +160,98 @@ export const registerUser = async (req, res) => {
     res.status(201).send({ success: true, user: userData, token });
   } catch (error) {
     res.status(500).send({ error: "Server error", details: error.message });
+  }
+};
+
+export const requestRegisterOtp = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail) {
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User already exists." });
+    }
+
+    const existing = await RegistrationOtp.findOne({ email: normalizedEmail });
+    if (existing?.lastSentAt) {
+      const diffSeconds = (Date.now() - new Date(existing.lastSentAt).getTime()) / 1000;
+      if (diffSeconds < REGISTER_OTP_MIN_RESEND_SECONDS) {
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${Math.ceil(
+            REGISTER_OTP_MIN_RESEND_SECONDS - diffSeconds
+          )}s before requesting another OTP.`,
+        });
+      }
+    }
+
+    const otp = generateSixDigitOtp();
+    const otpHash = hashRegisterOtp({ email: normalizedEmail, otp });
+    const expiresAt = new Date(Date.now() + REGISTER_OTP_TTL_MS);
+
+    await RegistrationOtp.findOneAndUpdate(
+      { email: normalizedEmail },
+      { email: normalizedEmail, otpHash, expiresAt, lastSentAt: new Date(), attempts: 0 },
+      { upsert: true, new: true }
+    );
+
+    await sendOtpEmailViaMailer({ email: normalizedEmail, otp });
+
+    return res.status(200).json({ success: true, message: "OTP sent to your email." });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", details: error.message });
+  }
+};
+
+export const verifyRegisterOtp = async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail) {
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+    if (!otp || String(otp).trim().length === 0) {
+      return res.status(400).json({ success: false, message: "OTP is required." });
+    }
+
+    const record = await RegistrationOtp.findOne({ email: normalizedEmail });
+    if (!record) {
+      return res.status(400).json({ success: false, message: "OTP not found. Request a new OTP." });
+    }
+
+    if (new Date(record.expiresAt).getTime() < Date.now()) {
+      await RegistrationOtp.deleteOne({ email: normalizedEmail });
+      return res.status(400).json({ success: false, message: "OTP expired. Request a new OTP." });
+    }
+
+    const providedHash = hashRegisterOtp({ email: normalizedEmail, otp: String(otp).trim() });
+    if (providedHash !== record.otpHash) {
+      record.attempts = (record.attempts || 0) + 1;
+      await record.save();
+      return res.status(400).json({ success: false, message: "Invalid OTP." });
+    }
+
+    await RegistrationOtp.deleteOne({ email: normalizedEmail });
+
+    const token = jwt.sign(
+      { email: normalizedEmail, purpose: "register_seller" },
+      process.env.JWT_SECRET,
+      { expiresIn: "15m" }
+    );
+
+    return res.status(200).json({ success: true, message: "OTP verified.", otpToken: token });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", details: error.message });
   }
 };
 

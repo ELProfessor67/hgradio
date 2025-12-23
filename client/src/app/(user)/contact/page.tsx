@@ -78,7 +78,7 @@ const Page = () => {
                 ministries here and worldwide.
               </p>
               <Link href="/donate">
-                Click here to Donate
+                Click here to Partner With Us
                 <div className=" mt-[1rem] flex items-center gap-1 font-semibold bg-[#12c4d1] px-6 py-1  w-fit text-[#000] ">
                   <FaHeart />
                   Share Your Love Gift

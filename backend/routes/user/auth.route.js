@@ -1,11 +1,22 @@
 import express from "express";
-import { deleteUser, forgotPassword, getCurrentUser, loginUser, registerUser, resetPassword } from "../../controllers/user/auth.controller.js";
+import {
+  deleteUser,
+  forgotPassword,
+  getCurrentUser,
+  loginUser,
+  registerUser,
+  resetPassword,
+  requestRegisterOtp,
+  verifyRegisterOtp,
+} from "../../controllers/user/auth.controller.js";
 
 
 const router = express.Router();
 
 
 router.post("/register", registerUser);
+router.post("/register-otp/request", requestRegisterOtp);
+router.post("/register-otp/verify", verifyRegisterOtp);
 router.post("/login", loginUser);
 router.get("/me/:userId", getCurrentUser);
 router.delete("/delete-user/:userId", deleteUser);

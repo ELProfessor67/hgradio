@@ -23,6 +23,17 @@ const userSchema = new mongoose.Schema(
     profileImg: { type: String, default: "" },
     description: { type: String, default: "" },
     role: { type: String, enum: ["Admin", "User"], default: "User" },
+    // Account type inside "User" role
+    accountType: { type: String, enum: ["buyer", "seller"], default: "buyer" },
+    // Seller admin approval (required to add albums)
+    sellerApprovalStatus: {
+      type: String,
+      enum: ["not_required", "pending", "approved", "rejected"],
+      default: "not_required",
+    },
+    sellerApprovalReason: { type: String, default: "" },
+    sellerReviewedAt: { type: Date },
+    sellerReviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     resetPasswordToken: { type: String },
     resetPasswordExpire: { type: Date },
 

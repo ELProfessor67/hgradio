@@ -32,7 +32,7 @@ interface AlbumType {
 }
 
 const Page = () => {
-  const { userData, logout } = useData();
+  const { userData, logout, setUserData } = useData();
 
   const [hasMounted, setHasMounted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -204,7 +204,40 @@ const Page = () => {
     }
   }, [userData?.token]);
 
+  useEffect(() => {
+    // Refresh user info (approval status etc.) when entering dashboard
+    const refreshMe = async () => {
+      if (!userData?._id) return;
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/me/${userData._id}`
+        );
+        const data = await res.json();
+        if (!res.ok || !data?.user?._id) return;
+        setUserData((prev) => ({
+          ...data.user,
+          token: prev.token,
+        }));
+      } catch {
+        // ignore
+      }
+    };
+    refreshMe();
+  }, [userData?._id, setUserData]);
+
   if (!hasMounted) return <PageLoading />;
+
+  const accountType = (userData as any)?.accountType as
+    | "buyer"
+    | "seller"
+    | undefined;
+  const sellerApprovalStatus = (userData as any)?.sellerApprovalStatus as
+    | "not_required"
+    | "pending"
+    | "approved"
+    | "rejected"
+    | undefined;
+  const sellerApprovalReason = (userData as any)?.sellerApprovalReason as string | undefined;
 
   const computedTotals = albums.reduce(
     (acc, a) => {
@@ -263,13 +296,60 @@ const Page = () => {
             </div>
           </div>
           <div className=" mt-2 flex justify-end ">
-            <Link
-              href={`/dashboard/${userData._id}/add-album`}
-              className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
-            >
-              Add Album
-            </Link>
+            {accountType === "seller" &&
+              (sellerApprovalStatus === "approved" ? (
+                <Link
+                  href={`/dashboard/${userData._id}/add-album`}
+                  className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
+                >
+                  Add Album
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.error(
+                      "Your form is not approved. Please contact the admin.",
+                      {
+                        style: {
+                          background: "red",
+                          border: "none",
+                          color: "white",
+                        },
+                      }
+                    );
+                  }}
+                  disabled
+                  className=" bg-second/40 text-[#000] transition-all duration-300 ease-in-out w-[8rem] text-center py-2 cursor-not-allowed opacity-70 "
+                  title="Not approved yet"
+                >
+                  Add Album
+                </button>
+              ))}
           </div>
+
+          {accountType === "seller" && sellerApprovalStatus !== "approved" && (
+            <div className="mt-4 bg-[#0b1834]/80 border border-yellow-400/30 p-4 text-white">
+              <div className="font-semibold text-yellow-300">
+                Your form is not approved. Please contact the admin.
+              </div>
+              {sellerApprovalStatus === "pending" && (
+                <div className="text-sm text-gray-200 mt-1">
+                  Status: <span className="font-medium">Pending</span>
+                </div>
+              )}
+              {sellerApprovalStatus === "rejected" && (
+                <div className="text-sm text-gray-200 mt-1">
+                  Status: <span className="font-medium">Disapproved</span>
+                  {sellerApprovalReason ? (
+                    <div className="mt-2">
+                      <span className="font-medium">Reason:</span> {sellerApprovalReason}
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className=" mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3 ">
             <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">

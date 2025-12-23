@@ -43,6 +43,13 @@ const PageWithCreateAccount = () => {
   const [showForm, setShowForm] = useState(false);
   const formRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
+  const [accountType, setAccountType] = useState<"buyer" | "seller">("buyer");
+  const [registerOtp, setRegisterOtp] = useState("");
+  const [registerOtpToken, setRegisterOtpToken] = useState("");
+  const [registerOtpSent, setRegisterOtpSent] = useState(false);
+  const [registerOtpVerified, setRegisterOtpVerified] = useState(false);
+  const [registerOtpSending, setRegisterOtpSending] = useState(false);
+  const [registerOtpVerifying, setRegisterOtpVerifying] = useState(false);
   const [formData, setFormData] = useState<FormDataType>({
     name: "",
     email: "",
@@ -79,6 +86,9 @@ const PageWithCreateAccount = () => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    if (name === "email" && accountType === "seller") {
+      resetSellerOtpState();
+    }
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -106,6 +116,108 @@ const PageWithCreateAccount = () => {
       return "Password must include at least one special character.";
 
     return "";
+  };
+
+  const resetSellerOtpState = () => {
+    setRegisterOtp("");
+    setRegisterOtpToken("");
+    setRegisterOtpSent(false);
+    setRegisterOtpVerified(false);
+    setRegisterOtpSending(false);
+    setRegisterOtpVerifying(false);
+  };
+
+  const requestSellerOtp = async () => {
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address first.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setRegisterOtpSending(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/register-otp/request`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email.trim().toLowerCase() }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.message || data?.error || "Failed to send OTP", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      setRegisterOtpSent(true);
+      setRegisterOtpVerified(false);
+      setRegisterOtpToken("");
+      toast.success("OTP sent to your email.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send OTP", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setRegisterOtpSending(false);
+    }
+  };
+
+  const verifySellerOtp = async () => {
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address first.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    if (!registerOtp || registerOtp.trim().length === 0) {
+      toast.error("Please enter OTP.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setRegisterOtpVerifying(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/register-otp/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: formData.email.trim().toLowerCase(),
+            otp: registerOtp.trim(),
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.message || data?.error || "OTP verification failed", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      setRegisterOtpVerified(true);
+      setRegisterOtpToken(data?.otpToken || "");
+      toast.success("OTP verified. Contract form unlocked.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "OTP verification failed", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setRegisterOtpVerifying(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -145,9 +257,54 @@ const PageWithCreateAccount = () => {
       return;
     }
 
+    if (accountType === "seller" && !registerOtpVerified) {
+      toast.error("Seller account requires OTP verification to unlock contract form.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
     try {
       setIsLoading(true);
-      const { confirmPassword: _, ...cleanedData } = formData;
+      const { confirmPassword: _, ...rest } = formData;
+
+      // Buyer: only send basic fields. Seller: send basic + contract fields + otpToken.
+      const baseData = {
+        name: rest.name,
+        email: rest.email,
+        password: rest.password,
+        country: rest.country,
+        city: rest.city,
+        state: rest.state,
+        zipCode: rest.zipCode,
+        accountType,
+      };
+
+      const sellerExtra = {
+        otpToken: registerOtpToken,
+        initialGrantAuthorization: rest.initialGrantAuthorization,
+        initialOwnershipRepresentation: rest.initialOwnershipRepresentation,
+        initialLicensingProtection: rest.initialLicensingProtection,
+        initialAffiliateUse: rest.initialAffiliateUse,
+        initialWaiverCompensation: rest.initialWaiverCompensation,
+        initialWarranties: rest.initialWarranties,
+        initialIndemnification: rest.initialIndemnification,
+        initialPublicityPromotion: rest.initialPublicityPromotion,
+        initialLimitationLiability: rest.initialLimitationLiability,
+        initialArbitrationVenue: rest.initialArbitrationVenue,
+        initialGoverningLaw: rest.initialGoverningLaw,
+        initialCoverageFullWorks: rest.initialCoverageFullWorks,
+        initialEntireAgreement: rest.initialEntireAgreement,
+        copyrightOwnerName: rest.copyrightOwnerName,
+        copyrightOwnerSignature: rest.copyrightOwnerSignature,
+        copyrightOwnerDate: rest.copyrightOwnerDate,
+        labelRepresentativeName: rest.labelRepresentativeName,
+        labelRepresentativeSignature: rest.labelRepresentativeSignature,
+        labelRepresentativeDate: rest.labelRepresentativeDate,
+      };
+
+      const cleanedData =
+        accountType === "seller" ? { ...baseData, ...sellerExtra } : baseData;
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/register`,
@@ -218,6 +375,14 @@ const PageWithCreateAccount = () => {
       }, 300); // slight delay to allow form render
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    // Reset OTP + contract gate whenever switching away from seller
+    if (accountType !== "seller") {
+      resetSellerOtpState();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountType]);
 
   return (
     <div className="">
@@ -368,10 +533,83 @@ const PageWithCreateAccount = () => {
                     ))}
                   </div>
                 ))}
+
+              <div className="bg-[#0B1834] p-4 text-white space-y-3">
+                <h3 className="text-xl font-semibold">Select Account Type</h3>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="accountType"
+                      value="buyer"
+                      checked={accountType === "buyer"}
+                      onChange={() => setAccountType("buyer")}
+                    />
+                    <span className="font-medium">Buyer</span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="accountType"
+                      value="seller"
+                      checked={accountType === "seller"}
+                      onChange={() => setAccountType("seller")}
+                    />
+                    <span className="font-medium">Seller</span>
+                  </label>
+                </div>
+
+                {accountType === "seller" && (
+                  <div className="space-y-3">
+                    <p className="text-gray-200">
+                      Seller accounts require email OTP verification to unlock the contract
+                      form.
+                    </p>
+
+                    <div className="flex flex-col md:flex-row gap-3 md:items-center">
+                      <button
+                        type="button"
+                        onClick={requestSellerOtp}
+                        disabled={registerOtpSending}
+                        className="bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {registerOtpSending ? "Sending..." : "Get Contract Form"}
+                      </button>
+
+                      {registerOtpSent && !registerOtpVerified && (
+                        <div className="flex flex-col md:flex-row gap-3 md:items-center w-full">
+                          <input
+                            type="text"
+                            placeholder="Enter OTP"
+                            value={registerOtp}
+                            onChange={(e) => setRegisterOtp(e.target.value)}
+                            className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] text-white placeholder:text-white/60 "
+                          />
+                          <button
+                            type="button"
+                            onClick={verifySellerOtp}
+                            disabled={registerOtpVerifying}
+                            className="bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                          >
+                            {registerOtpVerifying ? "Verifying..." : "Verify OTP"}
+                          </button>
+                        </div>
+                      )}
+
+                      {registerOtpVerified && (
+                        <span className="text-green-300 font-semibold">
+                          OTP verified
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          <div className=" bg-[#071126] text-[#fff] py-[3rem] ">
+          {accountType === "seller" && registerOtpVerified && (
+            <div className=" bg-[#071126] text-[#fff] py-[3rem] ">
             <div className=" max-w-[1500px] mx-auto px-3 ">
               <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
                 <h2 className=" text-[2.5rem] font-semibold ">
@@ -804,7 +1042,7 @@ const PageWithCreateAccount = () => {
                   name="copyrightOwnerName"
                   value={formData.copyrightOwnerName}
                   onChange={handleChange}
-                  required
+                  required={accountType === "seller"}
                 />
               </div>
               <div className=" flex items-center gap-2 ">
@@ -817,7 +1055,7 @@ const PageWithCreateAccount = () => {
                   name="copyrightOwnerSignature"
                   value={formData.copyrightOwnerSignature}
                   onChange={handleChange}
-                  required
+                  required={accountType === "seller"}
                 />
               </div>
               <div className=" flex items-center gap-2 ">
@@ -830,7 +1068,7 @@ const PageWithCreateAccount = () => {
                   name="copyrightOwnerDate"
                   value={formData.copyrightOwnerDate}
                   onChange={handleChange}
-                  required
+                  required={accountType === "seller"}
                 />
               </div>
             </div>
@@ -877,16 +1115,28 @@ const PageWithCreateAccount = () => {
               </div>
             </div>
           </div>
+            </div>
+          </div>
+          )}
+
+          <div className="bg-[#071126] text-[#fff] py-[2rem]">
+            <div className="max-w-[1500px] mx-auto px-3">
               <button
                 type="submit"
-                disabled={isLoading}
-                className="relative bg-second mt-10 hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[10rem] h-[2.70rem] group"
+                disabled={isLoading || (accountType === "seller" && !registerOtpVerified)}
+                className="relative bg-second hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
               >
                 <span className="relative z-10">
                   {isLoading ? <ButtonLoading /> : "Create Account"}
                 </span>
                 <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
               </button>
+
+              {accountType === "seller" && !registerOtpVerified && (
+                <p className="text-gray-300 mt-3">
+                  Verify OTP to unlock the contract form and enable account creation.
+                </p>
+              )}
             </div>
           </div>
         </form>
