@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const contactSchema = new mongoose.Schema(
+const sponsorSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -50,12 +50,28 @@ const contactSchema = new mongoose.Schema(
     comment: {
       type: String,
     },
+    paymentStatus: {
+      type: String,
+      enum: ["not_required", "pending", "paid", "failed"],
+      default: function () {
+        return this.method === "gift" ? "pending" : "not_required";
+      },
+      index: true,
+    },
+    transactionId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    paidAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-const Sponsor = mongoose.model("Sponsor", contactSchema);
+const Sponsor = mongoose.model("Sponsor", sponsorSchema);
 
 export default Sponsor;

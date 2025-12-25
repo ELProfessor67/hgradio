@@ -45,6 +45,8 @@ const sendOtpEmailViaMailer = async ({ email, otp }) => {
   }
 };
 
+
+
 const chargeCardWithAuthorizeNet = async ({
   cardNumber,
   expiryMonth,

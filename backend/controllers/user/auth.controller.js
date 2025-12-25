@@ -43,6 +43,26 @@ const sendOtpEmailViaMailer = async ({ email, otp }) => {
   }
 };
 
+
+const sendResetPasswordEmailViaMailer = async ({ email, resetUrl }) => {
+  const resp = await fetch("https://mailer.rafikyconnect.net/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, subject: "Reset Your Password", message: `Click ${resetUrl} to reset your password.` }),
+  });
+
+  if (!resp.ok) {
+    let details = "";
+    try {
+      details = await resp.text();
+    } catch {
+      // ignore
+    }
+    throw new Error(`Failed to send OTP email. ${details}`);
+  }
+};
+
+
 export const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN || "30d",
@@ -393,15 +413,13 @@ export const forgotPassword = async (req, res) => {
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
     // Send email
-    await sendEmail({
-      to: user.email,
-      subject: "Reset Your Password",
-      html: `<p>Click <a href="${resetUrl}">here</a> to reset your password.</p>`,
-    });
-
-    res
-      .status(200)
-      .send({ success: true, message: "Reset link sent to email." });
+    try {
+      await sendResetPasswordEmailViaMailer({ email: user.email, resetUrl });
+      return res.status(200).send({ success: true, message: "Reset link sent to email." });
+    } catch (error) {
+      console.error("Forgot password error:", error);
+      return res.status(500).send({ success: false, message: "Server error" });
+    }
   } catch (err) {
     console.error("Forgot password error:", err);
     res.status(500).send({ success: false, message: "Server error" });
