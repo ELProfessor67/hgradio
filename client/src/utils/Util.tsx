@@ -129,20 +129,19 @@ export const HomeAds = () => {
   ];
 
   return (
-    <div>
+     <>
+       <h2 className="text-[2rem] font-bold pl-4 text-[#fff] bg-black">
+            Coming Soon
+          </h2>
+    <div className=" w-full">
       <Ads items={videoAds} />
     </div>
+     </>
   );
-};
-
+}; 
 export const Accordian = () => {
   const [isOpen, setIsOpen] = useState<number | null>(0);
   const dataArr = [
-    {
-      title: "Hallelujah Gospel Globally",
-      description:
-        "This will let you explore seamlessly the exciting array of Gospel music, events, news, Biblical truths, people, interactions, projects, concepts, and efforts while giving you a glimpse of what Hallelujah Gospel is behind the name.",
-    },
     {
       title: "Gospel Pipeline",
       description:

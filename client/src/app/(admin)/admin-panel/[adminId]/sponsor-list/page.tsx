@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { MdDeleteOutline } from "react-icons/md";
+import { useDebounce } from "use-debounce";
+import { useData } from "@/context/Context";
 
 interface Sponsor {
   _id: string;
@@ -18,17 +20,21 @@ interface Sponsor {
   amount?: number;
   otherText?: string;
   comment?: string;
+  paymentStatus?: "not_required" | "pending" | "paid" | "failed";
+  transactionId?: string;
+  paidAt?: string;
   createdAt?: string;
 }
 
 const LIMIT = 10;
 
 export default function SponsorTable() {
+  const { userData } = useData();
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 500);
   const [selectedComment, setSelectedComment] = useState("");
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [selectedSponsorId, setSelectedSponsorId] = useState("");
@@ -36,28 +42,31 @@ export default function SponsorTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Debounce search query (simple implementation)
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery);
-      setPage(1);
-    }, 500);
-    return () => clearTimeout(handler);
-  }, [searchQuery]);
+  const [method, setMethod] = useState<"" | "prayer" | "gift" | "other">("");
+  const [sponsorType, setSponsorType] = useState<"" | "program" | "individual">("");
+  const [paymentStatus, setPaymentStatus] = useState<
+    "" | "not_required" | "pending" | "paid" | "failed"
+  >("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
   const fetchSponsors = async () => {
     try {
       setLoading(true);
       setError("");
-      const res = await axios.get(
-        `${
-          process.env.NEXT_PUBLIC_BACKEND_URL
-        }/api/sponsor?search=${encodeURIComponent(
-          debouncedSearchQuery
-        )}&page=${page}&limit=${LIMIT}`
-      );
+      const params = new URLSearchParams();
+      if (debouncedSearchQuery) params.set("search", debouncedSearchQuery);
+      params.set("page", String(page));
+      params.set("limit", String(LIMIT));
+      if (method) params.set("method", method);
+      if (sponsorType) params.set("sponsorType", sponsorType);
+      if (paymentStatus) params.set("paymentStatus", paymentStatus);
+      if (startDate) params.set("startDate", startDate);
+      if (endDate) params.set("endDate", endDate);
 
-      setSponsors(res.data.data);
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sponsor?${params.toString()}`);
+
+      setSponsors(res.data.data || []);
       setTotalPages(res.data.totalPages || 1);
     } catch (err: unknown) {
       setError((err as Error).message || "Failed to fetch sponsors");
@@ -67,14 +76,21 @@ export default function SponsorTable() {
   };
 
   useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchQuery, method, sponsorType, paymentStatus, startDate, endDate]);
+
+  useEffect(() => {
     fetchSponsors();
-  }, [debouncedSearchQuery, page]);
+  }, [debouncedSearchQuery, page, method, sponsorType, paymentStatus, startDate, endDate]);
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${
-          process.env.NEXT_PUBLIC_BACKEND_URL
-        }/api/sponsor/${selectedSponsorId}`);
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sponsor/${selectedSponsorId}`,
+        userData?.token
+          ? { headers: { Authorization: `Bearer ${userData.token}` } }
+          : undefined
+      );
       toast.success("Sponsor deleted successfully",{
                 style: {
                   background: "green",
@@ -109,14 +125,58 @@ export default function SponsorTable() {
     <div>
       <h2 className="text-2xl font-semibold mb-4">Sponsors</h2>
 
-      <div className="mb-4 relative w-full md:w-[40%]">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
         <input
           type="text"
-          placeholder="Search by email..."
-          className="w-full pl-4 pr-10 py-2  bg-[#25233bb4] outline-none text-white"
+          placeholder="Search (email/name/target)..."
+          className="w-full pl-4 pr-4 py-2 bg-[#25233bb4] outline-none text-white"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
+        <select
+          className="w-full px-3 py-2 bg-[#25233bb4] outline-none text-white"
+          value={method}
+          onChange={(e) => setMethod(e.target.value as any)}
+        >
+          <option value="">All methods</option>
+          <option value="prayer">Prayer and Fasting</option>
+          <option value="gift">Love Gift</option>
+          <option value="other">Other</option>
+        </select>
+        <select
+          className="w-full px-3 py-2 bg-[#25233bb4] outline-none text-white"
+          value={sponsorType}
+          onChange={(e) => setSponsorType(e.target.value as any)}
+        >
+          <option value="">All sponsor types</option>
+          <option value="program">Program</option>
+          <option value="individual">Individual</option>
+        </select>
+        <select
+          className="w-full px-3 py-2 bg-[#25233bb4] outline-none text-white"
+          value={paymentStatus}
+          onChange={(e) => setPaymentStatus(e.target.value as any)}
+        >
+          <option value="">All payment statuses</option>
+          <option value="not_required">Not required</option>
+          <option value="pending">Pending</option>
+          <option value="paid">Paid</option>
+          <option value="failed">Failed</option>
+        </select>
+        <div className="grid grid-cols-2 gap-2">
+          <input
+            type="date"
+            className="w-full px-3 py-2 bg-[#25233bb4] outline-none text-white"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+          />
+          <input
+            type="date"
+            className="w-full px-3 py-2 bg-[#25233bb4] outline-none text-white"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+          />
+        </div>
       </div>
 
       {loading ? (
@@ -141,6 +201,8 @@ export default function SponsorTable() {
                   <th className="px-6 py-3">Target</th>
                   <th className="px-6 py-3">Method</th>
                   <th className="px-6 py-3">Amount</th>
+                  <th className="px-6 py-3">Payment</th>
+                  <th className="px-6 py-3">Date</th>
                   <th className="px-6 py-3">Comment</th>
                   <th className="px-6 py-3">Action</th>
                 </tr>
@@ -148,7 +210,7 @@ export default function SponsorTable() {
               <tbody>
                 {sponsors.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="text-center py-6 text-gray-400 italic">
+                    <td colSpan={12} className="text-center py-6 text-gray-400 italic">
                       No sponsors found.
                     </td>
                   </tr>
@@ -166,7 +228,9 @@ export default function SponsorTable() {
                         {sponsor.organization || "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap"> {sponsor.sponsorType.charAt(0).toUpperCase() + sponsor.sponsorType.slice(1)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{sponsor.sponsorTarget.charAt(0).toUpperCase() + sponsor.sponsorType.slice(1)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {sponsor.sponsorTarget}
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
                           className={`px-2 py-1 rounded-full  ${
@@ -177,11 +241,22 @@ export default function SponsorTable() {
                               : "bg-yellow-200 text-yellow-800"
                           }`}
                         >
-                          {sponsor.method.charAt(0).toUpperCase() + sponsor.sponsorType.slice(1)}
+                          {sponsor.method.charAt(0).toUpperCase() + sponsor.method.slice(1)}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {sponsor.amount ? `$${sponsor.amount}` : "—"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {sponsor.paymentStatus ? sponsor.paymentStatus.replace("_", " ") : "—"}
+                        {sponsor.transactionId ? (
+                          <div className="text-xs text-gray-300">
+                            Tx: {sponsor.transactionId}
+                          </div>
+                        ) : null}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {sponsor.createdAt ? new Date(sponsor.createdAt).toLocaleDateString() : "—"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap max-w-xs">
                         {sponsor.comment && sponsor.comment.length > 20 ? (

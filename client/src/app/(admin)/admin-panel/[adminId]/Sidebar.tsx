@@ -44,15 +44,15 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
       path: `/admin-panel/${id}/contact-list`,
     },
     {
+      name: "Sponsor List",
+      icon: <LuBookOpen />,
+      path: `/admin-panel/${id}/sponsor-list`,
+    },
+    {
       name: "Widthraw Requests",
       icon: <FaMoneyBillWave />,
       path: `/admin-panel/${id}/widthraw-requests`,
     },
-    // {
-    //   name: "Sponsor List",
-    //   icon: <LuBookOpen />,
-    //   path: `/admin-panel/${id}/sponsor-list`,
-    // },
     {
       name: "Requested Users",
       icon: <HiUsers />,

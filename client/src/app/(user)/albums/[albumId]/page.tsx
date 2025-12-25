@@ -290,7 +290,7 @@ const Page: React.FC<PageProps> = ({ params }) => {
                   <span>Share Love Gift</span>
                 </Link>
                 <Link
-                  href={`#`}
+                  href={`/albums/sell-album`}
                   className=" w-[13rem] bg-[#28c76f] py-2 text-[#fff] flex items-center justify-center gap-2 "
                 >
                   <FaMusic />

@@ -535,12 +535,12 @@ const Page = () => {
                   href={`/dashboard/${userData._id}/albums/${album._id}`}
                   className=" group block "
                 >
-                  <div className=" w-full h-[17rem] relative overflow-hidden ">
+                  <div className=" w-full h-[17rem] relative overflow-hidden border border-white/10">
                     <Image
                       src={album.coverImg}
                       alt="Cover img"
                       fill
-                      className=" object-cover group-hover:scale-110 transition-all duration-300 ease-in-out "
+                      className="group-hover:scale-110 transition-all duration-300 ease-in-out object-contain"
                     />
                     <div className=" absolute top-2 left-2 flex gap-2 ">
                       <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">

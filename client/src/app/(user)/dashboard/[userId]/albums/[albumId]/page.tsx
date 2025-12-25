@@ -308,12 +308,12 @@ const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
         {album && !loading && (
           <div className=" mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4 ">
             <div className=" lg:col-span-1 bg-[#0b1834]/80 border border-white/10 p-4 ">
-              <div className=" w-full h-[18rem] relative overflow-hidden border border-white/10 ">
+              <div className=" w-full h-[18rem] relative overflow-hidden border border-white/10 object-contain ">
                 <Image
                   src={album.coverImg}
                   alt="Album cover"
                   fill
-                  className=" object-cover "
+                  className=" object-contain "
                 />
               </div>
 

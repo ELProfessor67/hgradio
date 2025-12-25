@@ -958,12 +958,12 @@ const ImageUpload: React.FC<DataProps> = ({ formData, setFormData }) => {
             >
               <FaXmark />
             </div>
-            <div className=" w-full h-[20rem] relative ">
+            <div className=" w-full h-[20rem] relative border border-white/10 ">
               <Image
                 src={formData.coverImg}
                 alt="Album Cover Img"
                 fill
-                className=" w-full h-full object-cover  "
+                className=" w-full h-full object-contain  "
               />
             </div>
           </div>

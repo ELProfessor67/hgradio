@@ -2,12 +2,13 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import Breadcrum from "@/components/Breadcrum";
 import Sponsor1 from "@/assets/Sponsor1.jpg";
 // import { toast } from "sonner";
 import { toast } from "sonner";
 import { ButtonLoading } from "@/utils/Loading";
+import { FaCreditCard } from "react-icons/fa";
 
 const Page = () => {
   return (
@@ -31,10 +32,20 @@ const Form = () => {
     method: "",
     comment: "",
   });
-    const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const [amount, setAmount] = useState("");
   const [otherText, setOtherText] = useState("");
+
+  const [cardNumber, setCardNumber] = useState("");
+  const [expiryMonth, setExpiryMonth] = useState("");
+  const [expiryYear, setExpiryYear] = useState("");
+  const [cvv, setCvv] = useState("");
+
+  const years = useMemo(() => {
+    const current = new Date().getFullYear();
+    return Array.from({ length: 12 }, (_, i) => String(current + i));
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -47,33 +58,99 @@ const Form = () => {
     setFormData((prev) => ({ ...prev, method }));
     if (method !== "gift") setAmount("");
     if (method !== "other") setOtherText("");
+    if (method !== "gift") {
+      setCardNumber("");
+      setExpiryMonth("");
+      setExpiryYear("");
+      setCvv("");
+    }
   };
 
   const handleSubmit = async () => {
-    setLoading(true)
+    // Basic validation (keep it lightweight but avoid DB validation errors)
+    if (!formData.name.trim()) {
+      toast.error("Name is required", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error("Email is required", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+    if (!formData.sponsorType) {
+      toast.error("Please select sponsor type", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+    if (!formData.sponsorTarget.trim()) {
+      toast.error("Please enter sponsor target", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+    if (!formData.method) {
+      toast.error("Please select sponsorship method", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+    if (formData.method === "gift") {
+      const amt = Number(amount);
+      if (!amt || amt <= 0) {
+        toast.error("Please enter a valid amount", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
+      if (!/^\d{13,19}$/.test(cardNumber.replace(/\s+/g, ""))) {
+        toast.error("Enter a valid card number", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
+      if (!/^\d{2}$/.test(expiryMonth) || Number(expiryMonth) < 1 || Number(expiryMonth) > 12) {
+        toast.error("Enter valid expiry month", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
+      if (!/^\d{4}$/.test(expiryYear)) {
+        toast.error("Enter valid expiry year", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
+      if (!/^\d{3,4}$/.test(cvv)) {
+        toast.error("Enter valid CVV", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
+    }
+    if (formData.method === "other" && !otherText.trim()) {
+      toast.error("Please specify other method", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+
+    setLoading(true);
     try {
-      const payload: Record<string, any> = {
+      const basePayload: Record<string, any> = {
         ...formData,
       };
 
-      if (formData.method === "gift" && amount) {
-        payload.amount = amount;
-      }
+      if (formData.method === "other" && otherText) basePayload.otherText = otherText;
 
-      if (formData.method === "other" && otherText) {
-        payload.otherText = otherText;
-      }
+      let res: Response;
 
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sponsor`,
-        {
+      if (formData.method === "gift") {
+        res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sponsor/process-payment`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+          body: JSON.stringify({
+            sponsorData: basePayload,
+            payment: {
+              amount: Number(amount),
+              cardNumber: cardNumber.replace(/\s+/g, ""),
+              expiryMonth,
+              expiryYear,
+              cvv,
+            },
+          }),
+        });
+      } else {
+        res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/sponsor`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(basePayload),
+        });
+      }
 
-      if (!res.ok) throw new Error("Failed to submit");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.message || "Failed to submit");
 
       toast.success("Sponsorship submitted!",{
                 style: {
@@ -94,6 +171,10 @@ const Form = () => {
       });
       setAmount("");
       setOtherText("");
+      setCardNumber("");
+      setExpiryMonth("");
+      setExpiryYear("");
+      setCvv("");
     } catch (err) {
       toast.error("Submission failed",{
                 style: {
@@ -102,8 +183,8 @@ const Form = () => {
                   color : "white"
                 },
               });
-    }finally{
-      setLoading(false)
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -259,13 +340,64 @@ const Form = () => {
             </div>
 
             {formData.method === "gift" && (
-              <input
-                type="number"
-                placeholder="Amount (USD)"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none"
-              />
+              <div className="space-y-4">
+                <input
+                  type="number"
+                  placeholder="Amount (USD)"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none"
+                />
+
+                <div className="space-y-3 bg-[#28344cdb] p-4">
+                  <p className="font-semibold flex items-center gap-2">
+                    <FaCreditCard className="text-second" /> Card Details
+                  </p>
+
+                  <input
+                    value={cardNumber}
+                    onChange={(e) => setCardNumber(e.target.value)}
+                    placeholder="Card Number"
+                    inputMode="numeric"
+                    className="text-[1.1rem] py-3 px-4 bg-black/20 w-full outline-none"
+                  />
+
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <input
+                      value={expiryMonth}
+                      onChange={(e) => setExpiryMonth(e.target.value)}
+                      placeholder="MM"
+                      inputMode="numeric"
+                      maxLength={2}
+                      className="text-[1.1rem] py-3 px-4 bg-black/20 w-full outline-none"
+                    />
+                    <select
+                      value={expiryYear}
+                      onChange={(e) => setExpiryYear(e.target.value)}
+                      className="text-[1.1rem] py-3 px-4 bg-black/20 w-full outline-none"
+                    >
+                      <option value="">YYYY</option>
+                      {years.map((y) => (
+                        <option key={y} value={y}>
+                          {y}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      value={cvv}
+                      onChange={(e) => setCvv(e.target.value)}
+                      placeholder="CVV"
+                      inputMode="numeric"
+                      maxLength={4}
+                      className="text-[1.1rem] py-3 px-4 bg-black/20 w-full outline-none"
+                    />
+                  </div>
+
+                  <p className="text-sm text-gray-200">
+                    This form processes a real card payment via Authorize.Net if your backend keys are set.
+                  </p>
+                </div>
+              </div>
             )}
 
             {formData.method === "other" && (
