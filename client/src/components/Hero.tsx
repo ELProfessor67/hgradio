@@ -33,7 +33,7 @@ const Hero = () => {
             Uplifting spirits with divine melodies
           </h1>
         </div>
-        <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem]">
+        <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem]" style={{marginBottom: "3rem"}}>
           Hallelujah Choice Radio Gospel Charting God&apos;s Enormous Blessings
           Below.
         </div>

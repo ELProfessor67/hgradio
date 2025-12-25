@@ -143,27 +143,27 @@ export const Accordian = () => {
   const [isOpen, setIsOpen] = useState<number | null>(0);
   const dataArr = [
     {
-      title: "Gospel Pipeline",
+      title: "Gospel Pipeline (Coming Soon 2026-2027)",
       description:
         "Are you in search of better-quality faith-building videos? This is the venue to stream family-friendly videos or make one yourself. Watch and share top videos and inspiring movies or upload your own Christian-themed content.",
     },
     {
-      title: "Gospel Store",
+      title: "Gospel Store (Coming Soon 2026-2027)",
       description:
         "Shop smarter at Hallelujah Gospel Online. Enjoy irresistible prices and exclusive deals. Discover a wider selection of top-grade goods. Take delight in terrific gift ideas for a variety of occasions. Save more on bundled products. Browse personalized promotional merchandise.",
     },
     {
-      title: "Gospel Scroll Pages (Social Media)",
+      title: "Gospel Scroll Pages (Social Media) (Coming Soon 2026-2027)",
       description:
         "If you're ready for something different, what we are offering is the best new alternative to social media as we know it. We've made Scroll Pages like a breath of fresh air - with less ad targeting and more secure sharing so that you can communicate with the people in your life in every sense of the word.",
     },
     {
-      title: "Gospel Classifieds",
+      title: "Gospel Classifieds (Coming Soon 2026-2027)",
       description:
         "Hallelujah Classifieds promises to find the perfect match for the ad you are looking for and to house your next cost-free campaign with only a few clicks of the mouse. This is the ultimate marketplace to advertise or check out location-based listings for practically everything you need. If you want to connect with prospective clients or just get the word out about your company, you can't go wrong with Hallelujah Classifieds.",
     },
     {
-      title: "Gospel Forum",
+      title: "Gospel Forum (Coming Soon 2026-2027)",
       description:
         "Our Gospel Forum is a wonderful avenue for you to connect and find fellowship with like-minded individuals. We have numerous forums, sub forums and several topics that will encourage you and meet your need for a supportive community no matter where you are in your Christian walk.",
     },

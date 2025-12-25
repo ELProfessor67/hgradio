@@ -196,7 +196,7 @@ const Header = () => {
         <div className=" flex items-center gap-4 ">
           <Link
             href={`/sponsor`}
-            className=" lg:block hidden text-[1.1rem] px-7 py-2  bg-white text-[#000] "
+            className=" lg:block hidden text-[1.1rem] px-7 py-2  bg-[#0d2c7b] text-white "
           >
             Sponsor
           </Link>
@@ -239,7 +239,7 @@ const Header = () => {
           <Link href="/schedule" onClick={() => setIsOpenSidebar(false)} className="py-2 border-b ">
             Schedule
           </Link>
-          <Link href="/studio-engineers" onClick={() => setIsOpenSidebar(false)} className="py-2 border-b ">
+          <Link href="/studio-engineers" onClick={() => setIsOpenSidebar(false)} className="py-2 border-b">
             Studio Engineers
           </Link>
           {/* Albums with Toggle */}
@@ -313,7 +313,7 @@ const Header = () => {
           </Link>
           <Link
             href={`/sponsor`} onClick={() => setIsOpenSidebar(false)}
-            className="  text-[1.1rem] px-7 py-2  text-center bg-white text-[#000] "
+            className="  text-[1.1rem] px-7 py-2  text-center bg-[#0d2c7b] text-white "
           >
             Sponsor
           </Link>

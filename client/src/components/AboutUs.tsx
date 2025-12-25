@@ -141,7 +141,7 @@ export const Stats = () => {
 
         <div className=" md:w-[60%] grid grid-cols-2 gap-5 ">
           <div className=" text-[#fff] font-semibold bg-[#2f3237] text-center  py-[2.5rem] ">
-            <div className=" text-[1.2rem] text-second ">Be in 2B+</div>
+            <div className=" text-[1.2rem] text-second ">Be one of 2B+</div>
             <div className=" text-[1.4rem] ">Listeners</div>
           </div>
           <div className=" text-[#fff] font-semibold bg-[#2f3237] text-center  py-[2.5rem] ">

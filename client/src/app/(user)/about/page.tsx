@@ -51,7 +51,7 @@ const Daily = () => {
 
       <div className=" text-center leading-tight mb-[5rem] ">
         <div className="text-[2rem] font-semibold text-second mb-2 ">
-          05 Aug 2025
+          25 Dec 2025
         </div>
         <h2 className="text-[3rem] font-bold mb-6 text-[#fff] ">
           Daily Devotions
@@ -180,8 +180,8 @@ const Stats = () => {
           <h3 className=" text-second text-[2rem] font-semibold ">
             Music Shows
           </h3>
-          <div className=" text-[3rem] lg:text-[4rem] font-bold leading-tight ">
-            Best Online Gospel Radio Station
+          <div className=" text-[2rem] lg:text-[3rem] font-bold leading-tight ">
+          <span className="text-green-400">Vision:</span> Serving Over 2.6 Billion People One Faith, One Future.
           </div>
           <p className=" text-lg my-[2rem] lg:my-[3rem] text-gray-200 ">
             Let the soul-stirring melodies of gospel music uplift you on our
@@ -189,7 +189,7 @@ const Stats = () => {
           </p>
           <div className=" grid grid-cols-3 gap-3 ">
             <div className="  font-semibold leading-tight ">
-              <div className=" text-[3rem] text-second ">10k+</div>
+              <div className=" text-[2rem] text-second ">Be one of <br/>2B+</div>
               <div className=" text-[2rem] ">Listeners</div>
             </div>
             <div className="  font-semibold leading-tight ">
