@@ -1,4 +1,5 @@
 import Album from "../../models/album.model.js";
+import UserModel from "../../models/user.model.js";
 
 export const getAllAlbums = async (req, res) => {
   try {
@@ -16,19 +17,37 @@ export const getAllAlbums = async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    const filter = search ? { title: { $regex: search, $options: "i" } } : {};
+    // // search by title, artist name, artist email
+    
 
-    const totalAlbums = await Album.countDocuments(filter);
+    const artistFilter = search ? {
+      $or: [
+        { name: { $regex: search, $options: "i" } }
+      ]
+    } : {};
+
+    const artist = await UserModel.find(artistFilter);
+
+    const filter = search ? {
+      $or: [
+        { title: { $regex: search, $options: "i" } },
+        ...artist.map(artist => ({ "artist": artist._id })),
+      ]
+    } : {};
+
+    const totalAlbums = await Album.countDocuments(filter).populate("artist", "_id name profileImg");
     const totalPages = Math.ceil(totalAlbums / limit);
 
     const albums = await Album.find(filter)
-      .populate("artist", "name profileImg")
+      .populate("artist", "_id name profileImg")
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .select("-songs");;
 
-      console.log(albums);
+      // console.log(albums);
+
+    
       
 
     res.status(200).json({
