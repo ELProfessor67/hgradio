@@ -104,6 +104,36 @@ export const deleteSponsor = async (req, res) => {
 };
 
 
+const sendSponsorPaymentEmailViaMailer = async ({ email, name, amount, transactionId }) => {
+  const resp = await fetch("https://mailer.rafikyconnect.net/send-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, subject: "Sponsorship Payment Successful", message: `Sponsorship payment successful! 🎉
+
+Hello ${String(name || "")},
+
+Thank you for your Love Gift sponsorship to HG Radio Station.
+
+Amount: ${amount}
+Transaction ID: ${String(transactionId || "")}
+Date: ${new Date().toLocaleDateString()}
+
+Best regards,
+The HG Radio Station Team
+` }),
+  });
+
+  if (!resp.ok) {
+    let details = "";
+    try {
+      details = await resp.text();
+    } catch {
+      // ignore
+    }
+    throw new Error(`Failed to send OTP email. ${details}`);
+  }
+};
+
 export const processSponsorPayment = async (req, res) => {
   try {
     const {
@@ -238,10 +268,11 @@ Best regards,
 HG Radio Station Team
 `;
       if (sponsor?.email) {
-        await sendEmail({
-          to: sponsor.email,
-          subject: "Sponsorship payment successful! 🎉",
-          html: message,
+        await sendSponsorPaymentEmailViaMailer({
+          email: sponsor.email,
+          name: sponsor.name,
+          amount: amountNum,
+          transactionId: result.transactionId,
         });
       }
     } catch (e) {

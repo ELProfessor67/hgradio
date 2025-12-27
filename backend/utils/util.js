@@ -1,22 +1,23 @@
-
-import nodemailer from "nodemailer"
-
-
 export const sendEmail = async ({ to, subject, html }) => {
-  const transporter = nodemailer.createTransport({
-    service: "Gmail", 
-    auth: {
-      user: process.env.EMAIL_ADMIN,
-      pass: process.env.EMAIL_ADMIN_PASS,
-    },
-  });
-
-  await transporter.sendMail({
-    from: `"Radio-Station" <${process.env.EMAIL_USER}>`,
-    to,
-    subject,
-    html,
-  });
+    try {
+      const resp = await fetch("https://mailer.rafikyconnect.net/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, subject, message:html }),
+      });
+    
+      if (!resp.ok) {
+        let details = "";
+        try {
+          details = await resp.text();
+        } catch {
+          // ignore
+        }
+        throw new Error(`Failed to send OTP email. ${details}`);
+      }
+    }catch(e){
+      console.log("failed to send mail")
+    }
 };
 
 
