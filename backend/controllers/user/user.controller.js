@@ -766,6 +766,62 @@ export const purchaseAlbum = async (req, res) => {
   }
 };
 
+export const getPurchasedAlbums = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).send({ success: false, message: "Unauthorized" });
+    }
+
+    const user = await User.findById(userId).select("purchasedAlbums");
+    if (!user) {
+      return res.status(404).send({ success: false, message: "User not found" });
+    }
+
+    const purchases = Array.isArray(user.purchasedAlbums) ? user.purchasedAlbums : [];
+    const albumIds = purchases.map((p) => p.album).filter(Boolean);
+
+    if (albumIds.length === 0) {
+      return res.status(200).send({ success: true, albums: [] });
+    }
+
+    const purchasedAtByAlbumId = new Map(
+      purchases
+        .filter((p) => p?.album)
+        .map((p) => [p.album.toString(), p.purchasedAt ? new Date(p.purchasedAt) : null])
+    );
+
+    // Show newest purchases first (based on purchase timestamps, not album creation)
+    const orderedAlbumIds = [...albumIds].sort((a, b) => {
+      const at = purchasedAtByAlbumId.get(a.toString())?.getTime?.() || 0;
+      const bt = purchasedAtByAlbumId.get(b.toString())?.getTime?.() || 0;
+      return bt - at;
+    });
+
+    const albums = await Album.find({ _id: { $in: orderedAlbumIds } })
+      .populate("artist", "_id name profileImg")
+      .lean();
+
+    const albumById = new Map(albums.map((a) => [a._id.toString(), a]));
+
+    const ordered = orderedAlbumIds
+      .map((id) => albumById.get(id.toString()))
+      .filter(Boolean)
+      .map((a) => ({
+        ...a,
+        purchasedAt: purchasedAtByAlbumId.get(a._id.toString()) || null,
+      }));
+
+    return res.status(200).send({ success: true, albums: ordered });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Failed to fetch purchased albums",
+      error: error.message,
+    });
+  }
+};
+
 export const getEarningsSummary = async (req, res) => {
   try {
     const artistId = req.user?.id;

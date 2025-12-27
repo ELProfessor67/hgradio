@@ -4,6 +4,7 @@ import {
   changePassword,
   createAlbum,
   getAlbumsByArtist,
+  getPurchasedAlbums,
   getEarningsSummary,
   getOwnedAlbumById,
   updateOwnedAlbum,
@@ -26,6 +27,7 @@ router.post("/album-otp/request", protect, requestAlbumOtp);
 router.post("/album-otp/verify", protect, verifyAlbumOtp);
 
 router.get("/earnings-summary", protect, getEarningsSummary);
+router.get("/purchased-albums", protect, getPurchasedAlbums);
 
 router.get("/albums/:albumId/purchase-status", protect, getAlbumPurchaseStatus);
 router.post("/albums/:albumId/purchase", protect, purchaseAlbum);

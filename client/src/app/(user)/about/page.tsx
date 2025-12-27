@@ -1,3 +1,4 @@
+"use client";
 import Breadcrum from "@/components/Breadcrum";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,7 +12,7 @@ import { Accordian } from "@/utils/Util";
 import Review1 from "@/assets/Review1.jpg";
 import HAbout4 from "@/assets/HAbout4.png";
 import Ads from "@/components/Ads";
-
+import { useState } from "react";
 
 
 const page = () => {
@@ -181,7 +182,7 @@ const Stats = () => {
             Music Shows
           </h3>
           <div className=" text-[2rem] lg:text-[3rem] font-bold leading-tight ">
-          <span className="text-green-400">Vision:</span> Serving Over 2.6 Billion People One Faith, One Future.
+            <span className="text-green-400">Vision:</span> Serving Over 2.6 Billion People One Faith, One Future.
           </div>
           <p className=" text-lg my-[2rem] lg:my-[3rem] text-gray-200 ">
             Let the soul-stirring melodies of gospel music uplift you on our
@@ -189,7 +190,7 @@ const Stats = () => {
           </p>
           <div className=" grid grid-cols-3 gap-3 ">
             <div className="  font-semibold leading-tight ">
-              <div className=" text-[2rem] text-second ">Be one of <br/>2B+</div>
+              <div className=" text-[2rem] text-second ">Be one of <br />2B+</div>
               <div className=" text-[2rem] ">Listeners</div>
             </div>
             <div className="  font-semibold leading-tight ">
@@ -240,10 +241,11 @@ const Websites = () => {
 };
 
 const AboutUs = () => {
+  const [expanded, setExpanded] = useState(false);
   return (
     <div className=" relative py-[3rem] bg-[#1f2226] ">
-      <div className="     ">
-        <div className=" max-w-[1500px] mx-auto px-3 flex py-[1rem] md:flex-row flex-col md:gap-0 gap-5  ">
+      <div className=" max-w-[1300px] mx-auto px-3 ">
+        <div className=" max-w-[1300px] mx-auto px-3 flex py-[1rem] md:flex-row flex-col md:gap-0 gap-5  ">
           <div className="flex-1 relative flex sm:justify-start justify-center overflow-hidden ">
             <div className=" sm:flex hidden absolute bottom-0 right-0 -z-0 h-full items-center">
               <Image
@@ -279,18 +281,43 @@ const AboutUs = () => {
                   uplifting and encouraging, so please enjoy the station and
                   allow us to be a blessing to you.
                 </p>
+
+                {expanded && <>
+
+                  <p className=" my-2">
+                    Whatever the day brings, we are here to keep you company.
+                    It is our prayer that you will come with an expectant heart and let the Lord minister to you.
+                    And remember to invite your family and friends, so that they,
+                    too, will experience the anointing and feel the jubilance in their spirit.
+                  </p>
+                </>}
               </div>
-              <div className="  ">
-                <Link
-                  href={`#`}
-                  className="  px-8 py-3 bg-second font-semibold text-[#000] "
-                >
-                  See More
-                </Link>
-              </div>
+              {!expanded && <>
+                <div className="">
+                  <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="  px-8 py-3 bg-second font-semibold text-[#000] "
+                  >
+                    See More
+                  </button>
+                </div>
+              </>}
             </div>
           </div>
         </div>
+
+        {expanded && <>
+          <p className=" my-2 text-white text-lg">
+            It's all about praising God together! This is also a venue to get your ministries heard throughout the region and across the globe, so be sure to contact us to know more about our program schedule and how we can work together.
+          </p>
+          <p className=" my-2 text-white text-lg">
+            It is no coincidence that you have found us online, and we hope that you also find Choice Radio a place of refuge, faith, love, healing, and deliverance.
+          </p>
+          <blockquote className="mt-4 bg-[#1b2846] p-3 text-white text-lg rounded-md py-4 flex items-center">
+            <span className="h-[2rem] w-[2px] bg-second rounded-full inline-block mr-2"></span>
+            He Put A New Song In My Mouth, A Hymn Of Praise To Our God. (- Psalm 40:3)
+          </blockquote>
+        </>}
       </div>
     </div>
   );

@@ -19,7 +19,7 @@ interface SongType {
 interface AlbumType {
   _id: string;
   title: string;
-  artist: string; // ObjectId as string
+  artist: string | { _id: string; name?: string; profileImg?: string }; // ObjectId or populated artist
   releaseYear: number;
   price: number;
   description: string;
@@ -27,6 +27,7 @@ interface AlbumType {
   songs: SongType[];
   salesCount?: number;
   totalRevenue?: number;
+  purchasedAt?: string | Date | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -61,6 +62,19 @@ const Page = () => {
   const router = useRouter();
   const [albums, setAlbums] = useState<AlbumType[]>([]);
   const [error, setError] = useState("");
+  const accountType = (userData as any)?.accountType as
+    | "buyer"
+    | "seller"
+    | undefined;
+  const sellerApprovalStatus = (userData as any)?.sellerApprovalStatus as
+    | "not_required"
+    | "pending"
+    | "approved"
+    | "rejected"
+    | undefined;
+  const sellerApprovalReason = (userData as any)?.sellerApprovalReason as
+    | string
+    | undefined;
 
   const fetchAlbums = async () => {
     setLoading(true);
@@ -87,6 +101,37 @@ const Page = () => {
     } catch (err) {
       console.error("Fetch albums error:", err);
       setError("Failed to fetch albums.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchPurchasedAlbums = async () => {
+    if (!userData?.token) return;
+    setLoading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/purchased-albums`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${userData.token}`,
+          },
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Failed to fetch purchased albums");
+        return;
+      }
+
+      setAlbums(data.albums || []);
+      setError("");
+    } catch (err) {
+      console.error("Fetch purchased albums error:", err);
+      setError("Failed to fetch purchased albums.");
     } finally {
       setLoading(false);
     }
@@ -198,11 +243,15 @@ const Page = () => {
   useEffect(() => {
     setHasMounted(true);
     if (userData?.token) {
-      fetchAlbums();
-      fetchSummary();
-      fetchWithdrawRequests(1);
+      if (accountType === "seller") {
+        fetchAlbums();
+        fetchSummary();
+        fetchWithdrawRequests(1);
+      } else if (accountType === "buyer") {
+        fetchPurchasedAlbums();
+      }
     }
-  }, [userData?.token]);
+  }, [userData?.token, accountType]);
 
   useEffect(() => {
     // Refresh user info (approval status etc.) when entering dashboard
@@ -227,26 +276,17 @@ const Page = () => {
 
   if (!hasMounted) return <PageLoading />;
 
-  const accountType = (userData as any)?.accountType as
-    | "buyer"
-    | "seller"
-    | undefined;
-  const sellerApprovalStatus = (userData as any)?.sellerApprovalStatus as
-    | "not_required"
-    | "pending"
-    | "approved"
-    | "rejected"
-    | undefined;
-  const sellerApprovalReason = (userData as any)?.sellerApprovalReason as string | undefined;
-
-  const computedTotals = albums.reduce(
-    (acc, a) => {
-      acc.totalSales += Number(a.salesCount || 0);
-      acc.totalRevenue += Number(a.totalRevenue || 0);
-      return acc;
-    },
-    { totalSales: 0, totalRevenue: 0 }
-  );
+  const computedTotals =
+    accountType === "seller"
+      ? albums.reduce(
+          (acc, a) => {
+            acc.totalSales += Number(a.salesCount || 0);
+            acc.totalRevenue += Number(a.totalRevenue || 0);
+            return acc;
+          },
+          { totalSales: 0, totalRevenue: 0 }
+        )
+      : { totalSales: 0, totalRevenue: 0 };
 
   const totalSales = summary?.totalSales ?? computedTotals.totalSales;
   const totalRevenue = summary?.totalRevenue ?? computedTotals.totalRevenue;
@@ -259,7 +299,14 @@ const Page = () => {
 
   return (
     <div className=" min-h-[100vh] ">
-      <Breadcrum mainTitle="Dashboard" subTitle="Add and manage your albums" />
+      <Breadcrum
+        mainTitle="Dashboard"
+        subTitle={
+          accountType === "buyer"
+            ? "View your purchased albums"
+            : "Add and manage your albums"
+        }
+      />
       <div
         className="relative z-20 min-h-screen bg-no-repeat bg-cover text-[#fff] "
         style={{ backgroundImage: `url(${bg2.src})` }}
@@ -268,7 +315,9 @@ const Page = () => {
 
         <div className="max-w-[1500px] mx-auto py-5 px-3">
           <div className=" flex justify-between ">
-            <h3 className=" text-[1.5rem] font-medium ">My Albums</h3>
+            <h3 className=" text-[1.5rem] font-medium ">
+              {accountType === "buyer" ? "My Purchased Albums" : "My Albums"}
+            </h3>
             <div className=" flex items-center gap-2 ">
               <div
                 onClick={() => {
@@ -295,9 +344,9 @@ const Page = () => {
               </Link>
             </div>
           </div>
-          <div className=" mt-2 flex justify-end ">
-            {accountType === "seller" &&
-              (sellerApprovalStatus === "approved" ? (
+          {accountType === "seller" ? (
+            <div className=" mt-2 flex justify-end ">
+              {sellerApprovalStatus === "approved" ? (
                 <Link
                   href={`/dashboard/${userData._id}/add-album`}
                   className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
@@ -325,8 +374,9 @@ const Page = () => {
                 >
                   Add Album
                 </button>
-              ))}
-          </div>
+              )}
+            </div>
+          ) : null}
 
           {accountType === "seller" && sellerApprovalStatus !== "approved" && (
             <div className="mt-4 bg-[#0b1834]/80 border border-yellow-400/30 p-4 text-white">
@@ -351,46 +401,52 @@ const Page = () => {
             </div>
           )}
 
-          <div className=" mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3 ">
-            <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">
-              <div className=" text-sm text-gray-200 ">Total Sales</div>
-              <div className=" text-[1.8rem] font-semibold ">
-                {summaryLoading ? "..." : totalSales}
+          {accountType === "seller" ? (
+            <div className=" mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3 ">
+              <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">
+                <div className=" text-sm text-gray-200 ">Total Sales</div>
+                <div className=" text-[1.8rem] font-semibold ">
+                  {summaryLoading ? "..." : totalSales}
+                </div>
               </div>
-            </div>
-            <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">
-              <div className=" text-sm text-gray-200 ">Total Revenue</div>
-              <div className=" text-[1.8rem] font-semibold ">
-                {summaryLoading ? "..." : `$${totalRevenue.toFixed(2)}`}
+              <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">
+                <div className=" text-sm text-gray-200 ">Total Revenue</div>
+                <div className=" text-[1.8rem] font-semibold ">
+                  {summaryLoading ? "..." : `$${totalRevenue.toFixed(2)}`}
+                </div>
               </div>
-            </div>
-            <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">
-              <div className=" flex items-center justify-between gap-3 ">
-                <div>
-                  <div className=" text-sm text-gray-200 ">Available Balance</div>
-                  <div className=" text-[1.8rem] font-semibold ">
-                    {summaryLoading ? "..." : `$${balance.toFixed(2)}`}
+              <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">
+                <div className=" flex items-center justify-between gap-3 ">
+                  <div>
+                    <div className=" text-sm text-gray-200 ">Available Balance</div>
+                    <div className=" text-[1.8rem] font-semibold ">
+                      {summaryLoading ? "..." : `$${balance.toFixed(2)}`}
+                    </div>
                   </div>
+                  <button
+                    onClick={() => setWithdrawModalOpen(true)}
+                    className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out px-4 py-2 text-sm "
+                  >
+                    Withdraw
+                  </button>
                 </div>
-                <button
-                  onClick={() => setWithdrawModalOpen(true)}
-                  className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out px-4 py-2 text-sm "
-                >
-                  Withdraw
-                </button>
-              </div>
-              {summary?.totalWithdrawn !== undefined && (
-                <div className=" mt-2 text-xs text-gray-200 ">
-                  Total withdrawn: <span className=" font-medium ">${Number(summary.totalWithdrawn).toFixed(2)}</span>
+                {summary?.totalWithdrawn !== undefined && (
+                  <div className=" mt-2 text-xs text-gray-200 ">
+                    Total withdrawn:{" "}
+                    <span className=" font-medium ">
+                      ${Number(summary.totalWithdrawn).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+                <div className=" mt-1 text-xs text-gray-200 ">
+                  Withdrawals take{" "}
+                  <span className=" font-medium ">1 to 2 days</span> to process.
                 </div>
-              )}
-              <div className=" mt-1 text-xs text-gray-200 ">
-                Withdrawals take <span className=" font-medium ">1 to 2 days</span> to process.
               </div>
             </div>
-          </div>
+          ) : null}
 
-          {withdrawModalOpen && (
+          {accountType === "seller" && withdrawModalOpen && (
             <div className=" fixed inset-0 z-[9999] bg-black/60 flex items-center justify-center px-3 ">
               <div className=" w-full max-w-[34rem] bg-[#0b1834] border border-white/10 p-4 text-white ">
                 <div className=" flex items-center justify-between gap-3 ">
@@ -434,90 +490,99 @@ const Page = () => {
             </div>
           )}
 
-          <div className=" mt-6 bg-[#0b1834]/80 border border-white/10 p-4 ">
-            <div className=" flex items-center justify-between gap-3 ">
-              <div>
-                <div className=" text-[1.2rem] font-semibold ">Withdraw History</div>
-                <div className=" text-xs text-gray-200 ">
-                  Track your requests and status.
-                </div>
-              </div>
-              <button
-                onClick={() => fetchWithdrawRequests(withdrawReqPage)}
-                className=" text-sm underline underline-offset-4 "
-              >
-                Refresh
-              </button>
-            </div>
-
-            {withdrawReqLoading ? (
-              <div className=" mt-4 text-sm text-gray-200 ">Loading...</div>
-            ) : withdrawRequests.length === 0 ? (
-              <div className=" mt-4 text-sm text-gray-200 ">
-                No withdraw requests yet.
-              </div>
-            ) : (
-              <div className=" mt-4 overflow-x-auto ">
-                <table className=" w-full text-sm ">
-                  <thead>
-                    <tr className=" text-left text-gray-200 border-b border-white/10 ">
-                      <th className=" py-2 ">Date</th>
-                      <th className=" py-2 ">Amount</th>
-                      <th className=" py-2 ">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {withdrawRequests.map((r) => (
-                      <tr
-                        key={r._id}
-                        className=" border-b border-white/10 text-white/90 "
-                      >
-                        <td className=" py-2 ">
-                          {new Date(r.createdAt).toLocaleString()}
-                        </td>
-                        <td className=" py-2 ">${Number(r.amount || 0).toFixed(2)}</td>
-                        <td className=" py-2 ">
-                          <span
-                            className={` inline-block px-2 py-1 border text-xs ${statusBadge(
-                              r.status
-                            )} `}
-                          >
-                            {r.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-
-                <div className=" mt-3 flex items-center justify-between gap-3 ">
-                  <button
-                    onClick={() => {
-                      const next = Math.max(1, withdrawReqPage - 1);
-                      fetchWithdrawRequests(next);
-                    }}
-                    disabled={withdrawReqPage <= 1}
-                    className=" px-3 py-2 border border-white/20 text-xs disabled:opacity-50 "
-                  >
-                    Prev
-                  </button>
-                  <div className=" text-xs text-gray-200 ">
-                    Page {withdrawReqPage} of {withdrawReqTotalPages}
+          {accountType === "seller" ? (
+            <div className=" mt-6 bg-[#0b1834]/80 border border-white/10 p-4 ">
+              <div className=" flex items-center justify-between gap-3 ">
+                <div>
+                  <div className=" text-[1.2rem] font-semibold ">
+                    Withdraw History
                   </div>
-                  <button
-                    onClick={() => {
-                      const next = Math.min(withdrawReqTotalPages, withdrawReqPage + 1);
-                      fetchWithdrawRequests(next);
-                    }}
-                    disabled={withdrawReqPage >= withdrawReqTotalPages}
-                    className=" px-3 py-2 border border-white/20 text-xs disabled:opacity-50 "
-                  >
-                    Next
-                  </button>
+                  <div className=" text-xs text-gray-200 ">
+                    Track your requests and status.
+                  </div>
                 </div>
+                <button
+                  onClick={() => fetchWithdrawRequests(withdrawReqPage)}
+                  className=" text-sm underline underline-offset-4 "
+                >
+                  Refresh
+                </button>
               </div>
-            )}
-          </div>
+
+              {withdrawReqLoading ? (
+                <div className=" mt-4 text-sm text-gray-200 ">Loading...</div>
+              ) : withdrawRequests.length === 0 ? (
+                <div className=" mt-4 text-sm text-gray-200 ">
+                  No withdraw requests yet.
+                </div>
+              ) : (
+                <div className=" mt-4 overflow-x-auto ">
+                  <table className=" w-full text-sm ">
+                    <thead>
+                      <tr className=" text-left text-gray-200 border-b border-white/10 ">
+                        <th className=" py-2 ">Date</th>
+                        <th className=" py-2 ">Amount</th>
+                        <th className=" py-2 ">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {withdrawRequests.map((r) => (
+                        <tr
+                          key={r._id}
+                          className=" border-b border-white/10 text-white/90 "
+                        >
+                          <td className=" py-2 ">
+                            {new Date(r.createdAt).toLocaleString()}
+                          </td>
+                          <td className=" py-2 ">
+                            ${Number(r.amount || 0).toFixed(2)}
+                          </td>
+                          <td className=" py-2 ">
+                            <span
+                              className={` inline-block px-2 py-1 border text-xs ${statusBadge(
+                                r.status
+                              )} `}
+                            >
+                              {r.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  <div className=" mt-3 flex items-center justify-between gap-3 ">
+                    <button
+                      onClick={() => {
+                        const next = Math.max(1, withdrawReqPage - 1);
+                        fetchWithdrawRequests(next);
+                      }}
+                      disabled={withdrawReqPage <= 1}
+                      className=" px-3 py-2 border border-white/20 text-xs disabled:opacity-50 "
+                    >
+                      Prev
+                    </button>
+                    <div className=" text-xs text-gray-200 ">
+                      Page {withdrawReqPage} of {withdrawReqTotalPages}
+                    </div>
+                    <button
+                      onClick={() => {
+                        const next = Math.min(
+                          withdrawReqTotalPages,
+                          withdrawReqPage + 1
+                        );
+                        fetchWithdrawRequests(next);
+                      }}
+                      disabled={withdrawReqPage >= withdrawReqTotalPages}
+                      className=" px-3 py-2 border border-white/20 text-xs disabled:opacity-50 "
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
 
           {error && <p className=" text-sm text-red-500 my-2 ">{error}</p>}
 
@@ -532,7 +597,11 @@ const Page = () => {
               {albums.map((album) => (
                 <Link
                   key={album._id}
-                  href={`/dashboard/${userData._id}/albums/${album._id}`}
+                  href={
+                    accountType === "buyer"
+                      ? `/albums/${album._id}`
+                      : `/dashboard/${userData._id}/albums/${album._id}`
+                  }
                   className=" group block "
                 >
                   <div className=" w-full h-[17rem] relative overflow-hidden border border-white/10">
@@ -542,21 +611,31 @@ const Page = () => {
                       fill
                       className="group-hover:scale-110 transition-all duration-300 ease-in-out object-contain"
                     />
-                    <div className=" absolute top-2 left-2 flex gap-2 ">
-                      <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
-                        Sales: {Number(album.salesCount || 0)}
+                    {accountType === "seller" ? (
+                      <div className=" absolute top-2 left-2 flex gap-2 ">
+                        <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
+                          Sales: {Number(album.salesCount || 0)}
+                        </div>
+                        <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
+                          Rev: ${Number(album.totalRevenue || 0).toFixed(2)}
+                        </div>
                       </div>
-                      <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
-                        Rev: ${Number(album.totalRevenue || 0).toFixed(2)}
+                    ) : (
+                      <div className=" absolute top-2 left-2 flex gap-2 ">
+                        <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
+                          Purchased
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </div>
                   <div className=" bg-[#0b1834] p-3 ">
                     <div className=" text-[1.4rem] font-medium line-clamp-1 ">
                       {album.title}
                     </div>
                     <div className=" mt-2 text-xs text-gray-200 ">
-                      Click to manage album
+                      {accountType === "buyer"
+                        ? "Click to view album"
+                        : "Click to manage album"}
                     </div>
                     <div className=" mt-3 flex items-center gap-3 ">
                       <div className=" relative w-[3.5rem] h-[3.5rem] rounded-full bg-blue-900 ">
@@ -577,7 +656,9 @@ const Page = () => {
             </div>
           ) : (
             <div className=" text-gray-200 text-center h-[10rem] flex items-center justify-center ">
-              There are no album yet
+              {accountType === "buyer"
+                ? "You haven't purchased any albums yet."
+                : "There are no album yet"}
             </div>
           )}
         </div>
