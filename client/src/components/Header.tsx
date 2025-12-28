@@ -266,7 +266,7 @@ const Header = () => {
                 <Link href="/albums" onClick={() => setIsOpenSidebar(false)} className=" py-2 ">
                   Albums
                 </Link>
-                <Link href="/albums/sell" onClick={() => setIsOpenSidebar(false)} className=" py-2 ">
+                <Link href="/albums/sell-album" onClick={() => setIsOpenSidebar(false)} className=" py-2 ">
                   Sell Album
                 </Link>
               </div>

@@ -127,7 +127,7 @@ const PaymentPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#071022] text-white py-10">
+    <div className="min-h-screen bg-[#071022] text-white py-10 pt-32">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
