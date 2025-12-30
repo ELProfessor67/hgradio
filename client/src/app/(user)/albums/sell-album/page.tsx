@@ -10,7 +10,7 @@ const videoAds = [
 const page = () => {
   return (
     <div>
-      <Breadcrum mainTitle="Distribution Contract" subTitle="album - sell album" />
+      <Breadcrum mainTitle="Sell Album. (Distribution Contract)" subTitle="album - sell album" />
      
       <PageWithCreateAccount/>
 
