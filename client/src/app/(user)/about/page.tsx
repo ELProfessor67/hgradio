@@ -935,8 +935,6 @@ const Daily = () => {
         </div>
        ))}
       </div>
-
-
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { HiMiniBars3BottomRight } from "react-icons/hi2";
 import { RxCross2 } from "react-icons/rx";
 import Logo from "@/assets/Logo.png";
 import { MdArrowForwardIos } from "react-icons/md";
+import { FaArrowRightLong } from "react-icons/fa6";
 
 const Header = () => {
   const pathname = usePathname();
@@ -196,9 +197,9 @@ const Header = () => {
         <div className=" flex items-center gap-4 ">
           <Link
             href={`/sponsor`}
-            className=" lg:block hidden text-[1.1rem] px-7 py-2  bg-[#0d2c7b] text-white "
+            className=" lg:block hidden text-[1.1rem] px-7 py-2  bg-[#0d2c7b] text-white !flex !items-center !gap-2 !justify-center "
           >
-            Sponsor
+             <span><FaArrowRightLong/> </span><span>Sponsor</span>
           </Link>
           <div
             onClick={() => setIsOpenSidebar(true)}
@@ -313,9 +314,9 @@ const Header = () => {
           </Link>
           <Link
             href={`/sponsor`} onClick={() => setIsOpenSidebar(false)}
-            className="  text-[1.1rem] px-7 py-2  text-center bg-[#0d2c7b] text-white "
+            className="  text-[1.1rem] px-7 py-2  text-center bg-[#0d2c7b] text-white !flex !items-center !gap-2 !justify-center "
           >
-            Sponsor
+            <span><FaArrowRightLong/> </span><span>Sponsor</span>
           </Link>
         </div>
       </div>

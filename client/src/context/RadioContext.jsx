@@ -274,7 +274,7 @@ export const RadioProvider = ({ children }) => {
     }, [pathname])
     return (
         <RadioContext.Provider value={value}>
-            <audio ref={audioRef} controls className="w-full bg-none hidden" onEnded={() => handleEnded(isPlay)} onPlay={() => setIsPlay(true)} autoPlay onPause={() => setIsPlay(false)} id="auto-dj"></audio>
+            <audio ref={audioRef} controls className="w-full bg-none hidden" onEnded={() => handleEnded(isPlay)} onPlay={() => setIsPlay(true)} onPause={() => setIsPlay(false)} id="auto-dj"></audio>
 
             {
                 pathname !== "/" &&
