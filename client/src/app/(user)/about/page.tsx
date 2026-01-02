@@ -18,9 +18,9 @@ import { useState } from "react";
 const page = () => {
 
   const videoAds = [
-    { videoSrc: "/vid1.mp4", link: "/contact" },
-    { videoSrc: "/vid2.mp4", link: "/contact" },
-    { videoSrc: "/vid3.mp4", link: "/contact" },
+    { videoSrc: "/vid1.mp4", link: "/sign-guestbook" },
+    { videoSrc: "/vid2.mp4", link: "/sign-guestbook" },
+    { videoSrc: "/vid3.mp4", link: "/sign-guestbook" },
 
   ];
 
@@ -44,6 +44,53 @@ const Daily = () => {
   const monthNames = [
     "Jan", "Feb", "Mar", "Apr", "May", "Jun",
     "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+  ];
+
+  const ensureMinDevotions = (
+    items: any[] | undefined,
+    minCount: number,
+    fallbackItems: any[]
+  ) => {
+    const base = Array.isArray(items) ? items : [];
+    if (base.length >= minCount) return base;
+
+    const source = fallbackItems.length ? fallbackItems : base;
+    if (!source.length) return base;
+
+    const out = [...base];
+    let i = 0;
+    while (out.length < minCount) {
+      out.push(source[i % source.length]);
+      i += 1;
+    }
+    return out;
+  };
+
+  const extraDevotions = [
+    {
+      type: "section",
+      text: "Meditation",
+    },
+    {
+      type: "paragraph",
+      text: "Take a quiet moment to reflect. God is present with you right now—invite Him into your thoughts, plans, and decisions today.",
+    },
+    {
+      type: "subtitle",
+      text: "Question for Today",
+    },
+    {
+      type: "paragraph",
+      text: "What is one worry you can place in God’s hands today, and what step of faith can you take in response?",
+    },
+    {
+      type: "section",
+      text: "Prayer",
+    },
+    {
+      type: "prayer",
+      text: "Lord, thank You for being near. Help me trust You more today, obey Your voice, and walk in peace. Amen.",
+    },
   ];
 
   const devotions = {
@@ -94,22 +141,42 @@ const Daily = () => {
       }
     ],
 
-    2: [
+    2:[
       {
         type: "title",
-        text: "Psalm 23 (NIV)",
+        text: "Philippians 4:1-9 (NIV)",
       },
       {
         type: "verse",
-        text: "The Lord is my shepherd, I lack nothing."
+        text: "Therefore, my brothers and sisters, you whom I love and long for, my joy and crown, stand firm in the Lord in this way, dear friends!"
+      },
+      {
+        type: "verse",
+        text: "I plead with Euodia and I plead with Syntyche to be of the same mind in the Lord."
+      },
+      {
+        type: "verse",
+        text: "Rejoice in the Lord always. I will say it again: Rejoice!"
       },
       {
         type: "section",
         text: "Reflection",
       },
       {
+        type: "subtitle",
+        text: "Stand Firm in the Lord (Verse 1)",
+      },
+      {
         type: "paragraph",
-        text: "God’s guidance brings peace even in uncertainty."
+        text: "Paul begins by encouraging us to stand firm in our faith. In a world full of challenges and distractions, it's essential to remain steadfast in our relationship with Christ."
+      },
+      {
+        type: "subtitle",
+        text: "Overcoming Anxiety (Verses 6-7)",
+      },
+      {
+        type: "paragraph",
+        text: "Paul instructs us not to be anxious but to present our requests to God with thanksgiving."
       },
       {
         type: "section",
@@ -117,7 +184,7 @@ const Daily = () => {
       },
       {
         type: "prayer",
-        text: "Lord, guide me and restore my soul. Amen."
+        text: "Heavenly Father, thank You for Your word that encourages and strengthens us..."
       }
     ],
     3: [
@@ -148,7 +215,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, help me to trust You completely and not depend on my own understanding. Guide my paths according to Your will. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     4: [
       {
@@ -178,7 +246,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Jesus, I bring my burdens to You today. Teach me to walk in Your peace and find rest in Your presence. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     5: [
       {
@@ -208,7 +277,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Father God, thank You for being with me always. Strengthen me when I feel weak and help me trust in Your unfailing support. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     6: [
       {
@@ -234,7 +304,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, thank You for being my refuge and strength. Help me to run to You in every situation. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     7: [
       {
@@ -260,7 +331,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "God, help me remain joyful in hope, patient in challenges, and faithful in prayer. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     8: [
       {
@@ -290,7 +362,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, thank You for Your new mercies every morning. Help me to trust Your faithfulness today. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     9: [
       {
@@ -320,7 +393,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, give me courage to face today’s challenges, trusting that You are always with me. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     10: [
       {
@@ -342,7 +416,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Father, help me do everything with a willing and faithful heart, as service to You. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     11: [
       {
@@ -368,7 +443,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, guide my steps through Your Word and lead me in the path of truth. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     12: [
       {
@@ -394,7 +470,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Father, I give You my worries and fears today. Thank You for caring for me. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     13: [
       {
@@ -420,7 +497,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Jesus, help me remain connected to You and bear fruit that honors You. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     14: [
       {
@@ -446,7 +524,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, strengthen my faith and help me trust You even when the path is unclear. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     15: [
       {
@@ -472,7 +551,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "God, help me act justly, love mercy, and walk humbly with You every day. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     16: [
       {
@@ -498,7 +578,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, thank You for Your sufficient grace. Help me rely on Your strength in my weakness. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     17: [
       {
@@ -524,7 +605,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, I commit my plans and my future into Your hands. Help me trust You completely. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     18: [
       {
@@ -550,7 +632,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Holy Spirit, grow Your fruit in my life and shape my character to reflect Christ. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     19: [
       {
@@ -576,7 +659,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Father, help me seek Your kingdom first in all areas of my life. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     20: [
       {
@@ -602,7 +686,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, thank You for creating me with purpose. Help me walk in the good works You have prepared for me. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     21: [
       {
@@ -628,7 +713,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "God, grant me Your wisdom today and help me make decisions that honor You. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     22: [
       {
@@ -654,7 +740,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, fill me with Your hope, joy, and peace today. Let Your Spirit overflow in my life. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     23: [
       {
@@ -680,7 +767,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Father, thank You for starting good work in me. Help me trust You to complete it fully. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     24: [
       {
@@ -706,7 +794,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, renew my strength today. Help me trust You and soar above every challenge. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     25: [
       {
@@ -732,7 +821,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "God, help me rejoice always, remain prayerful, and give thanks in every situation. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     26: [
       {
@@ -758,7 +848,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, help me commit everything I do to You, trusting that You will guide and establish my plans. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     27: [
       {
@@ -784,7 +875,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, help me experience Your goodness and find refuge in You every day. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     28: [
       {
@@ -810,7 +902,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "God, help me to find contentment in You and trust that You will never leave me. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     29: [
       {
@@ -840,7 +933,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, help me shine Your light through my words and actions, bringing glory to Your name. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     30: [
       {
@@ -866,7 +960,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Lord, fill me with Your peace and help me remain untroubled and unafraid today. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
     31: [
       {
@@ -892,7 +987,8 @@ const Daily = () => {
       {
         type: "prayer",
         text: "Father, help me trust that You are working all things together for my good. Amen."
-      }
+      },
+      ...extraDevotions,
     ],
   };
 
@@ -902,7 +998,9 @@ const Daily = () => {
     const month = currentDate.getMonth();
     const year = currentDate.getFullYear();
     setDate(`${day} ${monthNames[month]} ${year}`);
-    setDevotion(devotions[day as keyof typeof devotions]);
+    const fallback = devotions[1] ?? [];
+    const todays = devotions[day as keyof typeof devotions] ?? fallback;
+    setDevotion(ensureMinDevotions(todays, 10, fallback));
   }, [])
   return (
     <div className=" bg-[#000000e0] py-[5rem] relative ">
@@ -928,6 +1026,7 @@ const Daily = () => {
        {devotion.map((item: any, index: number) => (
         <div key={index}>
           {item.type === "title" && <h3 className="text-[1.5rem] font-bold mb-2 text-[#fff] ">{item.text}</h3>}
+          {item.type === "subtitle" && <h4 className="text-[1.2rem] font-semibold mb-2 text-second ">{item.text}</h4>}
           {item.type === "verse" && <p className="text-[1.2rem] font-semibold mb-2 text-[#fff] ">{item.text}</p>}
           {item.type === "section" && <h4 className="text-[1.2rem] font-semibold mb-2 text-[#fff] ">{item.text}</h4>}
           {item.type === "paragraph" && <p className="text-[1.2rem] mb-2 text-[#fff] ">{item.text}</p>}

@@ -122,10 +122,10 @@ export const HeroTextBox: React.FC<HeroTextBoxProps> = ({
 
 export const HomeAds = () => {
   const videoAds = [
-    { videoSrc: "/HAds1.mp4", link: "/contact" },
-    { videoSrc: "/HAds2.mp4", link: "/contact" },
-    { videoSrc: "/HAds3.mp4", link: "/contact" },
-    { videoSrc: "/HAds4.mp4", link: "/contact" },
+    { videoSrc: "/HAds1.mp4", link: "#" },
+    { videoSrc: "/HAds2.mp4", link: "#" },
+    { videoSrc: "/HAds3.mp4", link: "#" },
+    { videoSrc: "/HAds4.mp4", link: "#" },
   ];
 
   return (

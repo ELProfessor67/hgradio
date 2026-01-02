@@ -15,7 +15,7 @@ const Ads = ({ items }: AdsProps) => {
     <div className="bg-black py-5 px-3 ">
       <div className="flex flex-col  md:flex-row gap-5  max-w-[1400px] mx-auto py-5">
         {items.map((item: AdItem, index: number) => (
-          <Link key={index} href={item.link || "/contact"}>
+          // <Link key={index} href={item.link || "/contact"}>
             <div className=" overflow-hidden shadow-md aspect-video">
               <video
                 src={item.videoSrc}
@@ -26,7 +26,7 @@ const Ads = ({ items }: AdsProps) => {
                 className="w-full h-full object-cover"
               />
             </div>
-          </Link>
+          // </Link>
         ))}
       </div>
     </div>

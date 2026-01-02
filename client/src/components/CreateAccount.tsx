@@ -432,7 +432,7 @@ const PageWithCreateAccount = () => {
                 <div className="flex justify-center">
                   <button
                     onClick={() => setShowForm(true)}
-                    className="relative bg-second hover:bg-transparent  overflow-hidden font-semibold text-lg px-7 py-2 group"
+                    className="relative bg-[#0d2c7b] hover:bg-transparent  overflow-hidden font-semibold text-lg px-7 py-2 group"
                   >
                     <span className="relative z-10">Create Your Account</span>
                     <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100"></span>

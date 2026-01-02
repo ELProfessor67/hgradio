@@ -93,12 +93,13 @@ const Review = () => {
         backgroundImage: `url(${Review1.src})`,
       }}>
         <div className="absolute inset-0 bg-black/50 z-0" />
-      <div className=' relative z-10 text-center leading-tight mb-[8rem]  '>
+      <div className=' relative z-10 text-center leading-tight mb-[2rem]  '>
         <div className="text-[2rem] font-semibold text-second mb-2 ">What Our Lovely Listeners Say</div>
       <h2 className="text-[3rem] font-bold mb-6 text-[#fff] ">Testimonials</h2>
+     
       </div>
       {/* slider-container */}
-      <div className=" max-w-[1500px] mx-auto px-3 overflow-hidden mt-[4rem] pb-[3rem] relative">
+      <div className=" max-w-[1500px] mx-auto px-3 overflow-hidden mt-[1rem] pb-[3rem] relative">
         {/* <Slider {...settings}> */}
           <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 ">
             {reviews.map((review, idx) => (
@@ -124,6 +125,13 @@ const Review = () => {
           </div>
         {/* </Slider> */}
       </div>
+
+      <p className="text-[#fff] text-base md:text-lg text-center">
+        Share your testimonial at{" "}
+        <a className="underline" href="mailto:info@hgcradio.org">
+          info@hgcradio.org
+        </a>
+      </p>
     </div>
   );
 };
