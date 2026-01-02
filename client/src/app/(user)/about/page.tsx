@@ -1020,6 +1020,8 @@ const Daily = () => {
         <h2 className="text-[3rem] font-bold mb-6 text-[#fff] ">
           Daily Devotions
         </h2>
+
+        
       </div>
 
       <div className=" max-w-[1000px] mx-auto px-3 text-[#fff] md:text-xl min-h-[30rem] ">
