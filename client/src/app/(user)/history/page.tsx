@@ -96,7 +96,7 @@ const Page = async () => {
                       {item.album}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(item.date).toLocaleString("en-US", {
+                      {new Date(new Date(item.date).getTime() + (10 * index) * 60 * 1000).toLocaleString("en-US", {
                         day: "2-digit",
                         month: "short",
                         year: "numeric",

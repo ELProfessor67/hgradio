@@ -55,11 +55,11 @@ const Page = () => {
             <div>
               <div className=" flex items-center gap-4 ">
                 <div className=" w-2 h-2 rounded-full bg-white"></div>
-                <p>radio@hallelujahgospel.com</p>
+                <p>radio@hgcradio.org</p>
               </div>
               <div className=" flex items-center gap-4 ">
                 <div className=" w-2 h-2 rounded-full bg-white"></div>
-                <p>info@hgcradio.com</p>
+                <p>info@hgcradio.org</p>
               </div>
             </div>
           </div>
