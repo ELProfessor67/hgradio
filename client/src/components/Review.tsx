@@ -92,46 +92,47 @@ const Review = () => {
       style={{
         backgroundImage: `url(${Review1.src})`,
       }}>
-        <div className="absolute inset-0 bg-black/50 z-0" />
+      <div className="absolute inset-0 bg-black/50 z-0" />
       <div className=' relative z-10 text-center leading-tight mb-[2rem]  '>
         <div className="text-[2rem] font-semibold text-second mb-2 ">What Our Lovely Listeners Say</div>
-      <h2 className="text-[3rem] font-bold mb-6 text-[#fff] ">Testimonials</h2>
-     
+        <h2 className="text-[3rem] font-bold mb-6 text-[#fff] ">Testimonials</h2>
+        <p className="text-[#fff] text-base md:text-lg text-center">
+          Share your testimonial at{" "}
+          <a className="underline" href="mailto:info@hgcradio.org">
+            admin@hgcradio.org
+          </a>
+        </p>
+
       </div>
       {/* slider-container */}
       <div className=" max-w-[1500px] mx-auto px-3 overflow-hidden mt-[1rem] pb-[3rem] relative">
         {/* <Slider {...settings}> */}
-          <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 ">
-            {reviews.map((review, idx) => (
+        <div className=" grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 ">
+          {reviews.map((review, idx) => (
             <div key={idx} className=" bg-[#0b1834] p-4  ">
               <div className=" flex items-center gap-4 ">
                 <div className=" p-1 bg-[#5A6ACF]   ">
-                <Image
-                  src={review.img}
-                  alt="Review img"
-                  className=" w-[4.5rem] h-[4.5rem]  object-cover "
-                />
-              </div>
-              <div className=" text-[#fff] ">
-                <div className=" text-[1.2rem] font-medium  ">{review.name}</div>
-                <div className=" text-[#e6e6e6] ">{review.designation}</div>
-              </div>
+                  <Image
+                    src={review.img}
+                    alt="Review img"
+                    className=" w-[4.5rem] h-[4.5rem]  object-cover "
+                  />
+                </div>
+                <div className=" text-[#fff] ">
+                  <div className=" text-[1.2rem] font-medium  ">{review.name}</div>
+                  <div className=" text-[#e6e6e6] ">{review.designation}</div>
+                </div>
               </div>
               <p className=" mt-[2rem] text-base md:text-lg max-w-[35rem] mx-auto text-[#fff] ">
                 {review.message}
               </p>
             </div>
           ))}
-          </div>
+        </div>
         {/* </Slider> */}
       </div>
 
-      <p className="text-[#fff] text-base md:text-lg text-center">
-        Share your testimonial at{" "}
-        <a className="underline" href="mailto:info@hgcradio.org">
-          admin@hgcradio.org
-        </a>
-      </p>
+
     </div>
   );
 };

@@ -7,7 +7,7 @@ export default function ChatBox({ open, onClose, children, setName, name, messag
     return (
       
         <div className={`top-0 left-0 right-0 bottom-0 z-[100000] bg-black/5 fixed ${open ? '' : 'hidden'}`}>
-            <div className="max-w-[40rem] mx-auto mt-32 min-h-[35rem] bg-white shadow-md p-3 px-3 rounded-md flex flex-col !text-black">
+            <div className="max-w-[40rem] mx-auto mt-20 min-h-[35rem] bg-white shadow-md p-3 px-3 rounded-md flex flex-col !text-black">
                 <div class="modal-dialog modal-lg modal-dialog-scrollable" style={{ display: "block", margin: 0 }}>
                     <div class="modal-content" >
                         <div class="modal-header pb-2 mb-4 flex justify-between items-center" style={{ margin: "1rem 0", margin: 0, marginBottom: ".5rem", borderBottom: "1px solid gray", }}>
