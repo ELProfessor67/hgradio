@@ -13,7 +13,7 @@ import { FaCreditCard } from "react-icons/fa";
 const Page = () => {
   return (
     <div>
-      <Breadcrum mainTitle="Sponsors" subTitle="Join us as a sponsor" />
+      <Breadcrum mainTitle="Partner With Us" subTitle="Join us as a partner" />
       <Form />
     </div>
   );
@@ -199,12 +199,12 @@ const Form = () => {
           <h2
             className="text-[3rem] font-bold mb-6"
           >
-            Join As A Sponsor
+              Join As A Partner
           </h2>
           <div className="text-second font-semibold text-center">
-            <p>Thank you for considering sponsoring our radio station!</p>
+            <p>Thank you for considering partnering with us!</p>
             <p>
-              Please fill out the form below to specify your sponsorship
+              Please fill out the form below to specify your partnership
               details.
             </p>
           </div>
@@ -254,7 +254,7 @@ const Form = () => {
           {/* Sponsor Type */}
           <div className="space-y-3">
             <p>
-              Please select the type of program or person you wish to sponsor:
+              Please select the type of program or person you wish to partner with:
             </p>
             <div className="flex items-center space-x-4">
               <label className="flex items-center space-x-2 cursor-pointer">

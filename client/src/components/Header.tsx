@@ -199,7 +199,7 @@ const Header = () => {
             href={`/sponsor`}
             className=" lg:block hidden text-[1.1rem] px-7 py-2  bg-[#0d2c7b] text-white !flex !items-center !gap-2 !justify-center "
           >
-             <span><FaArrowRightLong/> </span><span>Sponsor</span>
+             <span><FaArrowRightLong/> </span><span>Partner With Us</span>
           </Link>
           <div
             onClick={() => setIsOpenSidebar(true)}
@@ -316,7 +316,7 @@ const Header = () => {
             href={`/sponsor`} onClick={() => setIsOpenSidebar(false)}
             className="  text-[1.1rem] px-7 py-2  text-center bg-[#0d2c7b] text-white !flex !items-center !gap-2 !justify-center "
           >
-            <span><FaArrowRightLong/> </span><span>Sponsor</span>
+            <span><FaArrowRightLong/> </span><span>Partner With Us</span>
           </Link>
         </div>
       </div>

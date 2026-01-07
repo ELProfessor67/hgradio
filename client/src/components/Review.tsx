@@ -129,7 +129,7 @@ const Review = () => {
       <p className="text-[#fff] text-base md:text-lg text-center">
         Share your testimonial at{" "}
         <a className="underline" href="mailto:info@hgcradio.org">
-          info@hgcradio.org
+          admin@hgcradio.org
         </a>
       </p>
     </div>
