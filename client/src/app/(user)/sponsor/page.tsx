@@ -152,7 +152,7 @@ const Form = () => {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.message || "Failed to submit");
 
-      toast.success("Sponsorship submitted!",{
+      toast.success("Partnership submitted!",{
                 style: {
                   background: "green",
                   border : "none",
@@ -305,7 +305,7 @@ const Form = () => {
 
           {/* Sponsorship Method */}
           <div className="space-y-3">
-            <p>Please describe how you wish to sponsor:</p>
+            <p>Please describe how you wish to partner:</p>
             <div className="flex items-center space-x-4 flex-wrap">
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
@@ -426,7 +426,7 @@ const Form = () => {
           <div>
             <p className="text-lg">
               By submitting this form, you agree to support our radio station
-              and understand that your sponsorship will be used to further our
+              and understand that your partnership will be used to further our
               programming and outreach efforts.
             </p>
           </div>

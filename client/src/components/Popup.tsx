@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react'
 import { useData } from '@/context/Context';
 const Popup = () => {
-    const [hide,setHide] = useState(true);
+    const [hide,setHide] = useState(false);
     const {currentDJ} = useData();
 
     function utcToLocalAmPm(utcTime:any) {
@@ -26,15 +26,15 @@ const Popup = () => {
       
 
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            setHide(false);
-            setTimeout(() => {
-                setHide(true);
-            }, 10000);
-        }, 4000);
-        return () => clearTimeout(timer);
-    }, []);
+    // useEffect(() => {
+    //     const timer = setTimeout(() => {
+    //         setHide(false);
+    //         setTimeout(() => {
+    //             setHide(true);
+    //         }, 10000);
+    //     }, 4000);
+    //     return () => clearTimeout(timer);
+    // }, []);
     return (
         <div className={`fixed bottom-4 left-4 bg-white shadow-lg rounded-lg p-4 max-w-[20rem] transition-all duration-500 transform -translate-y-4 ${hide ? "hidden": ""}`} style={{zIndex: 9999}}>
             <div className="flex items-center gap-3">
@@ -42,7 +42,13 @@ const Popup = () => {
                     <img alt="Dj Image" loading="lazy" src='/SongFallback.jpg'/>
 
                     </div>
-                <div className="text-gray-800 text-sm leading-relaxed"><span className="font-semibold text-black">{currentDJ?.dj?.name}</span> is inviting you to listen to the radio <span className="font-semibold">station</span> starting at <span className="font-semibold text-black">{utcToLocalAmPm(currentDJ?.dj?.djStartTime)}</span> Los Angeles.</div>
+                <div className="text-gray-800 text-sm leading-relaxed">
+                    <span className="font-semibold text-black text-2xl">{currentDJ?.dj?.name}</span> Invites You!
+                    <br/><span className="font-semibold text-black">{utcToLocalAmPm(currentDJ?.dj?.djStartTime)}</span> Los Angeles.<br />
+                    <span className="text-gray-800 text-sm leading-relaxed">A blessed, powerfull broadcast that will <span className="font-semibold text-black">uplift</span> and <span className="font-semibold text-black">inspire</span>.</span>
+                
+                
+                </div>
             </div>
         </div>
     )
