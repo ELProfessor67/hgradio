@@ -44,11 +44,10 @@ export const LiveProvider = ({ children }) => {
                 const audioRef = document.getElementById('auto-dj');
                 audioRef.pause();
                 audioRef.volume = 0;
-                setIsPlay(true);
                 handleTrackSubscribed(track,()=>{
                     setIsPlay(true);
                 });
-            } 
+            }
 
 
             if(participant.identity === 'admin' && track.source !== Track.Source.Microphone){

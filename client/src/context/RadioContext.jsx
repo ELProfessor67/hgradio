@@ -269,6 +269,14 @@ export const RadioProvider = ({ children }) => {
         handleEnded
     }
 
+
+    useEffect(() => {
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => {
+            audio.volume = volume;
+        });
+    },[volume])
+
     useEffect(() => {
         console.log(pathname, "pathname")
     }, [pathname])

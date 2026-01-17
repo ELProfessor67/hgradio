@@ -86,7 +86,7 @@ const socketInit = () => {
 		'force new connection': true,
 		reconnectionAttempt: 'Infinity',
 		timeout: 10000,
-		transform: ['websocket']
+		transform: ['polling','websocket']
 	}
 
 	return io(REACT_PUBLIC_SOCKET_URL, options);
