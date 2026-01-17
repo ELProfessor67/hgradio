@@ -217,7 +217,7 @@ export default function App() {
 													</button>
 													<button className=" text-xs border-none bg-none outline-none text-white disabled:cursor-[not-allowed]  cursor-pointer disabled:opacity-25 mr-2" disabled={!isLive} title="live chat" onClick={() => setChatOpen(true)}><IoChatboxEllipsesOutline size={35} /></button>
 												</div>
-												<div className="md:w-[50%] w-full flex items-center">
+												{/* <div className="md:w-[50%] w-full flex items-center">
 													<button className="text-gray-300 mr-3" onClick={() => volume === 0 ? setVolume(0.5) : setVolume(0)}>
 														{
 															volume === 0 ? <HiSpeakerXMark size={22} /> : <HiSpeakerWave size={22} />
@@ -225,7 +225,7 @@ export default function App() {
 													</button>
 
 													<input type="range" className="w-[90%]" min={0} max={1} step={0.1} value={volume} onChange={(e) => setVolume(e.target.value)} />
-												</div>
+												</div> */}
 											</div>
 
 
