@@ -75,6 +75,7 @@ export const getAlbumById = async (req, res) => {
     // Find the album by ID
     const album = await Album.findById(albumId).populate('artist', '_id name profileImg');
 
+
     if (!album) {
       return res.status(404).json({ message: "Album not found" });
     }
