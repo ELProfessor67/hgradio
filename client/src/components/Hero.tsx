@@ -11,6 +11,8 @@ const Hero = () => {
         backgroundImage: `url(${HeroImg.src})`,
       }}
     >
+
+
       <HeroTextBox
         direction="left"
         texts={[
@@ -29,11 +31,16 @@ const Hero = () => {
 
       <section className=" hero px-3 max-w-[1400px] mx-auto space-y-6 text-center py-16 ">
         <div className="max-w-[800px] mx-auto">
-          <h1 className=" text-[2rem] md:text-[3rem] xl:text-[5rem] font-extrabold leading-tight text-[#fff] ">
+          <h1 className=" text-[1.5rem] font-medium text-[#fff] opacity-80">
+            Hallelujah Gospel Choice Radio Station
+          </h1>
+        </div>
+        <div className="max-w-[800px] mx-auto">
+          <h1 className=" text-[2rem] md:text-[3rem] xl:text-[4rem] font-extrabold leading-tight text-[#fff] ">
             Uplifting spirits with divine melodies
           </h1>
         </div>
-        <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem]" style={{marginBottom: "3rem"}}>
+        <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem]" style={{ marginBottom: "3rem" }}>
           Hallelujah Choice Radio Gospel Charting God&apos;s Enormous Blessings
           Below.
         </div>
