@@ -197,7 +197,7 @@ const Header = () => {
         <div className=" flex items-center gap-4 ">
           <Link
             href={`/sponsor`}
-            className=" lg:block hidden text-[1.1rem] px-7 py-2  bg-[#0d2c7b] text-white !flex !items-center !gap-2 !justify-center "
+            className="!hidden lg:text-[1.1rem] px-7 py-2  bg-[#0d2c7b] text-white lg:!flex !items-center !gap-2 !justify-center "
           >
              <span><FaArrowRightLong/> </span><span>Partner With Us</span>
           </Link>

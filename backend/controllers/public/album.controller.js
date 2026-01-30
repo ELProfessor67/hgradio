@@ -86,3 +86,29 @@ export const getAlbumById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getTopSoldAlbums = async (req, res) => {
+  try {
+    const limitRaw = req.query.limit;
+    const parsed = Number.parseInt(String(limitRaw ?? "10"), 10);
+    const limit = Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 50) : 10;
+
+    const albums = await Album.find({})
+      .populate("artist", "_id name profileImg")
+      .sort({ salesCount: -1, totalRevenue: -1, lastSaleAt: -1, createdAt: -1 })
+      .limit(limit)
+      .select("-songs");
+
+    return res.status(200).json({
+      success: true,
+      limit,
+      albums,
+    });
+  } catch (error) {
+    console.error("Error fetching top sold albums:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching top sold albums.",
+    });
+  }
+};

@@ -187,11 +187,11 @@ export default function App() {
 						<div className="row">
 							<div className="col-lg-12">
 								<div className="single-audio-player">
-									<div class="single-audio-thumb">
+									<div class="single-audio-thumb !hidden lg:!block">
 										{isLive ? <img src={currentSong.cover} alt='image' /> : <img src="assets/images/shows/player/3.jpg" alt="image" />}
 
 									</div>
-									<div className="single-audio-content-top">
+									<div className="single-audio-content-top !hidden lg:!block">
 										{
 											IsTonePlayingMessage ?
 												<h4 className="title">{IsTonePlayingMessage}</h4>

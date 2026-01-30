@@ -16,6 +16,7 @@ type TrendingItem = {
   img: StaticImageData;
   title: string;
   description: string;
+  link: string;
 };
 
 const items: TrendingItem[] = [
@@ -23,21 +24,25 @@ const items: TrendingItem[] = [
     img: Trending3,
     title: 'Top Global Ranking',
     description: 'Single / CD Downloads',
+    link: "/top-global-ranking"
   },
   {
     img: Trending4,
     title: 'Epic Unveiling Albums',
     description: 'New Released Projects',
+    link: "/epic-unveiling-albums"
   },
   {
     img: Trending5,
     title: 'Chart Topping Songs',
     description: 'Most Listened To Music',
+    link: "/chart-topping-songs"
   },
   {
     img: Trending6,
     title: 'Breaking Gospel',
     description: 'Music News',
+    link: "/breaking-gospel"
   },
 ];
 
@@ -81,7 +86,7 @@ interface CardProps {
 const Card: React.FC<CardProps> = ({ item, idx }) => {
   return (
 
-    <Link href={"/albums"}>
+    <Link href={item.link}>
       <div key={idx} className=" overflow-hidden group cursor-pointer ">
         <div className=' overflow-hidden  '>
           <Image src={item.img} alt={item.title} className="w-full h-[16rem] object-cover  group-hover:scale-110 transition-all duration-300 ease-in-out " />
