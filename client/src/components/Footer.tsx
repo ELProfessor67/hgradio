@@ -36,7 +36,7 @@ export const Footer = () => {
           </div>
           <div className=" flex gap-2 mt-2 ">
             <IoMdMail className=" mt-1 " />
-            <p>info@hgcradio.com</p>
+            <p>info@hgcradio.org</p>
           </div>
           <div className=" flex items-center md:justify-start justify-center gap-4 mt-[2rem] ">
             <Link href={`#`} target="_blank" className=" text-[1.3rem] ">
