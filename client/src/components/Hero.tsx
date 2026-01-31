@@ -6,7 +6,7 @@ import LegacyHeroPlayer from "@/components/LagacyHeroPlayer";
 const Hero = () => {
   return (
     <div
-      className="relative h-[35rem] lg:h-[40rem] bg-cover bg-top bg-no-repeat flex items-start lg:items-center lg:pt-0 pt-[5rem] overflow-hidden "
+      className="relative h-[48rem] lg:h-[40rem] bg-cover bg-top bg-no-repeat flex items-start lg:items-center lg:pt-0 pt-[5rem] overflow-hidden "
       style={{
         backgroundImage: `url(${HeroImg.src})`,
       }}
@@ -31,12 +31,12 @@ const Hero = () => {
 
       <section className=" hero px-3 max-w-[1400px] mx-auto space-y-6 text-center py-16 ">
         <div className="max-w-[800px] mx-auto">
-          <h1 className=" text-[1.5rem] font-medium text-[#fff] opacity-80">
+          <h1 className=" text-[1.6rem] font-medium text-[#fff] opacity-80">
             Hallelujah Gospel Choice Radio Station
           </h1>
         </div>
         <div className="max-w-[800px] mx-auto">
-          <h1 className=" text-[2rem] md:text-[3rem] xl:text-[4rem] font-extrabold leading-tight text-[#fff] ">
+          <h1 className=" text-[1.9rem] md:text-[3rem] xl:text-[4rem] font-extrabold leading-tight text-[#fff] ">
             Uplifting spirits with divine melodies
           </h1>
         </div>

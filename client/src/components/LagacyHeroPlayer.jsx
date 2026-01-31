@@ -103,47 +103,47 @@ const Timer = ({ timerStart }) => {
 
 export default function App() {
 	const {
-        user,setUser,
-        schediles,setSchedules,
-        songs,setSongs,
-        isPlay,setIsPlay,
-        message,setMessage,
-        name,setName,
-        location,setLocation,
-        gedetailOpen,setGetDetailsOpne,
-        callOpen,setCallOpen,
-        permissionReset,setPermissionReset,
-        callStatus,setCallStatus,
-        volume,setVolume,
-        record,setRecord,
-        chatOpen,setChatOpen,
-        scheduleOpen,setScheduleOpen,
-        djs,setDjs,
-        nextDJ,setNextDJ,
-        audioRef,
-        mediaRecorder,
-        recordedChunks,
-        downloadLink,
-        owner,
-        schedulePlaying,
-        IsTonePlayingMessage,
-        roomActive,
-        handleRequestSong,
-        isLive,
-        autodj,
-        messageList,
-        handleSendMessage,
-        callAdmin,
-        cutCall,
-        nextSong,
-        currentSong,
-        disabledPlatBtn,
-        rOpen,setROPen,
-        handlePlay,
-        handleRecord,
-        handleCall,
-        handleEnded
-    } = useRadio()
+		user, setUser,
+		schediles, setSchedules,
+		songs, setSongs,
+		isPlay, setIsPlay,
+		message, setMessage,
+		name, setName,
+		location, setLocation,
+		gedetailOpen, setGetDetailsOpne,
+		callOpen, setCallOpen,
+		permissionReset, setPermissionReset,
+		callStatus, setCallStatus,
+		volume, setVolume,
+		record, setRecord,
+		chatOpen, setChatOpen,
+		scheduleOpen, setScheduleOpen,
+		djs, setDjs,
+		nextDJ, setNextDJ,
+		audioRef,
+		mediaRecorder,
+		recordedChunks,
+		downloadLink,
+		owner,
+		schedulePlaying,
+		IsTonePlayingMessage,
+		roomActive,
+		handleRequestSong,
+		isLive,
+		autodj,
+		messageList,
+		handleSendMessage,
+		callAdmin,
+		cutCall,
+		nextSong,
+		currentSong,
+		disabledPlatBtn,
+		rOpen, setROPen,
+		handlePlay,
+		handleRecord,
+		handleCall,
+		handleEnded
+	} = useRadio()
 
 
 
@@ -186,28 +186,32 @@ export default function App() {
 					<div className="px-3">
 						<div className="row">
 							<div className="col-lg-12">
-								<div className="single-audio-player">
-									<div class="single-audio-thumb !hidden lg:!block">
-										{isLive ? <img src={currentSong.cover} alt='image' /> : <img src="assets/images/shows/player/3.jpg" alt="image" />}
+								<div className="single-audio-player flex flex-col justify-center items-center lg:flex-row gap-4">
+									<div className="flex flex-col justify-center items-center lg:flex-row gap-4">
 
-									</div>
-									<div className="single-audio-content-top !hidden lg:!block">
-										{
-											IsTonePlayingMessage ?
-												<h4 className="title">{IsTonePlayingMessage}</h4>
-												:
-												<h4 className="title">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name} Live”`}</h4>
-										}
-										<p className="audio-time" style={{ fontSize: "12px", whiteSpace: 'pre' }}>Current song : {currentSong?.title?.split('.')[0]}</p>
-										{
-											(currentSong?.artist && currentSong?.album) &&
-											<p className="audio-time" style={{ fontSize: "12px", whiteSpace: 'pre' }}>{currentSong?.artist?.toLowerCase() != 'unknown' ? `Artist: ${currentSong?.artist} ,` : ''}  {currentSong?.album?.toLowerCase() != 'unknown' ? `Album: ${currentSong?.album}` : ''} </p>
-										}
-										<p className="audio-time" style={{ fontSize: "12px", whiteSpace: 'pre' }}>Next song : {nextSong?.title?.split('.')[0]}</p>
+
+										<div class="single-audio-thumb">
+											{isLive ? <img src={currentSong.cover} alt='image' /> : <img src="assets/images/shows/player/3.jpg" alt="image" />}
+
+										</div>
+										<div className="single-audio-content-top flex flex-col justify-center items-center lg:block">
+											{
+												IsTonePlayingMessage ?
+													<h4 className="title">{IsTonePlayingMessage}</h4>
+													:
+													<h4 className="title">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name} Live”`}</h4>
+											}
+											<p className="audio-time" style={{ fontSize: "12px", whiteSpace: 'pre' }}>Current song : {currentSong?.title?.split('.')[0]}</p>
+											{
+												(currentSong?.artist && currentSong?.album) &&
+												<p className="audio-time" style={{ fontSize: "12px", whiteSpace: 'pre' }}>{currentSong?.artist?.toLowerCase() != 'unknown' ? `Artist: ${currentSong?.artist} ,` : ''}  {currentSong?.album?.toLowerCase() != 'unknown' ? `Album: ${currentSong?.album}` : ''} </p>
+											}
+											<p className="audio-time" style={{ fontSize: "12px", whiteSpace: 'pre' }}>Next song : {nextSong?.title?.split('.')[0]}</p>
+										</div>
 									</div>
 									<div class="single-audio-content">
 										<div class="">
-											<div class="audio-control flex items-center flex-row justify-center gap-[5rem]">												
+											<div class="audio-control flex items-center flex-row justify-center gap-[5rem]">
 												<div className='flex gap-4 items-center'>
 													<button className=" border-none outline-none text-white disabled:cursor-[not-allowed]  cursor-pointer disabled:opacity-25 mr-2" disabled={!isLive} title="Call" onClick={handleCall}><MdCall size={35} /></button>
 													<button className="disabled:opacity-20 p-2 rounded-full border-none outline-none text-white" disabled={!roomActive || disabledPlatBtn} onClick={handlePlay}>
