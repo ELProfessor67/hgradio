@@ -201,12 +201,12 @@ export default function App() {
 													:
 													<h4 className="title">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name} Live”`}</h4>
 											}
-											<p className="audio-time whitespace-break-spaces" style={{ fontSize: "12px", whiteSpace: 'break-spaces', textAlign: 'center' }}>Current song : {currentSong?.title?.split('.')[0]}</p>
+											<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Current song : {currentSong?.title?.split('.')[0]}</p>
 											{
 												(currentSong?.artist && currentSong?.album) &&
-												<p className="audio-time whitespace-break-spaces" style={{ fontSize: "12px", whiteSpace: 'break-space',textAlign: 'center' }}>{currentSong?.artist?.toLowerCase() != 'unknown' ? `Artist: ${currentSong?.artist} ,` : ''}  {currentSong?.album?.toLowerCase() != 'unknown' ? `Album: ${currentSong?.album}` : ''} </p>
+												<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-space' }}>{currentSong?.artist?.toLowerCase() != 'unknown' ? `Artist: ${currentSong?.artist} ,` : ''}  {currentSong?.album?.toLowerCase() != 'unknown' ? `Album: ${currentSong?.album}` : ''} </p>
 											}
-											<p className="audio-time" style={{ fontSize: "12px", whiteSpace: 'break-spaces',textAlign: 'center' }}>Next song : {nextSong?.title?.split('.')[0]}</p>
+											<p className="audio-time text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Next song : {nextSong?.title?.split('.')[0]}</p>
 										</div>
 									</div>
 									<div class="single-audio-content">
