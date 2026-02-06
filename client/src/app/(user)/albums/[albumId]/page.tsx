@@ -359,7 +359,7 @@ const Page: React.FC<PageProps> = ({ params }) => {
                   <div>
                     {isPurchased
                       ? formatDuration(Number(song.duration))
-                      : formatDuration(10)}
+                      : formatDuration(60)}
                   </div>
                 </div>
 
@@ -452,8 +452,8 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
     }
 
     if (!isPurchased) {
-      maxPlayTimeRef.current = 10;
-      if (audioRef.current.currentTime > 10) {
+      maxPlayTimeRef.current = 60;
+      if (audioRef.current.currentTime > 60) {
         audioRef.current.pause();
         audioRef.current.currentTime = 0;
         setIsPlaying(false);
@@ -469,7 +469,7 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
       previewPromptedRef.current = false;
 
       audio.addEventListener("loadedmetadata", () => {
-        maxPlayTimeRef.current = isPurchased ? audio.duration : 10; // 10s preview unless purchased
+        maxPlayTimeRef.current = isPurchased ? audio.duration : 60; // 60s preview unless purchased
       });
 
       audio.addEventListener("timeupdate", () => {

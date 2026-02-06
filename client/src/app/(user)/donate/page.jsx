@@ -3,10 +3,31 @@ import Breadcrum from '@/components/Breadcrum'
 import React, { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ButtonLoading } from '@/utils/Loading'
-import { FaCreditCard } from 'react-icons/fa'
+import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle } from 'react-icons/fa'
+
+
+const methodsContent = {
+    "cash": {
+      heading: "Cash App Payment",
+      content: "Please use this $Cashtag on your Cash App.",
+      id: "$HallelujahGospel"
+    },
+    "zelle": {
+      heading: "Zelle Payment",
+      content: "Please use this Zelle number on your Zelle App.",
+      id: "9255942138"
+    },
+    "venmo": {
+      heading: "Venmo Payment",
+      content: "Please use this Venmo number on your Venmo App.",
+      id: "9255942138"
+    },
+}
 
 const page = () => {
     const [loading, setLoading] = useState(false)
+    const [selectedMethod, setSelectedMethod] = useState(null)
+    const [copied, setCopied] = useState(false)
     const [form, setForm] = useState({
         firstName: "",
         lastName: "",
@@ -26,6 +47,13 @@ const page = () => {
     const handleChange = (e) => {
         const { name, value } = e.target
         setForm(prev => ({ ...prev, [name]: value }))
+    }
+
+    const handleCopy = (text) => {
+        navigator.clipboard.writeText(text)
+        setCopied(true)
+        toast.success('Copied to clipboard!', { style: { background: 'green', border: 'none', color: 'white' } })
+        setTimeout(() => setCopied(false), 2000)
     }
 
     const validate = () => {
@@ -116,6 +144,94 @@ const page = () => {
                                     <li>Support community outreach</li>
                                 </ul>
                             </div>
+                        </div>
+
+
+                        <div className="space-y-4">
+                            <div className="text-center">
+                                <p className="text-lg font-semibold mb-1">Or Choose Alternative Payment Method</p>
+                                <p className="text-sm text-gray-400">Select your preferred payment method below</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedMethod(selectedMethod === 'cash' ? null : 'cash')}
+                                    className={`flex items-center justify-center gap-2 py-4 px-6 font-semibold transition-all ${
+                                        selectedMethod === 'cash'
+                                            ? 'bg-second text-black'
+                                            : 'bg-[#d9d9d9]/10 text-white hover:bg-[#d9d9d9]/20'
+                                    }`}
+                                >
+                                    <FaDollarSign className="text-xl" />
+                                    Cash App
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedMethod(selectedMethod === 'zelle' ? null : 'zelle')}
+                                    className={`flex items-center justify-center gap-2 py-4 px-6 font-semibold transition-all ${
+                                        selectedMethod === 'zelle'
+                                            ? 'bg-second text-black'
+                                            : 'bg-[#d9d9d9]/10 text-white hover:bg-[#d9d9d9]/20'
+                                    }`}
+                                >
+                                    <FaMoneyBillWave className="text-xl" />
+                                    Zelle
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedMethod(selectedMethod === 'venmo' ? null : 'venmo')}
+                                    className={`flex items-center justify-center gap-2 py-4 px-6 font-semibold transition-all ${
+                                        selectedMethod === 'venmo'
+                                            ? 'bg-second text-black'
+                                            : 'bg-[#d9d9d9]/10 text-white hover:bg-[#d9d9d9]/20'
+                                    }`}
+                                >
+                                    <FaDollarSign className="text-xl" />
+                                    Venmo
+                                </button>
+                            </div>
+
+                            {selectedMethod && (
+                                <div className="bg-[#d9d9d9]/10 p-6 space-y-3 transition-all duration-300 border-l-4 border-second">
+                                    <h3 className="text-xl font-bold text-second">
+                                        {methodsContent[selectedMethod].heading}
+                                    </h3>
+                                    <p className="text-gray-300">
+                                        {methodsContent[selectedMethod].content}
+                                    </p>
+                                    <div className="flex items-center gap-3 bg-black/30 p-4 rounded">
+                                        <div className="flex-1">
+                                            <p className="text-sm text-gray-400 mb-1">
+                                                {selectedMethod === 'cash' ? 'Cash Tag' : 'Phone Number'}
+                                            </p>
+                                            <p className="text-2xl font-bold text-second">
+                                                {methodsContent[selectedMethod].id}
+                                            </p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCopy(methodsContent[selectedMethod].id)}
+                                            className="bg-second hover:bg-second/80 text-black px-4 py-2 rounded font-semibold flex items-center gap-2 transition-all"
+                                        >
+                                            {copied ? (
+                                                <>
+                                                    <FaCheckCircle /> Copied
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <FaCopy /> Copy
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <p className="text-sm text-gray-400 italic">
+                                        After making your payment, you can still fill out the form above to let us know about your donation.
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <div className=" flex justify-center pt-[0.5rem] ">

@@ -54,7 +54,11 @@ const Page = () => {
         setError(data?.message || "Failed to fetch top albums");
         setAlbums([]);
       } else {
-        setAlbums(Array.isArray(data?.albums) ? data.albums : []);
+        // Filter out albums with no sales (salesCount is 0 or undefined)
+        const filteredAlbums = Array.isArray(data?.albums) 
+          ? data.albums.filter((album: AlbumType) => album.salesCount && album.salesCount > 0)
+          : [];
+        setAlbums(filteredAlbums);
       }
     } catch (err) {
       console.error("Fetch top sold albums error:", err);
