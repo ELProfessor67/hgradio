@@ -49,6 +49,12 @@ const Page = async () => {
     history = [];
   }
 
+  // Calculate daily play bonus based on days since reference date
+  const referenceDate = new Date('2026-02-03'); // Reference date: 03/02/2026
+  const today = new Date();
+  const daysDifference = Math.floor((today.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24));
+  const dailyPlayBonus = Math.max(0, daysDifference * 2); // 2 plays per day
+
   const bySong = new Map<string, ChartSong>();
   for (const item of history) {
     const title = String(item?.title || "").trim();
@@ -70,6 +76,11 @@ const Page = async () => {
         plays: 1,
       });
     }
+  }
+
+  // Add daily bonus to all songs
+  for (const song of bySong.values()) {
+    song.plays += dailyPlayBonus;
   }
 
   const topSongs = [...bySong.values()]

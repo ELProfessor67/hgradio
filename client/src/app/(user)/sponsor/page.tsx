@@ -25,7 +25,7 @@ const methodsContent = {
   "cash": {
     heading: "Cash App Payment",
     content: "Please use this $Cashtag on your Cash App.",
-    id: "$GregFranklin",
+    id: "$hgcradio",
     label: "Cash Tag"
   },
   "zelle": {
@@ -453,7 +453,7 @@ const Form = () => {
                           : 'bg-black/20 text-white hover:bg-black/30'
                       }`}
                     >
-                      <FaDollarSign className="text-xl" />
+                      <img src="/cash-app.png" alt="Cash App" className="w-8 h-8" />
                       Cash App
                     </button>
 
@@ -466,7 +466,7 @@ const Form = () => {
                           : 'bg-black/20 text-white hover:bg-black/30'
                       }`}
                     >
-                      <FaMoneyBillWave className="text-xl" />
+                      <img src="/zelle.png" alt="Zelle" className="w-10 h-10" />
                       Zelle
                     </button>
 
@@ -479,7 +479,7 @@ const Form = () => {
                           : 'bg-black/20 text-white hover:bg-black/30'
                       }`}
                     >
-                      <FaDollarSign className="text-xl" />
+                      <img src="/venmo.png" alt="Venmo" className="w-10 h-10" />
                       Venmo
                     </button>
 
@@ -492,7 +492,7 @@ const Form = () => {
                           : 'bg-black/20 text-white hover:bg-black/30'
                       }`}
                     >
-                      <FaMoneyCheck className="text-xl" />
+                      <img src="/check.png" alt="Check" className="w-10 h-10" />
                       Check / Money Order
                     </button>
                   </div>

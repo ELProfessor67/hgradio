@@ -61,6 +61,22 @@ const Page = () => {
                 <div className=" w-2 h-2 rounded-full bg-white"></div>
                 <p>info@hgcradio.org</p>
               </div>
+              <div className=" flex items-center gap-4 ">
+                <div className=" w-2 h-2 rounded-full bg-white"></div>
+                <p>contact@hgcradio.org</p>
+              </div>
+              <div className=" flex items-center gap-4 ">
+                <div className=" w-2 h-2 rounded-full bg-white"></div>
+                <p>support@hgcradio.org</p>
+              </div>
+              <div className=" flex items-center gap-4 ">
+                <div className=" w-2 h-2 rounded-full bg-white"></div>
+                <p>studio@hgcradio.org</p>
+              </div>
+              <div className=" flex items-center gap-4 ">
+                <div className=" w-2 h-2 rounded-full bg-white"></div>
+                <p>admin@hgcradio.org</p>
+              </div>
             </div>
           </div>
 
