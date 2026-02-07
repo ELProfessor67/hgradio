@@ -3,24 +3,33 @@ import Breadcrum from '@/components/Breadcrum'
 import React, { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ButtonLoading } from '@/utils/Loading'
-import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle } from 'react-icons/fa'
+import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle, FaMoneyCheck, FaEnvelope } from 'react-icons/fa'
 
 
 const methodsContent = {
     "cash": {
       heading: "Cash App Payment",
       content: "Please use this $Cashtag on your Cash App.",
-      id: "$HallelujahGospel"
+      id: "$GregFranklin",
+      label: "Cash Tag"
     },
     "zelle": {
       heading: "Zelle Payment",
       content: "Please use this Zelle number on your Zelle App.",
-      id: "9255942138"
+      id: "510-860-8608",
+      label: "Phone Number"
     },
     "venmo": {
       heading: "Venmo Payment",
       content: "Please use this Venmo number on your Venmo App.",
-      id: "9255942138"
+      id: "9255942138",
+      label: "Phone Number"
+    },
+    "check": {
+      heading: "Check or Money Order",
+      content: "Please mail your check or money order to the address below. You can include the artist name or purpose in the memo line.",
+      address: "Hallelujah Gospel Globally\n231 Market Place 195\nSan Ramon, CA 94583\nUSA",
+      label: "Mailing Address"
     },
 }
 
@@ -37,6 +46,7 @@ const page = () => {
         expiryMonth: "",
         expiryYear: "",
         cvv: "",
+        comment: "",
     })
 
     const years = useMemo(() => {
@@ -90,6 +100,7 @@ const page = () => {
                     expiryMonth: form.expiryMonth,
                     expiryYear: form.expiryYear,
                     cvv: form.cvv,
+                    comment: form.comment,
                 })
             })
             const data = await res.json()
@@ -98,7 +109,7 @@ const page = () => {
             }
 
             toast.success('Donation successful! Thank you!', { style: { background: 'green', border: 'none', color: 'white' } })
-            setForm({ firstName: "", lastName: "", email: "", amount: "", cardNumber: "", expiryMonth: "", expiryYear: "", cvv: "" })
+            setForm({ firstName: "", lastName: "", email: "", amount: "", cardNumber: "", expiryMonth: "", expiryYear: "", cvv: "", comment: "" })
         } catch (error) {
             toast.error(error.message || 'Something went wrong', { style: { background: 'red', border: 'none', color: 'white' } })
         } finally {
@@ -121,6 +132,16 @@ const page = () => {
                         <div className=" flex items-center gap-4 ">
                             <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Email" className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full " />
                             <input type="number" name="amount" value={form.amount} onChange={handleChange} placeholder="Amount (USD)" className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full " />
+                        </div>
+                        <div>
+                            <textarea 
+                                name="comment" 
+                                value={form.comment} 
+                                onChange={handleChange} 
+                                placeholder="Artist Name or Purpose of Donation (Optional)" 
+                                rows={3}
+                                className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full resize-none " 
+                            />
                         </div>
 
                         <div className=" grid md:grid-cols-2 grid-cols-1 gap-4 ">
@@ -153,7 +174,7 @@ const page = () => {
                                 <p className="text-sm text-gray-400">Select your preferred payment method below</p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <button
                                     type="button"
                                     onClick={() => setSelectedMethod(selectedMethod === 'cash' ? null : 'cash')}
@@ -192,6 +213,19 @@ const page = () => {
                                     <FaDollarSign className="text-xl" />
                                     Venmo
                                 </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setSelectedMethod(selectedMethod === 'check' ? null : 'check')}
+                                    className={`flex items-center justify-center gap-2 py-4 px-6 font-semibold transition-all ${
+                                        selectedMethod === 'check'
+                                            ? 'bg-second text-black'
+                                            : 'bg-[#d9d9d9]/10 text-white hover:bg-[#d9d9d9]/20'
+                                    }`}
+                                >
+                                    <FaMoneyCheck className="text-xl" />
+                                    Check / Money Order
+                                </button>
                             </div>
 
                             {selectedMethod && (
@@ -205,30 +239,57 @@ const page = () => {
                                     <div className="flex items-center gap-3 bg-black/30 p-4 rounded">
                                         <div className="flex-1">
                                             <p className="text-sm text-gray-400 mb-1">
-                                                {selectedMethod === 'cash' ? 'Cash Tag' : 'Phone Number'}
+                                                {methodsContent[selectedMethod].label}
                                             </p>
-                                            <p className="text-2xl font-bold text-second">
-                                                {methodsContent[selectedMethod].id}
-                                            </p>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => handleCopy(methodsContent[selectedMethod].id)}
-                                            className="bg-second hover:bg-second/80 text-black px-4 py-2 rounded font-semibold flex items-center gap-2 transition-all"
-                                        >
-                                            {copied ? (
-                                                <>
-                                                    <FaCheckCircle /> Copied
-                                                </>
+                                            {selectedMethod === 'check' ? (
+                                                <p className="text-lg font-bold text-second whitespace-pre-line">
+                                                    {methodsContent[selectedMethod].address}
+                                                </p>
                                             ) : (
-                                                <>
-                                                    <FaCopy /> Copy
-                                                </>
+                                                <p className="text-2xl font-bold text-second">
+                                                    {methodsContent[selectedMethod].id}
+                                                </p>
                                             )}
-                                        </button>
+                                        </div>
+                                        {selectedMethod !== 'check' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCopy(methodsContent[selectedMethod].id)}
+                                                className="bg-second hover:bg-second/80 text-black px-4 py-2 rounded font-semibold flex items-center gap-2 transition-all"
+                                            >
+                                                {copied ? (
+                                                    <>
+                                                        <FaCheckCircle /> Copied
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaCopy /> Copy
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
+                                        {selectedMethod === 'check' && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleCopy(methodsContent[selectedMethod].address)}
+                                                className="bg-second hover:bg-second/80 text-black px-4 py-2 rounded font-semibold flex items-center gap-2 transition-all"
+                                            >
+                                                {copied ? (
+                                                    <>
+                                                        <FaCheckCircle /> Copied
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <FaCopy /> Copy
+                                                    </>
+                                                )}
+                                            </button>
+                                        )}
                                     </div>
                                     <p className="text-sm text-gray-400 italic">
-                                        After making your payment, you can still fill out the form above to let us know about your donation.
+                                        {selectedMethod === 'check' 
+                                            ? 'Please include the artist name or purpose in the memo line of your check or on a separate note with your money order.'
+                                            : 'After making your payment, you can fill out the form above to let us know about your donation and include the artist name or purpose in the comment field.'}
                                     </p>
                                 </div>
                             )}
