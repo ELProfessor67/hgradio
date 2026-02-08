@@ -31,12 +31,12 @@ const Hero = () => {
 
       <section className=" hero px-3 max-w-[1400px] mx-auto space-y-6 text-center py-16 ">
         <div className="max-w-[800px] mx-auto">
-          <h1 className=" text-[1.6rem] font-medium text-[#fff] opacity-80">
+          <h1 className=" text-[1.9rem] md:text-[2.5rem] xl:text-[3rem] font-bold text-[#fff] opacity-80">
             Hallelujah Gospel Choice Radio Station
           </h1>
         </div>
         <div className="max-w-[800px] mx-auto">
-          <h1 className=" text-[1.9rem] md:text-[3rem] xl:text-[4rem] font-extrabold leading-tight text-[#fff] ">
+          <h1 className=" text-[1.6rem] md:text-[1.9rem] xl:text-[2.5rem] font-medium leading-tight text-[#fff] ">
             Uplifting spirits with divine melodies
           </h1>
         </div>
