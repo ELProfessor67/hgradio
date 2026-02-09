@@ -25,6 +25,8 @@ const Page = async () => {
     { videoSrc: "/vid3.mp4", link: "/contact" },
   ];
 
+
+  
   const res = await fetch(
     "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
     {

@@ -279,13 +279,13 @@ const Page = () => {
   const computedTotals =
     accountType === "seller"
       ? albums.reduce(
-          (acc, a) => {
-            acc.totalSales += Number(a.salesCount || 0);
-            acc.totalRevenue += Number(a.totalRevenue || 0);
-            return acc;
-          },
-          { totalSales: 0, totalRevenue: 0 }
-        )
+        (acc, a) => {
+          acc.totalSales += Number(a.salesCount || 0);
+          acc.totalRevenue += Number(a.totalRevenue || 0);
+          return acc;
+        },
+        { totalSales: 0, totalRevenue: 0 }
+      )
       : { totalSales: 0, totalRevenue: 0 };
 
   const totalSales = summary?.totalSales ?? computedTotals.totalSales;
@@ -318,7 +318,41 @@ const Page = () => {
             <h3 className=" text-[1.5rem] font-medium ">
               {accountType === "buyer" ? "My Purchased Albums" : "My Albums"}
             </h3>
+            {accountType === "seller" ? (
+              <div className=" mt-2 flex justify-end ">
+                {sellerApprovalStatus === "approved" ? (
+                  <Link
+                    href={`/dashboard/${userData._id}/add-album`}
+                    className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
+                  >
+                    Add Album
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.error(
+                        "Your form is not approved. Please contact the admin.",
+                        {
+                          style: {
+                            background: "red",
+                            border: "none",
+                            color: "white",
+                          },
+                        }
+                      );
+                    }}
+                    disabled
+                    className=" bg-second/40 text-[#000] transition-all duration-300 ease-in-out w-[8rem] text-center py-2 cursor-not-allowed opacity-70 "
+                    title="Not approved yet"
+                  >
+                    Add Album
+                  </button>
+                )}
+              </div>
+            ) : null}
             <div className=" flex items-center gap-2 ">
+
               <div
                 onClick={() => {
                   logout();
@@ -344,39 +378,7 @@ const Page = () => {
               </Link>
             </div>
           </div>
-          {accountType === "seller" ? (
-            <div className=" mt-2 flex justify-end ">
-              {sellerApprovalStatus === "approved" ? (
-                <Link
-                  href={`/dashboard/${userData._id}/add-album`}
-                  className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
-                >
-                  Add Album
-                </Link>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    toast.error(
-                      "Your form is not approved. Please contact the admin.",
-                      {
-                        style: {
-                          background: "red",
-                          border: "none",
-                          color: "white",
-                        },
-                      }
-                    );
-                  }}
-                  disabled
-                  className=" bg-second/40 text-[#000] transition-all duration-300 ease-in-out w-[8rem] text-center py-2 cursor-not-allowed opacity-70 "
-                  title="Not approved yet"
-                >
-                  Add Album
-                </button>
-              )}
-            </div>
-          ) : null}
+
 
           {accountType === "seller" && sellerApprovalStatus !== "approved" && (
             <div className="mt-4 bg-[#0b1834]/80 border border-yellow-400/30 p-4 text-white">

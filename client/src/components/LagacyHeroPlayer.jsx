@@ -201,12 +201,12 @@ export default function App() {
 													:
 													<h4 className="title">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name} Live”`}</h4>
 											}
-											<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Current song : {currentSong?.title?.split('.')[0]}</p>
+											{/* <p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Current song : {currentSong?.title?.split('.')[0]}</p> */}
 											{
 												(currentSong?.artist && currentSong?.album) &&
 												<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-space' }}>{currentSong?.artist?.toLowerCase() != 'unknown' ? `Artist: ${currentSong?.artist} ,` : ''}  {currentSong?.album?.toLowerCase() != 'unknown' ? `Album: ${currentSong?.album}` : ''} </p>
 											}
-											<p className="audio-time text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Next song : {nextSong?.title?.split('.')[0]}</p>
+											{/* <p className="audio-time text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Next song : {nextSong?.title?.split('.')[0]}</p> */}
 										</div>
 									</div>
 									<div class="single-audio-content">
@@ -230,12 +230,21 @@ export default function App() {
 
 													<input type="range" className="w-[90%]" min={0} max={1} step={0.1} value={volume} onChange={(e) => setVolume(e.target.value)} />
 												</div> */}
+
+
+										
 											</div>
 
 
 										</div>
 
 									</div>
+
+									<div className="single-audio-content-top flex flex-col justify-center items-center lg:block">
+										    <h1 className="text-white text-2xl font-bold text-nowrap mb-2">Song Details: </h1>
+											<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Current song : {currentSong?.title?.split('.')[0]}</p>
+											<p className="audio-time text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Next song : {nextSong?.title?.split('.')[0]}</p>
+										</div>
 
 								</div>
 							</div>
