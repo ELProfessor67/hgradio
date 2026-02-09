@@ -1,6 +1,5 @@
 import bg1 from "@/assets/bg1.jpg";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
 import plus from "@/assets/el_plus.png";
 import dot from "@/assets/right-dot-circle.png";
 
