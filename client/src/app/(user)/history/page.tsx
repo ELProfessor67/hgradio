@@ -1,4 +1,3 @@
-"use client";
 import bg1 from "@/assets/bg1.jpg";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
@@ -7,6 +6,7 @@ import dot from "@/assets/right-dot-circle.png";
 
 import Ads from "@/components/Ads";
 import Breadcrum from "@/components/Breadcrum";
+import RendeDate from "@/components/RendeDate";
 
 interface SongHistoryItem {
   _id : string
@@ -19,35 +19,22 @@ interface SongHistoryItem {
   owner: string;
 }
 
-const Page = () => {
+const Page = async () => {
   const videoAds = [
     { videoSrc: "/vid1.mp4", link: "/contact" },
     { videoSrc: "/vid2.mp4", link: "/contact" },
     { videoSrc: "/vid3.mp4", link: "/contact" },
   ];
 
-  const [history, setHistory] = useState<SongHistoryItem[]>([]);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      const res = await fetch(
-        "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
-      );
-      const data = await res.json();
-      setHistory(data.history || []);
-    };
-    fetchHistory();
-  }, []);
+  const res = await fetch(
+    "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
+    {
+      cache: "no-store", 
+    }
+  );
 
-
-  // const res = await fetch(
-  //   "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
-  //   {
-  //     cache: "no-store", 
-  //   }
-  // );
-
-  // const history = await res.json();
+  const history = await res.json();
 
   return (
     <div>
@@ -111,13 +98,7 @@ const Page = () => {
                       {item.album}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      {new Date(new Date().getTime() - ((index + 1) * 5 * 60 * 1000)).toLocaleString("en-US", {
-                        day: "2-digit",
-                        month: "short",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                      <RendeDate  index={index}/>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap"></td>
                   </tr>

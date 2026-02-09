@@ -661,7 +661,7 @@ const Page = () => {
               {accountType === "buyer"
                 ? "You haven't purchased any albums yet."
                 : (
-                  <div className=" text-gray-200 text-center h-[10rem] flex items-center justify-center ">
+                  <div className=" text-gray-200 text-center h-[10rem] flex items-center justify-center flex-col gap-2 ">
                     <p>There are no album yet please add some albums</p>
                     <Link
                       href={`/dashboard/${userData._id}/add-album`}
