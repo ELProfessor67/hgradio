@@ -1,3 +1,4 @@
+"use client";
 import bg1 from "@/assets/bg1.jpg";
 import Image from "next/image";
 import React from "react";
@@ -26,7 +27,7 @@ const Page = async () => {
   ];
 
 
-  
+
   const res = await fetch(
     "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
     {
