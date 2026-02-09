@@ -660,7 +660,17 @@ const Page = () => {
             <div className=" text-gray-200 text-center h-[10rem] flex items-center justify-center ">
               {accountType === "buyer"
                 ? "You haven't purchased any albums yet."
-                : "There are no album yet"}
+                : (
+                  <div className=" text-gray-200 text-center h-[10rem] flex items-center justify-center ">
+                    <p>There are no album yet please add some albums</p>
+                    <Link
+                      href={`/dashboard/${userData._id}/add-album`}
+                      className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
+                    >
+                      Add Album
+                    </Link>
+                  </div>
+                )}
             </div>
           )}
         </div>

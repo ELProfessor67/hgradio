@@ -1,7 +1,7 @@
 "use client";
 import bg1 from "@/assets/bg1.jpg";
 import Image from "next/image";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import plus from "@/assets/el_plus.png";
 import dot from "@/assets/right-dot-circle.png";
 
@@ -19,23 +19,35 @@ interface SongHistoryItem {
   owner: string;
 }
 
-const Page = async () => {
+const Page = () => {
   const videoAds = [
     { videoSrc: "/vid1.mp4", link: "/contact" },
     { videoSrc: "/vid2.mp4", link: "/contact" },
     { videoSrc: "/vid3.mp4", link: "/contact" },
   ];
 
+  const [history, setHistory] = useState<SongHistoryItem[]>([]);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      const res = await fetch(
+        "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
+      );
+      const data = await res.json();
+      setHistory(data.history || []);
+    };
+    fetchHistory();
+  }, []);
 
 
-  const res = await fetch(
-    "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
-    {
-      cache: "no-store", 
-    }
-  );
+  // const res = await fetch(
+  //   "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
+  //   {
+  //     cache: "no-store", 
+  //   }
+  // );
 
-  const history = await res.json();
+  // const history = await res.json();
 
   return (
     <div>
