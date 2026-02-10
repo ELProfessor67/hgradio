@@ -1120,8 +1120,9 @@ const PageWithCreateAccount = () => {
             </div>
           )}
 
+
           <div className="bg-[#071126] text-[#fff] py-[2rem]">
-            <div className="max-w-[1500px] mx-auto px-3 flex justify-center">
+            <div className="max-w-[1500px] mx-auto px-3 flex justify-center flex-col items-center">
               <button
                 type="submit"
                 disabled={isLoading || (accountType === "seller" && !registerOtpVerified)}
@@ -1134,10 +1135,11 @@ const PageWithCreateAccount = () => {
               </button>
 
               {accountType === "seller" && !registerOtpVerified && (
-                <p className="text-gray-300 mt-3">
+                <p className="text-gray-300 mt-3 text-center">
                   Verify OTP to unlock the contract form and enable account creation.
                 </p>
               )}
+
             </div>
           </div>
         </form>

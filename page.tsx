@@ -18,11 +18,11 @@ import { useData } from "@/context/Context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
-const videoAds = [
-  { videoSrc: "/vid1.mp4", link: "/contact" },
-  { videoSrc: "/vid2.mp4", link: "/contact" },
-  { videoSrc: "/vid3.mp4", link: "/contact" },
-];
+ const videoAds = [
+    { videoSrc: "/vid1.mp4", link: "/contact" },
+    { videoSrc: "/vid2.mp4", link: "/contact" },
+    { videoSrc: "/vid3.mp4", link: "/contact" },
+  ];
 
 interface SongType {
   name: string;
@@ -76,7 +76,6 @@ const Page: React.FC<PageProps> = ({ params }) => {
   const [isPurchased, setIsPurchased] = useState(false);
   const [showUpsell, setShowUpsell] = useState(false);
   const [upsellSongName, setUpsellSongName] = useState<string>("");
-  const currentlyPlayingAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const fetchAlbum = async () => {
     setLoading(true);
@@ -224,12 +223,12 @@ const Page: React.FC<PageProps> = ({ params }) => {
 
   // console.log(album);
 
-  if (error) {
-    return <div>{error}</div>
+  if(error){
+    return<div>{error}</div>
   }
 
-  if (loading) {
-    return <PageLoading />
+  if(loading){
+    return<PageLoading />
   }
 
   return (
@@ -368,7 +367,6 @@ const Page: React.FC<PageProps> = ({ params }) => {
                   songUrl={song.url}
                   isPurchased={isPurchased}
                   onPreviewEnded={() => handlePreviewEnded(song.name)}
-                  currentlyPlayingAudioRef={currentlyPlayingAudioRef}
                 />
               </div>
             </div>
@@ -430,14 +428,12 @@ interface SongPlayerRowProps {
   songUrl: string;
   isPurchased: boolean;
   onPreviewEnded?: () => void;
-  currentlyPlayingAudioRef: React.MutableRefObject<HTMLAudioElement | null>;
 }
 
 const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
   songUrl,
   isPurchased,
   onPreviewEnded,
-  currentlyPlayingAudioRef,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0); // percentage
@@ -468,12 +464,6 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
 
   const handlePlayPause = () => {
     if (!audioRef.current) {
-      // Stop any currently playing audio from other SongPlayerRow instances
-      if (currentlyPlayingAudioRef.current && currentlyPlayingAudioRef.current !== audioRef.current) {
-        currentlyPlayingAudioRef.current.pause();
-        currentlyPlayingAudioRef.current.currentTime = 0;
-      }
-
       const audio = new Audio(songUrl);
       audioRef.current = audio;
       previewPromptedRef.current = false;
@@ -507,18 +497,6 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
         setIsPlaying(false);
         setProgress(0);
       });
-
-      // Set this audio as the currently playing one
-      currentlyPlayingAudioRef.current = audio;
-    } else {
-      // If clicking play on a different song while another is playing
-      if (currentlyPlayingAudioRef.current && currentlyPlayingAudioRef.current !== audioRef.current) {
-        currentlyPlayingAudioRef.current.pause();
-        currentlyPlayingAudioRef.current.currentTime = 0;
-      }
-
-      // Set this audio as the currently playing one
-      currentlyPlayingAudioRef.current = audioRef.current;
     }
 
     if (audioRef.current.paused) {
