@@ -5,6 +5,7 @@ const audioSchema = new mongoose.Schema({
   name: { type: String, required: true },
   duration: { type: Number, required: true },
   url: { type: String, required: true },
+  views: { type: Number, default: 0 },
 });
 
 const albumSchema = new mongoose.Schema(

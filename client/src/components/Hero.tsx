@@ -6,7 +6,7 @@ import LegacyHeroPlayer from "@/components/LagacyHeroPlayer";
 const Hero = () => {
   return (
     <div
-      className="relative h-[48rem] lg:h-[40rem] bg-cover bg-top bg-no-repeat flex items-start lg:items-center lg:pt-0 pt-[5rem] overflow-hidden "
+      className="relative h-[52rem] lg:h-[40rem] bg-cover bg-top bg-no-repeat flex items-start lg:items-center lg:pt-0 pt-[5rem] overflow-hidden "
       style={{
         backgroundImage: `url(${HeroImg.src})`,
       }}

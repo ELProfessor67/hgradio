@@ -326,7 +326,7 @@ const showsData = {
 
 const Schedule = () => {
   const pathname = usePathname();
-  
+
 
   const [selectedDay, setSelectedDay] = useState<string>(() => {
     const todayIndex: number = new Date().getDay();
@@ -397,7 +397,7 @@ const Schedule = () => {
       />
       <div className="text-center pt-4 pb-14">
         <h2 className="text-3xl md:text-5xl z-50 font-extrabold">
-          Scheduled Programs
+          Daily Programs Schedule
         </h2>
       </div>
       <div className="max-w-[1500px] mx-auto px-3 z-50">
@@ -408,11 +408,10 @@ const Schedule = () => {
                 <button
                   key={day}
                   onClick={() => setSelectedDay(day)}
-                  className={`p-4 text-lg text-center font-semibold bg-[#2f3e58] hover:bg-second/20 hover:text-second ${
-                    selectedDay === day
-                      ? "text-second bg-second/20"
-                      : "text-white"
-                  }`}
+                  className={`p-4 text-lg text-center font-semibold bg-[#2f3e58] hover:bg-second/20 hover:text-second ${selectedDay === day
+                    ? "text-second bg-second/20"
+                    : "text-white"
+                    }`}
                 >
                   {day}
                 </button>

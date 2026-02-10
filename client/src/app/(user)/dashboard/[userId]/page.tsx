@@ -62,6 +62,37 @@ const Page = () => {
   const router = useRouter();
   const [albums, setAlbums] = useState<AlbumType[]>([]);
   const [error, setError] = useState("");
+
+  // Upgrade to seller states
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [upgradeOtp, setUpgradeOtp] = useState("");
+  const [upgradeOtpToken, setUpgradeOtpToken] = useState("");
+  const [upgradeOtpSent, setUpgradeOtpSent] = useState(false);
+  const [upgradeOtpVerified, setUpgradeOtpVerified] = useState(false);
+  const [upgradeOtpSending, setUpgradeOtpSending] = useState(false);
+  const [upgradeOtpVerifying, setUpgradeOtpVerifying] = useState(false);
+  const [upgrading, setUpgrading] = useState(false);
+  const [upgradeFormData, setUpgradeFormData] = useState({
+    initialGrantAuthorization: "",
+    initialOwnershipRepresentation: "",
+    initialLicensingProtection: "",
+    initialAffiliateUse: "",
+    initialWaiverCompensation: "",
+    initialWarranties: "",
+    initialIndemnification: "",
+    initialPublicityPromotion: "",
+    initialLimitationLiability: "",
+    initialArbitrationVenue: "",
+    initialGoverningLaw: "",
+    initialCoverageFullWorks: "",
+    initialEntireAgreement: "",
+    copyrightOwnerName: "",
+    copyrightOwnerSignature: "",
+    copyrightOwnerDate: "",
+    labelRepresentativeName: "",
+    labelRepresentativeSignature: "",
+    labelRepresentativeDate: "",
+  });
   const accountType = (userData as any)?.accountType as
     | "buyer"
     | "seller"
@@ -240,6 +271,178 @@ const Page = () => {
     }
   };
 
+  const requestUpgradeOtp = async () => {
+    if (!userData?.email) {
+      toast.error("Email not found.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setUpgradeOtpSending(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/upgrade-otp/request`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: userData.email }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.message || "Failed to send OTP", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      setUpgradeOtpSent(true);
+      setUpgradeOtpVerified(false);
+      setUpgradeOtpToken("");
+      toast.success("OTP sent to your email.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send OTP", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setUpgradeOtpSending(false);
+    }
+  };
+
+  const verifyUpgradeOtp = async () => {
+    if (!userData?.email) {
+      toast.error("Email not found.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    if (!upgradeOtp || upgradeOtp.trim().length === 0) {
+      toast.error("Please enter OTP.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setUpgradeOtpVerifying(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/upgrade-otp/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: userData.email,
+            otp: upgradeOtp.trim(),
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.message || "OTP verification failed", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      setUpgradeOtpVerified(true);
+      setUpgradeOtpToken(data?.otpToken || "");
+      toast.success("OTP verified. Contract form unlocked.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "OTP verification failed", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setUpgradeOtpVerifying(false);
+    }
+  };
+
+  const handleUpgradeSubmit = async () => {
+    if (!upgradeOtpVerified) {
+      toast.error("Please verify OTP first.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setUpgrading(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/upgrade-to-seller`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userData._id,
+            otpToken: upgradeOtpToken,
+            ...upgradeFormData,
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error || "Upgrade failed", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      if (data?.user?._id) {
+        setUserData({
+          ...data.user,
+          token: userData.token,
+        });
+
+        toast.success("Account upgraded to seller! Pending admin approval.", {
+          style: { background: "green", border: "none", color: "white" },
+        });
+        setUpgradeModalOpen(false);
+        // Reset form
+        setUpgradeOtp("");
+        setUpgradeOtpToken("");
+        setUpgradeOtpSent(false);
+        setUpgradeOtpVerified(false);
+        setUpgradeFormData({
+          initialGrantAuthorization: "",
+          initialOwnershipRepresentation: "",
+          initialLicensingProtection: "",
+          initialAffiliateUse: "",
+          initialWaiverCompensation: "",
+          initialWarranties: "",
+          initialIndemnification: "",
+          initialPublicityPromotion: "",
+          initialLimitationLiability: "",
+          initialArbitrationVenue: "",
+          initialGoverningLaw: "",
+          initialCoverageFullWorks: "",
+          initialEntireAgreement: "",
+          copyrightOwnerName: "",
+          copyrightOwnerSignature: "",
+          copyrightOwnerDate: "",
+          labelRepresentativeName: "",
+          labelRepresentativeSignature: "",
+          labelRepresentativeDate: "",
+        });
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Upgrade failed", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
   useEffect(() => {
     setHasMounted(true);
     if (userData?.token) {
@@ -403,6 +606,32 @@ const Page = () => {
             </div>
           )}
 
+          {accountType === "buyer" && (
+            <div className="mt-4 bg-gradient-to-r from-[#0d2c7b] to-[#0b1834] border border-second/30 p-6 text-white">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex-1">
+                  <h3 className="text-xl font-bold text-second mb-2">
+                    Become a Seller
+                  </h3>
+                  <p className="text-gray-200 text-sm">
+                    Upgrade your account to start selling your music albums. Reach a global audience and monetize your content.
+                  </p>
+                  <ul className="mt-3 text-sm text-gray-300 space-y-1">
+                    <li>✓ Worldwide distribution</li>
+                    <li>✓ Manage your albums and track sales</li>
+                    <li>✓ Withdraw earnings directly</li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => setUpgradeModalOpen(true)}
+                  className="bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out px-6 py-3 font-semibold whitespace-nowrap"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            </div>
+          )}
+
           {accountType === "seller" ? (
             <div className=" mt-4 grid grid-cols-1 lg:grid-cols-3 gap-3 ">
               <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">
@@ -488,6 +717,238 @@ const Page = () => {
                     {withdrawing ? "Submitting..." : "Submit Request"}
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Upgrade to Seller Modal */}
+          {upgradeModalOpen && accountType === "buyer" && (
+            <div className=" fixed inset-0 z-[9999] bg-black/70 flex items-center justify-center px-3 overflow-y-auto py-10 ">
+              <div className=" w-full max-w-[50rem] bg-[#0b1834] border border-white/10 p-6 text-white max-h-[90vh] overflow-y-auto ">
+                <div className=" flex items-center justify-between gap-3 mb-6 sticky top-0 bg-[#0b1834] pb-4 border-b border-white/10 ">
+                  <div>
+                    <div className=" text-[1.5rem] font-semibold ">Upgrade to Seller Account</div>
+                    <div className=" text-xs text-gray-200 mt-1 ">
+                      Complete OTP verification and contract form to upgrade
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setUpgradeModalOpen(false)}
+                    className=" text-white/80 hover:text-white transition-all duration-300 ease-in-out text-2xl "
+                  >
+                    ×
+                  </button>
+                </div>
+
+                {/* OTP Verification Section */}
+                <div className=" bg-[#071126] p-4 mb-6 ">
+                  <h3 className=" text-lg font-semibold mb-3 ">Email Verification</h3>
+                  <p className=" text-sm text-gray-200 mb-4 ">
+                    Verify your email to unlock the contract form.
+                  </p>
+
+                  <div className=" flex flex-col gap-3 ">
+                    <button
+                      type="button"
+                      onClick={requestUpgradeOtp}
+                      disabled={upgradeOtpSending || upgradeOtpVerified}
+                      className=" bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed "
+                    >
+                      {upgradeOtpSending ? "Sending..." : upgradeOtpVerified ? "Verified ✓" : "Get OTP"}
+                    </button>
+
+                    {upgradeOtpSent && !upgradeOtpVerified && (
+                      <div className=" flex gap-3 items-center ">
+                        <input
+                          type="text"
+                          placeholder="Enter OTP"
+                          value={upgradeOtp}
+                          onChange={(e) => setUpgradeOtp(e.target.value)}
+                          className=" flex-1 text-[1.1rem] py-2 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
+                        />
+                        <button
+                          type="button"
+                          onClick={verifyUpgradeOtp}
+                          disabled={upgradeOtpVerifying}
+                          className=" bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed "
+                        >
+                          {upgradeOtpVerifying ? "Verifying..." : "Verify"}
+                        </button>
+                      </div>
+                    )}
+
+                    {upgradeOtpVerified && (
+                      <span className=" text-green-300 font-semibold text-sm ">
+                        ✓ OTP verified. Contract form unlocked below.
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Contract Form - Only show if OTP verified */}
+                {upgradeOtpVerified && (
+                  <div className=" space-y-6 ">
+                    <div className=" border-t border-gray-500 pt-6 ">
+                      <h2 className=" text-[1.8rem] font-semibold mb-4 ">
+                        Artist's Original Music Consent and Release Form
+                      </h2>
+                      <p className=" text-gray-300 text-sm mb-4 ">
+                        This form is required for your music to be broadcast or distributed by Hallelujah Gospel Globally.
+                      </p>
+                    </div>
+
+                    {/* Contract Sections */}
+                    {[
+                      {
+                        title: "1. Grant of Authorization",
+                        content: "The Copyright Owner hereby grants Hallelujah Gospel Globally the non-exclusive, royalty-free, worldwide right to broadcast, stream, and distribute the submitted original music.",
+                        field: "initialGrantAuthorization"
+                      },
+                      {
+                        title: "2. Ownership and Copyright Representation",
+                        content: "The Copyright Owner affirms that the submitted recordings are original works or fully licensed by the undersigned.",
+                        field: "initialOwnershipRepresentation"
+                      },
+                      {
+                        title: "3. Ironclad Licensing Protection",
+                        content: "This agreement supersedes any claim from outside licensing organizations including BMI, ASCAP, SESAC, SoundExchange, RIAA.",
+                        field: "initialLicensingProtection"
+                      },
+                      {
+                        title: "4. Use by Affiliates and Partners",
+                        content: "Permission granted herein extends to all platforms owned, operated, or partnered with Hallelujah Gospel Globally.",
+                        field: "initialAffiliateUse"
+                      },
+                      {
+                        title: "5. Waiver of Compensation",
+                        content: "The undersigned agrees that no payment is due for use of the submitted content under this agreement.",
+                        field: "initialWaiverCompensation"
+                      },
+                      {
+                        title: "6. Warranties",
+                        content: "The undersigned warrants that they own and/or control 100% of the rights in the submitted materials.",
+                        field: "initialWarranties"
+                      },
+                      {
+                        title: "7. Indemnification",
+                        content: "The undersigned agrees to indemnify and hold harmless Hallelujah Gospel Globally from any claims, damages, or losses.",
+                        field: "initialIndemnification"
+                      },
+                      {
+                        title: "8. Publicity and Promotion Rights",
+                        content: "The undersigned grants Hallelujah Gospel Globally the right to use artist and song information for promotional purposes.",
+                        field: "initialPublicityPromotion"
+                      },
+                      {
+                        title: "9. Limitation of Liability",
+                        content: "Hallelujah Gospel Globally shall not be liable for any indirect, incidental, or consequential damages.",
+                        field: "initialLimitationLiability"
+                      },
+                      {
+                        title: "10. Arbitration and Venue",
+                        content: "Any disputes shall be resolved through binding arbitration in California.",
+                        field: "initialArbitrationVenue"
+                      },
+                      {
+                        title: "11. Governing Law",
+                        content: "This agreement shall be governed by the laws of the State of California.",
+                        field: "initialGoverningLaw"
+                      },
+                      {
+                        title: "12. Coverage of Full Works",
+                        content: "This consent applies to all current and future works submitted by the Copyright Owner.",
+                        field: "initialCoverageFullWorks"
+                      },
+                      {
+                        title: "13. Song/Album Information",
+                        content: "Please provide details about your music catalog.",
+                        field: "initialEntireAgreement"
+                      }
+                    ].map((section, idx) => (
+                      <div key={idx} className=" border-b border-gray-500 pb-4 ">
+                        <h3 className=" text-[1.2rem] font-semibold mb-2 ">{section.title}</h3>
+                        <p className=" text-gray-300 text-sm mb-3 ">{section.content}</p>
+                        <div className=" flex items-center gap-2 ">
+                          <label className=" text-sm ">Initial:</label>
+                          <input
+                            type="text"
+                            value={upgradeFormData[section.field as keyof typeof upgradeFormData]}
+                            onChange={(e) => setUpgradeFormData(prev => ({ ...prev, [section.field]: e.target.value }))}
+                            className=" w-full max-w-[15rem] py-2 px-3 outline-none bg-[#222F46] border-b-2 border-[#445d88] text-white text-sm "
+                            required
+                          />
+                        </div>
+                      </div>
+                    ))}
+
+                    {/* Signature Section */}
+                    <div className=" border-t border-gray-500 pt-6 space-y-6 ">
+                      <h3 className=" text-[1.3rem] font-semibold ">Signatures</h3>
+
+                      <div className=" space-y-3 ">
+                        <h4 className=" font-semibold ">Copyright Owner</h4>
+                        <input
+                          type="text"
+                          placeholder="Full Name"
+                          value={upgradeFormData.copyrightOwnerName}
+                          onChange={(e) => setUpgradeFormData(prev => ({ ...prev, copyrightOwnerName: e.target.value }))}
+                          className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
+                          required
+                        />
+                        <input
+                          type="text"
+                          placeholder="Signature (Type your name)"
+                          value={upgradeFormData.copyrightOwnerSignature}
+                          onChange={(e) => setUpgradeFormData(prev => ({ ...prev, copyrightOwnerSignature: e.target.value }))}
+                          className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
+                          required
+                        />
+                        <input
+                          type="date"
+                          value={upgradeFormData.copyrightOwnerDate}
+                          onChange={(e) => setUpgradeFormData(prev => ({ ...prev, copyrightOwnerDate: e.target.value }))}
+                          className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white text-sm "
+                          required
+                        />
+                      </div>
+
+                      <div className=" space-y-3 ">
+                        <h4 className=" font-semibold ">Label Representative (if applicable)</h4>
+                        <input
+                          type="text"
+                          placeholder="Full Name (optional)"
+                          value={upgradeFormData.labelRepresentativeName}
+                          onChange={(e) => setUpgradeFormData(prev => ({ ...prev, labelRepresentativeName: e.target.value }))}
+                          className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
+                        />
+                        <input
+                          type="text"
+                          placeholder="Signature (optional)"
+                          value={upgradeFormData.labelRepresentativeSignature}
+                          onChange={(e) => setUpgradeFormData(prev => ({ ...prev, labelRepresentativeSignature: e.target.value }))}
+                          className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
+                        />
+                        <input
+                          type="date"
+                          value={upgradeFormData.labelRepresentativeDate}
+                          onChange={(e) => setUpgradeFormData(prev => ({ ...prev, labelRepresentativeDate: e.target.value }))}
+                          className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white text-sm "
+                        />
+                      </div>
+                    </div>
+
+                    {/* Submit Button */}
+                    <div className=" sticky bottom-0 bg-[#0b1834] pt-4 border-t border-white/10 ">
+                      <button
+                        onClick={handleUpgradeSubmit}
+                        disabled={upgrading}
+                        className=" w-full bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out py-3 text-lg font-semibold disabled:opacity-60 "
+                      >
+                        {upgrading ? "Upgrading..." : "Submit Upgrade Request"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

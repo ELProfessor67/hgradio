@@ -112,3 +112,105 @@ export const getTopSoldAlbums = async (req, res) => {
     });
   }
 };
+
+// Increment song view count
+export const incrementSongView = async (req, res) => {
+  try {
+    const { albumId, songId } = req.params;
+
+    const album = await Album.findById(albumId);
+    if (!album) {
+      return res.status(404).json({ success: false, message: "Album not found" });
+    }
+
+    const song = album.songs.id(songId);
+    if (!song) {
+      return res.status(404).json({ success: false, message: "Song not found" });
+    }
+
+    song.views = (song.views || 0) + 1;
+    await album.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Song view incremented",
+      views: song.views,
+    });
+  } catch (error) {
+    console.error("Error incrementing song view:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while incrementing song view.",
+    });
+  }
+};
+
+// Get top songs by views
+export const getTopSongs = async (req, res) => {
+  try {
+    const limitRaw = req.query.limit;
+    const parsed = Number.parseInt(String(limitRaw ?? "10"), 10);
+    const limit = Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 50) : 10;
+
+    // Aggregate to get all songs from all albums with their views
+    const topSongs = await Album.aggregate([
+      // Unwind the songs array to get individual songs
+      { $unwind: "$songs" },
+      
+      // Filter out songs with 0 or null views
+      {
+        $match: {
+          "songs.views": { $gt: 0 }
+        }
+      },
+      
+      // Lookup artist information
+      {
+        $lookup: {
+          from: "users",
+          localField: "artist",
+          foreignField: "_id",
+          as: "artistInfo",
+        },
+      },
+      
+      // Unwind artist info
+      { $unwind: { path: "$artistInfo", preserveNullAndEmptyArrays: true } },
+      
+      // Project the fields we need
+      {
+        $project: {
+          songId: "$songs._id",
+          songName: "$songs.name",
+          songUrl: "$songs.url",
+          songDuration: "$songs.duration",
+          views: { $ifNull: ["$songs.views", 0] },
+          albumTitle: "$title",
+          albumCover: "$coverImg",
+          albumId: "$_id",
+          artistName: "$artistInfo.name",
+          artistId: "$artistInfo._id",
+        },
+      },
+      
+      // Sort by views descending
+      { $sort: { views: -1 } },
+      
+      // Limit results
+      { $limit: limit },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      limit,
+      totalSongs: topSongs.length,
+      songs: topSongs,
+    });
+  } catch (error) {
+    console.error("Error fetching top songs:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error while fetching top songs.",
+    });
+  }
+};

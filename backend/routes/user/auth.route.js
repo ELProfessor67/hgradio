@@ -8,6 +8,9 @@ import {
   resetPassword,
   requestRegisterOtp,
   verifyRegisterOtp,
+  requestUpgradeOtp,
+  verifyUpgradeOtp,
+  upgradeToSeller,
 } from "../../controllers/user/auth.controller.js";
 
 
@@ -22,6 +25,9 @@ router.get("/me/:userId", getCurrentUser);
 router.delete("/delete-user/:userId", deleteUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
+router.post("/upgrade-otp/request", requestUpgradeOtp);
+router.post("/upgrade-otp/verify", verifyUpgradeOtp);
+router.post("/upgrade-to-seller", upgradeToSeller);
 
 
 export default router;

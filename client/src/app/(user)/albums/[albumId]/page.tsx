@@ -25,9 +25,11 @@ const videoAds = [
 ];
 
 interface SongType {
+  _id: string;
   name: string;
   duration: string;
   url: string;
+  views?: number;
 }
 
 interface ArtistType {
@@ -366,6 +368,8 @@ const Page: React.FC<PageProps> = ({ params }) => {
 
                 <SongPlayerRow
                   songUrl={song.url}
+                  songId={song._id}
+                  albumId={albumId}
                   isPurchased={isPurchased}
                   onPreviewEnded={() => handlePreviewEnded(song.name)}
                   currentlyPlayingAudioRef={currentlyPlayingAudioRef}
@@ -428,6 +432,8 @@ export default Page;
 
 interface SongPlayerRowProps {
   songUrl: string;
+  songId: string;
+  albumId: string;
   isPurchased: boolean;
   onPreviewEnded?: () => void;
   currentlyPlayingAudioRef: React.MutableRefObject<HTMLAudioElement | null>;
@@ -435,6 +441,8 @@ interface SongPlayerRowProps {
 
 const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
   songUrl,
+  songId,
+  albumId,
   isPurchased,
   onPreviewEnded,
   currentlyPlayingAudioRef,
@@ -444,6 +452,22 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const maxPlayTimeRef = useRef(0);
   const previewPromptedRef = useRef(false);
+  const viewIncrementedRef = useRef(false);
+
+  // Function to increment song view
+  const incrementSongView = async () => {
+    if (viewIncrementedRef.current) return; // Only increment once per component mount
+
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/album/${albumId}/song/${songId}/view`,
+        { method: 'POST' }
+      );
+      viewIncrementedRef.current = true;
+    } catch (error) {
+      console.error('Failed to increment view:', error);
+    }
+  };
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -501,7 +525,10 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
         setProgress((audio.currentTime / maxPlayTimeRef.current) * 100);
       });
 
-      audio.addEventListener("play", () => setIsPlaying(true));
+      audio.addEventListener("play", () => {
+        setIsPlaying(true);
+        incrementSongView(); // Increment view when song starts playing
+      });
       audio.addEventListener("pause", () => setIsPlaying(false));
       audio.addEventListener("ended", () => {
         setIsPlaying(false);

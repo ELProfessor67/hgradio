@@ -7,26 +7,20 @@ import dot from "@/assets/right-dot-circle.png";
 import Ads from "@/components/Ads";
 import Breadcrum from "@/components/Breadcrum";
 
-interface SongHistoryItem {
-  _id: string;
-  title: string;
-  artist: string;
-  album: string;
-  date: string;
-  audio: string;
-  cover: string;
-  owner: string;
-}
 
-type ChartSong = {
-  key: string;
-  title: string;
-  artist: string;
-  album: string;
-  cover?: string;
-  audio?: string;
-  plays: number;
-};
+interface TopSong {
+  _id: string;
+  songId: string;
+  songName: string;
+  songUrl: string;
+  songDuration: number;
+  views: number;
+  albumTitle: string;
+  albumCover: string;
+  albumId: string;
+  artistName: string;
+  artistId: string;
+}
 
 const Page = async () => {
   const videoAds = [
@@ -35,57 +29,20 @@ const Page = async () => {
     { videoSrc: "/vid3.mp4", link: "/contact" },
   ];
 
-  let history: SongHistoryItem[] = [];
+  let topSongs: TopSong[] = [];
   try {
     const res = await fetch(
-      "https://backend.hgdjlive.com/api/v1/song-history/655347b59c00a7409d9181c3",
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/public/album/top-songs?limit=10`,
       {
         cache: "no-store",
       }
     );
     const data = await res.json();
-    history = Array.isArray(data) ? data : [];
-  } catch {
-    history = [];
+    topSongs = data.success && Array.isArray(data.songs) ? data.songs : [];
+  } catch (error) {
+    console.error("Error fetching top songs:", error);
+    topSongs = [];
   }
-
-  // Calculate daily play bonus based on days since reference date
-  const referenceDate = new Date('2026-02-03'); // Reference date: 03/02/2026
-  const today = new Date();
-  const daysDifference = Math.floor((today.getTime() - referenceDate.getTime()) / (1000 * 60 * 60 * 24));
-  const dailyPlayBonus = Math.max(0, daysDifference * 2); // 2 plays per day
-
-  const bySong = new Map<string, ChartSong>();
-  for (const item of history) {
-    const title = String(item?.title || "").trim();
-    const artist = String(item?.artist || "").trim();
-    if (!title) continue;
-
-    const key = `${title.toLowerCase()}__${artist.toLowerCase()}`;
-    const prev = bySong.get(key);
-    if (prev) {
-      prev.plays += 1;
-    } else {
-      bySong.set(key, {
-        key,
-        title,
-        artist,
-        album: String(item?.album || "").trim(),
-        cover: item?.cover,
-        audio: item?.audio,
-        plays: 1,
-      });
-    }
-  }
-
-  // Add daily bonus to all songs
-  for (const song of bySong.values()) {
-    song.plays += dailyPlayBonus;
-  }
-
-  const topSongs = [...bySong.values()]
-    .sort((a, b) => b.plays - a.plays)
-    .slice(0, 10);
 
   return (
     <div>
@@ -132,43 +89,40 @@ const Page = async () => {
                     <th className="px-6 py-3">Song</th>
                     <th className="px-6 py-3">Artist</th>
                     <th className="px-6 py-3">Album</th>
-                    <th className="px-6 py-3">Plays</th>
+                    <th className="px-6 py-3">Views</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm divide-y divide-slate-600">
                   {topSongs.map((item, index) => (
                     <tr
-                      key={item.key}
-                      className={`${
-                        index % 2 === 0 ? "bg-[#232937ef]" : "bg-[#25233bb4]"
-                      } transition`}
+                      key={item.songId}
+                      className={`${index % 2 === 0 ? "bg-[#232937ef]" : "bg-[#25233bb4]"
+                        } transition`}
                     >
                       <td className="px-6 py-4 whitespace-nowrap font-bold text-second">
                         #{index + 1}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-3">
-                          {/* {item.cover ? (
-                            // cover from external API is already absolute in many cases;
-                            // if not, it will still render as-is in <img>
+                          {item.albumCover && (
                             <img
-                              src={item.cover}
-                              alt={item.title}
+                              src={item.albumCover}
+                              alt={item.songName}
                               className="w-12 h-12 object-cover rounded"
                               loading="lazy"
                             />
-                          ) : null} */}
-                          <div className="font-semibold">{item.title}</div>
+                          )}
+                          <div className="font-semibold">{item.songName}</div>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.artist || "Unknown"}
+                        {item.artistName || "Unknown"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        {item.album || "Unknown"}
+                        {item.albumTitle || "Unknown"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap font-semibold">
-                        {item.plays}
+                        {item.views}
                       </td>
                     </tr>
                   ))}
