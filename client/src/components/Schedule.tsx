@@ -370,7 +370,7 @@ const Schedule = () => {
 
   return (
     <div className="relative bg-[#0c1c3d] z-20 text-white h-fit py-10 overflow-hidden">
-      <Image src={bglefttop} alt="corner" className="absolute top-8 left-8" />
+      <Image src={bglefttop} alt="corner" className="absolute top-8 left-8 -z-[1]" />
       {pathname !== "/" ? (
         <Image
           src={bgrighttop}
