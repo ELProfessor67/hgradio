@@ -3,7 +3,7 @@ import Breadcrum from '@/components/Breadcrum'
 import React, { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ButtonLoading } from '@/utils/Loading'
-import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle, FaMoneyCheck, FaEnvelope } from 'react-icons/fa'
+import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle, FaMoneyCheck, FaEnvelope, FaShieldAlt } from 'react-icons/fa'
 
 
 const methodsContent = {
@@ -312,6 +312,13 @@ const page = () => {
                                     I accept the Check Payment Security Policy
                                 </label>
                             </div>
+
+                            <p className="text-sm text-gray-500 flex items-start justify-start gap-2">
+                                
+                                <span className="text-gray-300">
+                                    Legal-Clean & Professional Secure Payment Processing This website uses Authorize.Net for secure credit card processing. Transactions are protected by advanced encryption and comply with PCI-DSS security standards.
+                                </span>
+                            </p>
 
                             <div className=" flex justify-center pt-[0.5rem] ">
                                 <button type="submit" disabled={loading || !checkPolicyAccepted} className=" bg-second relative w-[12rem] h-[2.8rem] text-[#000] font-semibold disabled:opacity-50 disabled:cursor-not-allowed">

@@ -604,6 +604,13 @@ const Form = () => {
             </div>
 
 
+            <p className="text-sm text-gray-500 flex items-start justify-start gap-2">
+              <span className="text-gray-300">
+                Legal-Clean & Professional Secure Payment Processing This website uses Authorize.Net for secure credit card processing. Transactions are protected by advanced encryption and comply with PCI-DSS security standards.
+              </span>
+            </p>
+
+
             {/* Submit */}
             <div className="flex justify-center pt-4">
               <button
