@@ -524,6 +524,46 @@ const PageWithCreateAccount = () => {
                   </label>
                 </div>
 
+
+              </div>
+              {[
+                { name: "name", placeholder: "Your Full Name", type: "text" },
+                { name: "email", placeholder: "Your Email", type: "email" },
+                { name: "password", placeholder: "Password", type: "password" },
+                {
+                  name: "confirmPassword",
+                  placeholder: "Confirm Password",
+                  type: "password",
+                },
+                { name: "city", placeholder: "City", type: "text" },
+                { name: "state", placeholder: "State", type: "text" },
+                { name: "country", placeholder: "Country", type: "text" },
+                { name: "zipCode", placeholder: "Zip Code", type: "text" },
+              ]
+                .reduce((rows, field, index, array) => {
+                  if (index % 2 === 0) rows.push(array.slice(index, index + 2));
+                  return rows;
+                }, [] as { name: string; placeholder: string; type: string }[][])
+                .map((row, i) => (
+                  <div key={i} className="flex flex-col md:flex-row gap-5">
+                    {row.map(({ name, placeholder, type }) => (
+                      <input
+                        key={name}
+                        type={type}
+                        name={name}
+                        placeholder={placeholder}
+                        value={formData[name as keyof typeof formData] || ""}
+                        onChange={handleChange}
+                        className="w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
+                        required
+                      />
+                    ))}
+                  </div>
+                ))}
+
+
+
+              <div className="bg-[#0B1834] p-4 text-white space-y-3">
                 {accountType === "seller" && (
                   <div className="space-y-3">
                     <p className="text-gray-200">
@@ -570,40 +610,6 @@ const PageWithCreateAccount = () => {
                   </div>
                 )}
               </div>
-              {[
-                { name: "name", placeholder: "Your Full Name", type: "text" },
-                { name: "email", placeholder: "Your Email", type: "email" },
-                { name: "password", placeholder: "Password", type: "password" },
-                {
-                  name: "confirmPassword",
-                  placeholder: "Confirm Password",
-                  type: "password",
-                },
-                { name: "city", placeholder: "City", type: "text" },
-                { name: "state", placeholder: "State", type: "text" },
-                { name: "country", placeholder: "Country", type: "text" },
-                { name: "zipCode", placeholder: "Zip Code", type: "text" },
-              ]
-                .reduce((rows, field, index, array) => {
-                  if (index % 2 === 0) rows.push(array.slice(index, index + 2));
-                  return rows;
-                }, [] as { name: string; placeholder: string; type: string }[][])
-                .map((row, i) => (
-                  <div key={i} className="flex flex-col md:flex-row gap-5">
-                    {row.map(({ name, placeholder, type }) => (
-                      <input
-                        key={name}
-                        type={type}
-                        name={name}
-                        placeholder={placeholder}
-                        value={formData[name as keyof typeof formData] || ""}
-                        onChange={handleChange}
-                        className="w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
-                        required
-                      />
-                    ))}
-                  </div>
-                ))}
 
 
             </div>
