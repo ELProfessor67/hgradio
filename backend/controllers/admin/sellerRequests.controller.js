@@ -95,7 +95,7 @@ export const adminApproveSeller = async (req, res) => {
       await sendEmail({
         to: user.email,
         subject: "Seller Account Approved",
-        html: `<p>Congratulations ${user.name || ""}! Your seller account has been approved. You can now add albums.</p>`,
+        html: `Congratulations ${user.name || ""}! Your seller account has been approved. You can now add albums.`,
       });
     } catch (e) {
       // Don't fail the approval if email fails

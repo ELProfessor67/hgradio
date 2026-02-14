@@ -3,7 +3,7 @@ export const sendEmail = async ({ to, subject, html }) => {
       const resp = await fetch("https://mailing.hgcradio.org/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, subject, message:html }),
+        body: JSON.stringify({ email:to, subject, message:html }),
       });
     
       if (!resp.ok) {
