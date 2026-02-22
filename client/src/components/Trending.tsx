@@ -49,6 +49,7 @@ const items: TrendingItem[] = [
 const Trending: React.FC = () => {
   return (
     <div className="relative bg-cover bg-top bg-no-repeat flex items-center overflow-hidden py-[2rem] "
+      id='top_chart'
       style={{
         backgroundImage: `url(${Trending1.src})`,
       }}>

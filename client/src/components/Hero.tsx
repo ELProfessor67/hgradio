@@ -2,6 +2,8 @@ import React from "react";
 import HeroImg from "@/assets/HeroImg.jpg";
 import { HeroTextBox } from "@/utils/Util";
 import LegacyHeroPlayer from "@/components/LagacyHeroPlayer";
+import { BsArrowRight } from "react-icons/bs";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -29,7 +31,7 @@ const Hero = () => {
         ]}
       />
 
-      <section className=" hero px-3 max-w-[1400px] mx-auto space-y-6 text-center py-16 ">
+      <section className=" hero px-3 max-w-[1400px] mx-auto space-y-6 text-center py-16 z-[1000000]">
         <div className="max-w-[800px] mx-auto">
           <h1 className=" text-[1.9rem] md:text-[2.5rem] xl:text-[3rem] font-bold text-[#fff] opacity-80">
             Hallelujah Gospel Choice Radio Station
@@ -40,10 +42,15 @@ const Hero = () => {
             Uplifting spirits with divine melodies
           </h1>
         </div>
-        <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem]" style={{ marginBottom: "3rem" }}>
+        
+        <Link href="#top_chart">
+        <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem] flex items-center hover:underline" style={{ marginBottom: "3rem" }}>
           Hallelujah Choice Radio Gospel Charting God&apos;s Enormous Blessings
           Below.
+          <Link href="#top_chart" className="text-[#19e234] mt-1 ml-2 cursor-pointer font-bold">&#8594;</Link>
         </div>
+        </Link>
+        
       </section>
 
       <div className=" absolute bottom-0 left-0 w-full ">
