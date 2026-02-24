@@ -42,15 +42,15 @@ const Hero = () => {
             Uplifting spirits with divine melodies
           </h1>
         </div>
-        
+
         <Link href="#top_chart">
-        <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem] flex items-center hover:underline" style={{ marginBottom: "3rem" }}>
-          Hallelujah Choice Radio Gospel Charting God&apos;s Enormous Blessings
-          Below.
-          <Link href="#top_chart" className="text-[#19e234] mt-1 ml-2 cursor-pointer font-bold">&#8594;</Link>
-        </div>
+          <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem] flex items-center hover:underline" style={{ marginBottom: "3rem" }}>
+            Hallelujah Choice Radio Gospel Charting God&apos;s Enormous Blessings
+            Below.
+            {/* <Link href="#top_chart" className="text-[#19e234] mt-1 ml-2 cursor-pointer font-bold">&#8594;</Link> */}
+          </div>
         </Link>
-        
+
       </section>
 
       <div className=" absolute bottom-0 left-0 w-full ">

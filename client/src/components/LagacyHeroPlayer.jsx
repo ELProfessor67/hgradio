@@ -199,7 +199,9 @@ export default function App() {
 												IsTonePlayingMessage ?
 													<h4 className="title">{IsTonePlayingMessage}</h4>
 													:
-													<h4 className="title">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name} Live”`}</h4>
+													// <h4 className="title">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name} Live”`}</h4>
+													<h4 className="title !text-md whitespace-nowrap">“Hallelujah Gospel Choice Radio Station”</h4>
+
 											}
 											{/* <p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Current song : {currentSong?.title?.split('.')[0]}</p> */}
 
@@ -207,7 +209,9 @@ export default function App() {
 											{
 												(currentSong?.artist && currentSong?.album) &&
 												<p className="audio-time text-center lg:text-left" style={{ fontSize: "14px", whiteSpace: 'break-space' }}>
-													{currentSong?.artist?.toLowerCase() != 'unknown' ? <><span className="font-normal">Artist:</span> <span className="font-bold text-second text-nowrap">{currentSong?.artist}</span> , </> : ''}
+													{/* {currentSong?.artist?.toLowerCase() != 'unknown' ? <><span className="font-normal">Artist:</span> <span className="font-bold text-second text-nowrap">{currentSong?.artist}</span> </> : ''} */}
+													{currentSong?.artist?.toLowerCase() != 'unknown' ? <><span className="font-normal">Hosted By:</span> <span className="font-bold text-second text-nowrap">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name}”`}</span> </> : ''}
+													<br />
 													{currentSong?.album?.toLowerCase() != 'unknown' ? <><span className="font-normal">Album:</span> <span className="font-bold text-second text-nowrap">{currentSong?.album}</span></> : ''}
 												</p>
 											}
