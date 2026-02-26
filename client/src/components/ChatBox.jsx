@@ -90,7 +90,7 @@ export default function ChatBox({
                             <input
                                 type="text"
                                 placeholder="Enter your name"
-                                className="flex-1 border p-2 outline-none"
+                                className="flex-1 border p-2 outline-none text-black"
                                 value={tempName}
                                 onChange={(e) => setTempName(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
@@ -108,7 +108,7 @@ export default function ChatBox({
                             <input
                                 type="text"
                                 placeholder="Type your message"
-                                className="flex-1 border p-2 outline-none"
+                                className="flex-1 border p-2 outline-none text-black"
                                 value={message}
                                 onChange={(e) => setMessage(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSendMessage(name)}
