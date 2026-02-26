@@ -149,12 +149,12 @@ export default function App() {
 
 	return (
 		<>
-			{
+			{/* {
 				IsTonePlayingMessage &&
 				<div className='absolute top-[50%] -translate-y-[50%] left-[50%] -translate-x-[50%] p-2 bg-black/40 rounded-md z-[100000000000000000000000]'>
 					{IsTonePlayingMessage}
 				</div>
-			}
+			} */}
 
 			{/* schedule  */}
 			<NewDialog open={scheduleOpen} onClose={() => setScheduleOpen(false)}>
@@ -169,7 +169,7 @@ export default function App() {
 
 
 			{/* banner section start */}
-			<section className="  banner-section style-two" style={{ backgroundImage: "url('assets/images/bg/banner-bg3.jpg')" }}>
+			<section className="!pointer-events-auto  banner-section style-two" style={{ backgroundImage: "url('assets/images/bg/banner-bg3.jpg')" }}>
 				<div className="container">
 					<div class="row align-items-center justify-content-center">
 						<div class="col-lg-8 text-center">
@@ -210,7 +210,7 @@ export default function App() {
 												(currentSong?.artist && currentSong?.album) &&
 												<p className="audio-time text-center lg:text-left" style={{ fontSize: "14px", whiteSpace: 'break-space' }}>
 													{/* {currentSong?.artist?.toLowerCase() != 'unknown' ? <><span className="font-normal">Artist:</span> <span className="font-bold text-second text-nowrap">{currentSong?.artist}</span> </> : ''} */}
-													{currentSong?.artist?.toLowerCase() != 'unknown' ? <><span className="font-normal">Hosted By:</span> <span className="font-bold text-second text-nowrap">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name}”`}</span> </> : ''}
+													{currentSong?.artist?.toLowerCase() != 'unknown' ? <><span className="font-normal">Hosted By:</span> <span className="font-bold text-second text-nowrap">{schedulePlaying ? `“Live Schedule”` : !isLive ? `“Auto DJ”` : `“${owner?.name || "Hallelujah Gospel"}”`}</span> </> : ''}
 													<br />
 													{currentSong?.album?.toLowerCase() != 'unknown' ? <><span className="font-normal">Album:</span> <span className="font-bold text-second text-nowrap">{currentSong?.album}</span></> : ''}
 												</p>
