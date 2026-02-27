@@ -69,9 +69,9 @@ export default function ChatBox({
             <div className="max-w-[40rem] mx-auto mt-20 min-h-[35rem] bg-white shadow-md p-3 rounded-md flex flex-col text-black">
 
                 {/* HEADER */}
-                <div className="flex justify-between items-center border-b pb-2 mb-2">
+                <div className="flex justify-between items-center border-b pb-2 mb-2 text-black">
                     <h5 className="text-lg font-semibold">Chat with Radio Broadcaster</h5>
-                    <button onClick={onClose}>X</button>
+                    <button onClick={onClose} className='text-black'>X</button>
                 </div>
 
                 {/* BODY */}
