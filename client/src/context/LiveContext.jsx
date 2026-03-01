@@ -23,49 +23,52 @@ export const LiveProvider = ({ children }) => {
             console.log('Participant disconnected:', participant.identity);
         });
 
-        roomRef.current.on(RoomEvent.ParticipantDisconnected, (participant) => {
-            console.log('Participant disconnected:', participant.identity);
-        });
+
 
         roomRef.current.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
             console.log('Track subscribed:', track.kind, participant.identity);
 
 
-            if(participant.identity === 'tone-player-bot'){
+            if (participant.identity === 'tone-player-bot') {
                 setIsTonePlayingMessage("Tone Is Playing...");
-                handleTrackSubscribed(track,()=>{
+                handleTrackSubscribed(track, () => {
                     setIsPlay(true);
                 });
             }
 
-            if(participant.identity === 'admin' && track.source == Track.Source.Microphone){
+            if (participant.identity === 'admin' && track.source == Track.Source.Microphone) {
                 setIsLive(true);
                 setRoomActive(true);
                 const audioRef = document.getElementById('auto-dj');
                 audioRef.pause();
                 audioRef.volume = 0;
-                handleTrackSubscribed(track,()=>{
+                handleTrackSubscribed(track, () => {
                     setIsPlay(true);
                 });
             }
 
 
-            if(participant.identity === 'admin' && track.source !== Track.Source.Microphone){
-                handleTrackSubscribed(track,()=>{
+            if (participant.identity === 'admin' && track.source !== Track.Source.Microphone) {
+                handleTrackSubscribed(track, () => {
                     setIsPlay(true);
                 });
             }
-             
+
+            if (participant.identity.includes('call')) {
+                handleTrackSubscribed(track, () => {
+                    setIsPlay(true);
+                });
+            }
         });
 
         roomRef.current.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
             console.log('Track unsubscribed:', track.kind, participant.identity);
 
-            if(participant.identity === 'tone-player-bot'){
+            if (participant.identity === 'tone-player-bot') {
                 setIsTonePlayingMessage(null);
             }
 
-            if(participant.identity === 'admin' && track.source == Track.Source.Microphone){
+            if (participant.identity === 'admin' && track.source == Track.Source.Microphone) {
                 setIsLive(false);
                 setRoomActive(false);
                 const audioRef = document.getElementById('auto-dj');
@@ -78,7 +81,7 @@ export const LiveProvider = ({ children }) => {
     }, [roomRef.current]);
 
 
-    function handleTrackSubscribed(track,cb) {
+    function handleTrackSubscribed(track, cb) {
         const audioElement = document.createElement('audio');
         audioElement.autoplay = true;
         audioElement.addEventListener('play', cb);
