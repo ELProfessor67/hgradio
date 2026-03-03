@@ -86,7 +86,7 @@ export const LiveProvider = ({ children }) => {
 
     function handleTrackSubscribed(track, cb) {
         const audioElement = document.createElement('audio');
-        audioElement.autoplay = true;
+        audioElement.autoplay = isPlay;
         audioElement.addEventListener('play', cb);
         track.attach(audioElement);
         document.body.appendChild(audioElement);

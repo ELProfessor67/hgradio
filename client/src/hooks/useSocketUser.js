@@ -408,6 +408,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 		socketRef.current.on('room-active', (data) => {
 			console.log('owner', data?.user)
 			setOwner(data?.user);
+			audioRef.current.pause();
+			audioRef.current.volume = 0;
 			if (data.nextSong) {
 				setNextSong(data.nextSong)
 			}
@@ -498,7 +500,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			const isSheduled = data.isSheduled;
 			setSchedulePlaying(isSheduled);
 
-			setDisabledPlayBtn(true)
+			// setDisabledPlayBtn(true)
 			console.log("Audio started playing");
 			setIsTonePlayingMessage("Tone Is Playing...");
 
@@ -592,7 +594,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 		socketRef.current.on('ending-tone-played', (data) => {
 			setTimeout(() => {
-				setDisabledPlayBtn(false);
+				// setDisabledPlayBtn(false);
 				setIsTonePlayingMessage(null);
 				window.location.reload();
 			}, 3000);
@@ -600,6 +602,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 
 		socketRef.current.on('room-unactive', async (data) => {
+			audioRef.current.play();
+			audioRef.current.volume = 1;
 			if (data?.butScheduleActive) {
 				console.log('schedule-active but');
 				await connectedWithScheduleStream();
