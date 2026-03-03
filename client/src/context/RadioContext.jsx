@@ -188,7 +188,11 @@ export const RadioProvider = ({ children }) => {
     }
 
     const handleCall = async () => {
-        audioRef.current.pause();
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => {
+            audio.pause();
+        });
+        setIsPlay(false);
         window.open(`https://hgdjlive.com/call/${params.streamId}`, "_blank", "width=600,height=600")
     }
 
@@ -275,7 +279,7 @@ export const RadioProvider = ({ children }) => {
         audioElements.forEach(audio => {
             audio.volume = volume;
         });
-    },[volume])
+    }, [volume])
 
     useEffect(() => {
         console.log(pathname, "pathname")
