@@ -55,9 +55,12 @@ export const LiveProvider = ({ children }) => {
             }
 
             if (participant.identity.includes('call')) {
-                handleTrackSubscribed(track, () => {
-                    setIsPlay(true);
-                });
+                const audioElement = document.createElement('audio');
+                track.attach(audioElement);
+                document.body.appendChild(audioElement);
+                if (isPlay) {
+                    audioElement.play();
+                }
             }
         });
 
@@ -83,7 +86,7 @@ export const LiveProvider = ({ children }) => {
 
     function handleTrackSubscribed(track, cb) {
         const audioElement = document.createElement('audio');
-        audioElement.autoplay = isPlay;
+        audioElement.autoplay = true;
         audioElement.addEventListener('play', cb);
         track.attach(audioElement);
         document.body.appendChild(audioElement);
