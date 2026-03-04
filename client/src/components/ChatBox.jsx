@@ -50,16 +50,16 @@ export default function ChatBox({
     const [tempName, setTempName] = useState("")
 
     // ✅ Load name from localStorage (only once)
-    useEffect(() => {
-        const savedName = localStorage.getItem("chat_name")
-        if (savedName) setName(savedName)
-    }, [])
+    // useEffect(() => {
+    //     const savedName = localStorage.getItem("chat_name")
+    //     if (savedName) setName(savedName)
+    // }, [])
 
     // ✅ Save name
     const handleSaveName = () => {
         if (!tempName.trim()) return
         setName(tempName)
-        localStorage.setItem("chat_name", tempName)
+        // localStorage.setItem("chat_name", tempName)
     }
 
     if (!open) return null
