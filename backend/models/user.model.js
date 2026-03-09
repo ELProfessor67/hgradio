@@ -74,6 +74,18 @@ const userSchema = new mongoose.Schema(
     labelRepresentativeName: { type: String, default: "" },
     labelRepresentativeSignature: { type: String, default: "" },
     labelRepresentativeDate: { type: Date },
+
+    digitalDistributionArtistName: { type: String, default: "" },
+    digitalDistributionArtistSignature: { type: String, default: "" },
+    digitalDistributionArtistDate: { type: Date },
+    digitalDistributionRepName: { type: String, default: "" },
+    digitalDistributionRepTitle: { type: String, default: "" },
+    digitalDistributionRepSignature: { type: String, default: "" },
+    digitalDistributionRepDate: { type: Date },
+    digitalDistributionDigitalStoreOption: { type: String, default: "" },
+    digitalDistributionSummaryName: { type: String, default: "" },
+    digitalDistributionSummarySignature: { type: String, default: "" },
+    digitalDistributionSummaryDate: { type: Date },
   },
   { timestamps: true }
 );

@@ -181,11 +181,10 @@ const Page = () => {
                 <button
                   key={s}
                   onClick={() => setStatus(s)}
-                  className={`px-4 py-2 border transition-all duration-300 ease-in-out ${
-                    status === s
+                  className={`px-4 py-2 border transition-all duration-300 ease-in-out ${status === s
                       ? "bg-second text-black border-second"
                       : "border-white/20 hover:border-second"
-                  }`}
+                    }`}
                 >
                   {s}
                 </button>
@@ -298,6 +297,21 @@ const Page = () => {
                 <Field label="Label Representative Name" value={selected?.labelRepresentativeName} />
                 <Field label="Label Representative Signature" value={selected?.labelRepresentativeSignature} />
                 <Field label="Label Representative Date" value={selected?.labelRepresentativeDate} />
+              </div>
+
+              <div className="mt-6 text-lg font-semibold">Digital Music Distribution Agreement</div>
+              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
+                <Field label="Artist Name" value={selected?.digitalDistributionArtistName} />
+                <Field label="Artist Signature" value={selected?.digitalDistributionArtistSignature} />
+                <Field label="Artist Date" value={selected?.digitalDistributionArtistDate} />
+                <Field label="Rep Name" value={selected?.digitalDistributionRepName} />
+                <Field label="Rep Title" value={selected?.digitalDistributionRepTitle} />
+                <Field label="Rep Signature" value={selected?.digitalDistributionRepSignature} />
+                <Field label="Rep Date" value={selected?.digitalDistributionRepDate} />
+                <Field label="Digital Store Option (Initial)" value={selected?.digitalDistributionDigitalStoreOption} />
+                <Field label="Summary Name" value={selected?.digitalDistributionSummaryName} />
+                <Field label="Summary Signature" value={selected?.digitalDistributionSummarySignature} />
+                <Field label="Summary Date" value={selected?.digitalDistributionSummaryDate} />
               </div>
             </div>
 

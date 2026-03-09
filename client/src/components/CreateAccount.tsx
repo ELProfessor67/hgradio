@@ -38,9 +38,21 @@ type FormDataType = {
   labelRepresentativeName: string;
   labelRepresentativeSignature: string;
   labelRepresentativeDate: string;
+  digitalDistributionArtistName: string;
+  digitalDistributionArtistSignature: string;
+  digitalDistributionArtistDate: string;
+  digitalDistributionRepName: string;
+  digitalDistributionRepTitle: string;
+  digitalDistributionRepSignature: string;
+  digitalDistributionRepDate: string;
+  digitalDistributionDigitalStoreOption: string;
+  digitalDistributionSummaryName: string;
+  digitalDistributionSummarySignature: string;
+  digitalDistributionSummaryDate: string;
 };
 const PageWithCreateAccount = () => {
   const [showForm, setShowForm] = useState(false);
+  const [currentStep, setCurrentStep] = useState(1);
   const formRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
   const [accountType, setAccountType] = useState<"buyer" | "seller">("buyer");
@@ -78,6 +90,17 @@ const PageWithCreateAccount = () => {
     labelRepresentativeName: "",
     labelRepresentativeSignature: "",
     labelRepresentativeDate: "",
+    digitalDistributionArtistName: "",
+    digitalDistributionArtistSignature: "",
+    digitalDistributionArtistDate: "",
+    digitalDistributionRepName: "",
+    digitalDistributionRepTitle: "",
+    digitalDistributionRepSignature: "",
+    digitalDistributionRepDate: "",
+    digitalDistributionDigitalStoreOption: "",
+    digitalDistributionSummaryName: "",
+    digitalDistributionSummarySignature: "",
+    digitalDistributionSummaryDate: "",
   });
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -220,6 +243,40 @@ const PageWithCreateAccount = () => {
     }
   };
 
+  const handleNextStep = () => {
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+    const passwordError = validatePassword(formData.password);
+    if (passwordError) {
+      toast.error(passwordError, {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Passwords do not match.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+    if (accountType === "seller" && !registerOtpVerified) {
+      toast.error("Seller account requires OTP verification to unlock contract form.", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    // Move to next step and scroll to top of form
+    setCurrentStep(2);
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -301,6 +358,17 @@ const PageWithCreateAccount = () => {
         labelRepresentativeName: rest.labelRepresentativeName,
         labelRepresentativeSignature: rest.labelRepresentativeSignature,
         labelRepresentativeDate: rest.labelRepresentativeDate,
+        digitalDistributionArtistName: rest.digitalDistributionArtistName,
+        digitalDistributionArtistSignature: rest.digitalDistributionArtistSignature,
+        digitalDistributionArtistDate: rest.digitalDistributionArtistDate,
+        digitalDistributionRepName: rest.digitalDistributionRepName,
+        digitalDistributionRepTitle: rest.digitalDistributionRepTitle,
+        digitalDistributionRepSignature: rest.digitalDistributionRepSignature,
+        digitalDistributionRepDate: rest.digitalDistributionRepDate,
+        digitalDistributionDigitalStoreOption: rest.digitalDistributionDigitalStoreOption,
+        digitalDistributionSummaryName: rest.digitalDistributionSummaryName,
+        digitalDistributionSummarySignature: rest.digitalDistributionSummarySignature,
+        digitalDistributionSummaryDate: rest.digitalDistributionSummaryDate,
       };
 
       const cleanedData =
@@ -367,7 +435,7 @@ const PageWithCreateAccount = () => {
   };
 
   useEffect(() => {
-    const shouldOpen = searchParams.get("openForm");
+    const shouldOpen = searchParams?.get("openForm");
     if (shouldOpen === "true") {
       setShowForm(true);
       setTimeout(() => {
@@ -498,124 +566,126 @@ const PageWithCreateAccount = () => {
               </h2>
             </div>
 
-            <div className="relative z-10 space-y-5 max-w-[1500px] mx-auto px-3">
-              <div className="bg-[#0B1834] p-4 text-white space-y-3">
-                <h3 className="text-xl font-semibold">Select Account Type</h3>
-                <div className="flex flex-col md:flex-row gap-4">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="accountType"
-                      value="buyer"
-                      checked={accountType === "buyer"}
-                      onChange={() => setAccountType("buyer")}
-                    />
-                    <span className="font-medium">Buyer</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="accountType"
-                      value="seller"
-                      checked={accountType === "seller"}
-                      onChange={() => setAccountType("seller")}
-                    />
-                    <span className="font-medium">Seller</span>
-                  </label>
+            {currentStep === 1 && (
+              <div className="relative z-10 space-y-5 max-w-[1500px] mx-auto px-3">
+                <div className="bg-[#0B1834] p-4 text-white space-y-3">
+                  <h3 className="text-xl font-semibold">Select Account Type</h3>
+                  <div className="flex flex-col md:flex-row gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="accountType"
+                        value="buyer"
+                        checked={accountType === "buyer"}
+                        onChange={() => setAccountType("buyer")}
+                      />
+                      <span className="font-medium">Buyer</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="accountType"
+                        value="seller"
+                        checked={accountType === "seller"}
+                        onChange={() => setAccountType("seller")}
+                      />
+                      <span className="font-medium">Seller</span>
+                    </label>
+                  </div>
+
+
+                </div>
+                {[
+                  { name: "name", placeholder: "Your Full Name", type: "text" },
+                  { name: "email", placeholder: "Your Email", type: "email" },
+                  { name: "password", placeholder: "Password", type: "password" },
+                  {
+                    name: "confirmPassword",
+                    placeholder: "Confirm Password",
+                    type: "password",
+                  },
+                  { name: "city", placeholder: "City", type: "text" },
+                  { name: "state", placeholder: "State", type: "text" },
+                  { name: "country", placeholder: "Country", type: "text" },
+                  { name: "zipCode", placeholder: "Zip Code", type: "text" },
+                ]
+                  .reduce((rows, field, index, array) => {
+                    if (index % 2 === 0) rows.push(array.slice(index, index + 2));
+                    return rows;
+                  }, [] as { name: string; placeholder: string; type: string }[][])
+                  .map((row, i) => (
+                    <div key={i} className="flex flex-col md:flex-row gap-5">
+                      {row.map(({ name, placeholder, type }) => (
+                        <input
+                          key={name}
+                          type={type}
+                          name={name}
+                          placeholder={placeholder}
+                          value={formData[name as keyof typeof formData] || ""}
+                          onChange={handleChange}
+                          className="w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
+                          required
+                        />
+                      ))}
+                    </div>
+                  ))}
+
+
+
+                <div className="bg-[#0B1834] p-4 text-white space-y-3">
+                  {accountType === "seller" && (
+                    <div className="space-y-3">
+                      <p className="text-gray-200">
+                        Seller accounts require email OTP verification to unlock the contract
+                        form.
+                      </p>
+
+                      <div className="flex flex-col md:flex-row gap-3 md:items-center">
+                        <button
+                          type="button"
+                          onClick={requestSellerOtp}
+                          disabled={registerOtpSending}
+                          className="bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                        >
+                          {registerOtpSending ? "Sending..." : "Get Contract Form"}
+                        </button>
+
+                        {registerOtpSent && !registerOtpVerified && (
+                          <div className="flex flex-col md:flex-row gap-3 md:items-center w-full">
+                            <input
+                              type="text"
+                              placeholder="Enter OTP"
+                              value={registerOtp}
+                              onChange={(e) => setRegisterOtp(e.target.value)}
+                              className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] text-white placeholder:text-white/60 "
+                            />
+                            <button
+                              type="button"
+                              onClick={verifySellerOtp}
+                              disabled={registerOtpVerifying}
+                              className="bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                              {registerOtpVerifying ? "Verifying..." : "Verify OTP"}
+                            </button>
+                          </div>
+                        )}
+
+                        {registerOtpVerified && (
+                          <span className="text-green-300 font-semibold">
+                            OTP verified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
 
               </div>
-              {[
-                { name: "name", placeholder: "Your Full Name", type: "text" },
-                { name: "email", placeholder: "Your Email", type: "email" },
-                { name: "password", placeholder: "Password", type: "password" },
-                {
-                  name: "confirmPassword",
-                  placeholder: "Confirm Password",
-                  type: "password",
-                },
-                { name: "city", placeholder: "City", type: "text" },
-                { name: "state", placeholder: "State", type: "text" },
-                { name: "country", placeholder: "Country", type: "text" },
-                { name: "zipCode", placeholder: "Zip Code", type: "text" },
-              ]
-                .reduce((rows, field, index, array) => {
-                  if (index % 2 === 0) rows.push(array.slice(index, index + 2));
-                  return rows;
-                }, [] as { name: string; placeholder: string; type: string }[][])
-                .map((row, i) => (
-                  <div key={i} className="flex flex-col md:flex-row gap-5">
-                    {row.map(({ name, placeholder, type }) => (
-                      <input
-                        key={name}
-                        type={type}
-                        name={name}
-                        placeholder={placeholder}
-                        value={formData[name as keyof typeof formData] || ""}
-                        onChange={handleChange}
-                        className="w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
-                        required
-                      />
-                    ))}
-                  </div>
-                ))}
-
-
-
-              <div className="bg-[#0B1834] p-4 text-white space-y-3">
-                {accountType === "seller" && (
-                  <div className="space-y-3">
-                    <p className="text-gray-200">
-                      Seller accounts require email OTP verification to unlock the contract
-                      form.
-                    </p>
-
-                    <div className="flex flex-col md:flex-row gap-3 md:items-center">
-                      <button
-                        type="button"
-                        onClick={requestSellerOtp}
-                        disabled={registerOtpSending}
-                        className="bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                      >
-                        {registerOtpSending ? "Sending..." : "Get Contract Form"}
-                      </button>
-
-                      {registerOtpSent && !registerOtpVerified && (
-                        <div className="flex flex-col md:flex-row gap-3 md:items-center w-full">
-                          <input
-                            type="text"
-                            placeholder="Enter OTP"
-                            value={registerOtp}
-                            onChange={(e) => setRegisterOtp(e.target.value)}
-                            className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] text-white placeholder:text-white/60 "
-                          />
-                          <button
-                            type="button"
-                            onClick={verifySellerOtp}
-                            disabled={registerOtpVerifying}
-                            className="bg-second text-black font-semibold px-5 py-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                          >
-                            {registerOtpVerifying ? "Verifying..." : "Verify OTP"}
-                          </button>
-                        </div>
-                      )}
-
-                      {registerOtpVerified && (
-                        <span className="text-green-300 font-semibold">
-                          OTP verified
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-
-            </div>
+            )}
           </div>
 
-          {accountType === "seller" && registerOtpVerified && (
+          {accountType === "seller" && registerOtpVerified && currentStep === 1 && (
             <div className=" bg-[#071126] text-[#fff] py-[3rem] ">
               <div className=" max-w-[1500px] mx-auto px-3 ">
                 <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
@@ -1126,26 +1196,160 @@ const PageWithCreateAccount = () => {
             </div>
           )}
 
+          {accountType === "seller" && registerOtpVerified && currentStep === 2 && (
+            <div className=" bg-[#071126] text-[#fff] py-[3rem] ">
+              <div className=" max-w-[1500px] mx-auto px-3 ">
+
+                <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
+                  <h2 className=" text-[2.5rem] font-semibold uppercase ">
+                    HGC RADIO – DIGITAL MUSIC DISTRIBUTION AND MERCHANDISE AGREEMENT
+                  </h2>
+                  <p className=" text-gray-300 ">
+                    This DIGITAL MUSIC DISTRIBUTION AND MERCHANDISE AGREEMENT (&quot;Agreement&quot;) is entered into by and between Hallelujah Gospel Globally, operating as HGC Radio and Hallelujah Gospel Choice Radio (&quot;Company&quot;), and the Artist.
+                  </p>
+                  <p className=" text-gray-300 ">
+                    The Company distributes, promotes, markets, broadcasts, and sells digital music and related merchandise worldwide to glorify God and advance Kingdom purposes. Artist grants Company the right to distribute and promote Artist’s musical works in alignment with Kingdom values under the terms set forth in this Agreement.
+                  </p>
+                </div>
+
+                <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
+                  <h3 className=" text-[1.4rem] font-semibold ">DIGITAL STORE DISTRIBUTION OPTION</h3>
+                  <div className=" text-gray-300 ">
+                    <h4>
+                      Artist may authorize Company to distribute the Work to third-party digital stores and streaming platforms.
+                    </h4>
+                  </div>
+                  <div className=" flex items-center gap-2 ">
+                    <label htmlFor="" className=" text-[1.2rem] ">
+                      Initial:
+                    </label>
+                    <input
+                      className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white placeholder:text-white/60 "
+                      type="text"
+                      name="digitalDistributionDigitalStoreOption"
+                      value={formData.digitalDistributionDigitalStoreOption}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
+                  <h3 className=" text-[1.4rem] font-semibold ">SIGNATURES</h3>
+                  <div className=" mt-4 ">
+                    <h4 className=" font-semibold text-[1.2rem] mb-2 ">Artist / Authorized Representative</h4>
+                    <div className=" space-y-2 ">
+                      <div className=" flex items-center gap-2 ">
+                        <label className=" text-[1.2rem] ">Name of Artist:</label>
+                        <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="text" name="digitalDistributionArtistName" value={formData.digitalDistributionArtistName} onChange={handleChange} required />
+                      </div>
+                      <div className=" flex items-center gap-2 ">
+                        <label className=" text-[1.2rem] ">Signature:</label>
+                        <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="text" name="digitalDistributionArtistSignature" value={formData.digitalDistributionArtistSignature} onChange={handleChange} required />
+                      </div>
+                      <div className=" flex items-center gap-2 ">
+                        <label className=" text-[1.2rem] ">Date:</label>
+                        <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="date" name="digitalDistributionArtistDate" value={formData.digitalDistributionArtistDate} onChange={handleChange} required />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className=" mt-6 ">
+                    <h4 className=" font-semibold text-[1.2rem] mb-2 text-gray-300 ">If the Artist is signing through a representative, manager, or record label, please include:</h4>
+                    <div className=" space-y-2 ">
+                      <div className=" flex items-center gap-2 ">
+                        <label className=" text-[1.2rem] text-gray-300 ">Representative / Label Name:</label>
+                        <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="text" name="digitalDistributionRepName" value={formData.digitalDistributionRepName} onChange={handleChange} />
+                      </div>
+                      <div className=" flex items-center gap-2 ">
+                        <label className=" text-[1.2rem] text-gray-300 ">Title/Relationship:</label>
+                        <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="text" name="digitalDistributionRepTitle" value={formData.digitalDistributionRepTitle} onChange={handleChange} />
+                      </div>
+                      <div className=" flex items-center gap-2 ">
+                        <label className=" text-[1.2rem] text-gray-300 ">Signature:</label>
+                        <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="text" name="digitalDistributionRepSignature" value={formData.digitalDistributionRepSignature} onChange={handleChange} />
+                      </div>
+                      <div className=" flex items-center gap-2 ">
+                        <label className=" text-[1.2rem] text-gray-300 ">Date:</label>
+                        <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="date" name="digitalDistributionRepDate" value={formData.digitalDistributionRepDate} onChange={handleChange} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className=" space-y-5 border-b border-gray-500 pb-[2rem] mb-[2rem] ">
+                  <h2 className=" text-[2rem] font-semibold uppercase ">
+                    FAITH-BASED ARTIST-FRIENDLY SUMMARY
+                  </h2>
+                  <p className=" text-gray-300 ">
+                    <strong>Artist Acknowledgment</strong><br />
+                    I have read the summary and understand how HGC Radio will distribute, promote, and manage my music for Kingdom impact.
+                  </p>
+                  <div className=" space-y-2 mt-4 ">
+                    <div className=" flex items-center gap-2 ">
+                      <label className=" text-[1.2rem] ">Name:</label>
+                      <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="text" name="digitalDistributionSummaryName" value={formData.digitalDistributionSummaryName} onChange={handleChange} required />
+                    </div>
+                    <div className=" flex items-center gap-2 ">
+                      <label className=" text-[1.2rem] ">Signature:</label>
+                      <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="text" name="digitalDistributionSummarySignature" value={formData.digitalDistributionSummarySignature} onChange={handleChange} required />
+                    </div>
+                    <div className=" flex items-center gap-2 ">
+                      <label className=" text-[1.2rem] ">Date:</label>
+                      <input className="w-full text-[1.1rem] py-2 px-4 outline-none max-w-[20rem] bg-[#222F46] border-b-2 border-[#445d88] text-white" type="date" name="digitalDistributionSummaryDate" value={formData.digitalDistributionSummaryDate} onChange={handleChange} required />
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
 
           <div className="bg-[#071126] text-[#fff] py-[2rem]">
-            <div className="max-w-[1500px] mx-auto px-3 flex justify-center flex-col items-center">
-              <button
-                type="submit"
-                disabled={isLoading || (accountType === "seller" && !registerOtpVerified)}
-                className="relative bg-second hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
-              >
-                <span className="relative z-10">
-                  {isLoading ? <ButtonLoading /> : "Create Account"}
-                </span>
-                <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
-              </button>
+            <div className="max-w-[1500px] mx-auto px-3 flex justify-center flex-col items-center gap-4">
+              {accountType === "seller" && registerOtpVerified && currentStep === 1 ? (
+                <button
+                  type="button"
+                  onClick={handleNextStep}
+                  className="relative bg-second hover:bg-transparent text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
+                >
+                  <span className="relative z-10">Next</span>
+                  <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                </button>
+              ) : (
+                <div className="flex flex-col md:flex-row items-center gap-4">
+                  {accountType === "seller" && currentStep === 2 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCurrentStep(1);
+                        setTimeout(() => {
+                          formRef.current?.scrollIntoView({ behavior: "smooth" });
+                        }, 100);
+                      }}
+                      className="border border-second text-white hover:bg-second hover:text-black transition-all font-medium text-lg w-[12rem] h-[2.70rem]"
+                    >
+                      Back
+                    </button>
+                  )}
+                  <button
+                    type="submit"
+                    disabled={isLoading || (accountType === "seller" && !registerOtpVerified)}
+                    className="relative bg-second hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
+                  >
+                    <span className="relative z-10">
+                      {isLoading ? <ButtonLoading /> : "Create Account"}
+                    </span>
+                    <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                  </button>
+                </div>
+              )}
 
               {accountType === "seller" && !registerOtpVerified && (
                 <p className="text-gray-300 mt-3 text-center">
                   Verify OTP to unlock the contract form and enable account creation.
                 </p>
               )}
-
             </div>
           </div>
         </form>

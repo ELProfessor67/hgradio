@@ -23,7 +23,7 @@ interface SidebarProps {
 
 const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
 
-  const {logout} = useData()
+  const { logout } = useData()
   const router = useRouter()
   const currentPath = usePathname();
 
@@ -76,11 +76,10 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
   return (
     <>
       <div
-        className={`fixed inset-0 z-[59] ${
-          !isOpenSidebar
+        className={`fixed inset-0 z-[59] ${!isOpenSidebar
             ? "xl:bg-transparent bg-black/20 xl:w-fit w-full"
             : "pointer-events-none"
-        }`}
+          }`}
         onClick={() => {
           if (window.innerWidth < 1280) {
             // Tailwind's xl = 1280px
@@ -90,9 +89,8 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
       >
         <div
           className={`bg-[#071126] h-screen w-[300px] flex flex-col justify-between pb-8
-    transform transition-transform duration-300 ease-in-out ${
-      !isOpenSidebar ? "translate-x-0" : "-translate-x-full"
-    }`}
+    transform transition-transform duration-300 ease-in-out ${!isOpenSidebar ? "translate-x-0" : "-translate-x-full"
+            }`}
           onClick={(e) => e.stopPropagation()} // Prevent click close
         >
           <div className="text-second">
@@ -108,9 +106,8 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
                 className=" text-[1.3rem] cursor-pointer xl:hidden flex "
               >
                 <BsLayoutSidebar
-                  className={` ${
-                    isOpenSidebar ? "rotate-180" : "rotate-0"
-                  } transition-all duration-300 ease-in-out `}
+                  className={` ${isOpenSidebar ? "rotate-180" : "rotate-0"
+                    } transition-all duration-300 ease-in-out `}
                 />
               </div>
             </div>
@@ -129,27 +126,24 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
                       }
                     }}
                     key={idx}
-                    className={` ${
-                      item.path === currentPath
+                    className={` ${item.path === currentPath
                         ? "bg-second/20 text-second"
                         : " bg-transparent text-second "
-                    } flex items-center gap-3 hover:bg-second/20 py-2 px-4  text-[1.1rem] group  `}
+                      } flex items-center gap-3 hover:bg-second/20 py-2 px-4  text-[1.1rem] group  `}
                   >
                     <div
-                      className={` ${
-                        item.path === currentPath
+                      className={` ${item.path === currentPath
                           ? "text-second"
                           : " text-second "
-                      } group-hover:text-second `}
+                        } group-hover:text-second `}
                     >
                       {item.icon}
                     </div>
                     <div
-                      className={` ${
-                        item.path === currentPath
+                      className={` ${item.path === currentPath
                           ? "text-second"
                           : " text-second"
-                      } text-[1rem] group-hover:text-second `}
+                        } text-[1rem] group-hover:text-second `}
                     >
                       {item.name}
                     </div>
@@ -165,13 +159,13 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
           </div>
 
           <div className=" px-7  ">
-            <div onClick={()=> {
+            <div onClick={() => {
               logout()
-              toast.success("Logout Successfully!!",{
+              toast.success("Logout Successfully!!", {
                 style: {
                   background: "green",
-                  border : "none",
-                  color : "white"
+                  border: "none",
+                  color: "white"
                 },
               })
               router.push(`/admin-login`)
@@ -213,55 +207,49 @@ const Items = ({ items, currentPath }: ItemsProps) => {
           <Link
             onClick={() => handleToggle(idx)}
             href={item.subItems ? currentPath : item.path}
-            className={` ${
-              item.path === currentPath
+            className={` ${item.path === currentPath
                 ? "bg-second/20 text-second"
                 : " bg-transparent text-second "
-            }  hover:bg-second/20 py-2 px-4  text-[1.1rem] group flex items-center justify-between `}
+              }  hover:bg-second/20 py-2 px-4  text-[1.1rem] group flex items-center justify-between `}
           >
             <div className=" flex items-center gap-3 ">
               <div
-                className={` ${
-                  item.path === currentPath
+                className={` ${item.path === currentPath
                     ? "text-second"
                     : " text-second "
-                } group-hover:text-second `}
+                  } group-hover:text-second `}
               >
                 {item.icon}
               </div>
               <div
-                className={` ${
-                  item.path === currentPath
+                className={` ${item.path === currentPath
                     ? "text-second"
                     : " text-second"
-                } text-[1rem] group-hover:text-second `}
+                  } text-[1rem] group-hover:text-second `}
               >
                 {item.name}
               </div>
             </div>
             {item.subItems && (
               <div
-                className={` ${
-                  item.path === currentPath
+                className={` ${item.path === currentPath
                     ? "text-second"
                     : " text-second"
-                } text-[1rem] group-hover:text-second `}
+                  } text-[1rem] group-hover:text-second `}
               >
                 <IoIosArrowForward
-                  className={` ${
-                    isActive === idx ? "rotate-90" : ""
-                  } transition-all duration-300 ease-in-out `}
+                  className={` ${isActive === idx ? "rotate-90" : ""
+                    } transition-all duration-300 ease-in-out `}
                 />
               </div>
             )}
           </Link>
 
           <div
-            className={`grid overflow-hidden transition-all duration-300 ease-in-out ${
-              isActive === idx
+            className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isActive === idx
                 ? "grid-rows-[1fr] opacity-100"
                 : "grid-rows-[0fr] opacity-0"
-            }`}
+              }`}
           >
             <div className="overflow-hidden *:cursor-pointer pl-4 ">
               {item.subItems?.map((sub, idx) => (

@@ -102,6 +102,18 @@ export const registerUser = async (req, res) => {
       labelRepresentativeName,
       labelRepresentativeSignature,
       labelRepresentativeDate,
+
+      digitalDistributionArtistName,
+      digitalDistributionArtistSignature,
+      digitalDistributionArtistDate,
+      digitalDistributionRepName,
+      digitalDistributionRepTitle,
+      digitalDistributionRepSignature,
+      digitalDistributionRepDate,
+      digitalDistributionDigitalStoreOption,
+      digitalDistributionSummaryName,
+      digitalDistributionSummarySignature,
+      digitalDistributionSummaryDate,
     } = req.body || {};
 
     if (!name || !email || !password) {
@@ -172,6 +184,18 @@ export const registerUser = async (req, res) => {
       labelRepresentativeName,
       labelRepresentativeSignature,
       labelRepresentativeDate,
+
+      digitalDistributionArtistName,
+      digitalDistributionArtistSignature,
+      digitalDistributionArtistDate,
+      digitalDistributionRepName,
+      digitalDistributionRepTitle,
+      digitalDistributionRepSignature,
+      digitalDistributionRepDate,
+      digitalDistributionDigitalStoreOption,
+      digitalDistributionSummaryName,
+      digitalDistributionSummarySignature,
+      digitalDistributionSummaryDate,
     });
 
     const token = generateToken(user._id);
@@ -220,6 +244,8 @@ export const requestRegisterOtp = async (req, res) => {
       { email: normalizedEmail, otpHash, expiresAt, lastSentAt: new Date(), attempts: 0 },
       { upsert: true, new: true }
     );
+
+    console.log(otp)
 
     await sendOtpEmailViaMailer({ email: normalizedEmail, otp });
 
@@ -591,6 +617,18 @@ export const upgradeToSeller = async (req, res) => {
       labelRepresentativeName,
       labelRepresentativeSignature,
       labelRepresentativeDate,
+
+      digitalDistributionArtistName,
+      digitalDistributionArtistSignature,
+      digitalDistributionArtistDate,
+      digitalDistributionRepName,
+      digitalDistributionRepTitle,
+      digitalDistributionRepSignature,
+      digitalDistributionRepDate,
+      digitalDistributionDigitalStoreOption,
+      digitalDistributionSummaryName,
+      digitalDistributionSummarySignature,
+      digitalDistributionSummaryDate,
     } = req.body || {};
 
     if (!userId || !otpToken) {
@@ -650,6 +688,18 @@ export const upgradeToSeller = async (req, res) => {
     user.labelRepresentativeName = labelRepresentativeName;
     user.labelRepresentativeSignature = labelRepresentativeSignature;
     user.labelRepresentativeDate = labelRepresentativeDate;
+
+    user.digitalDistributionArtistName = digitalDistributionArtistName;
+    user.digitalDistributionArtistSignature = digitalDistributionArtistSignature;
+    user.digitalDistributionArtistDate = digitalDistributionArtistDate;
+    user.digitalDistributionRepName = digitalDistributionRepName;
+    user.digitalDistributionRepTitle = digitalDistributionRepTitle;
+    user.digitalDistributionRepSignature = digitalDistributionRepSignature;
+    user.digitalDistributionRepDate = digitalDistributionRepDate;
+    user.digitalDistributionDigitalStoreOption = digitalDistributionDigitalStoreOption;
+    user.digitalDistributionSummaryName = digitalDistributionSummaryName;
+    user.digitalDistributionSummarySignature = digitalDistributionSummarySignature;
+    user.digitalDistributionSummaryDate = digitalDistributionSummaryDate;
 
     await user.save();
 
