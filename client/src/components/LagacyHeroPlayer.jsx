@@ -186,8 +186,8 @@ export default function App() {
 					<div className="px-3">
 						<div className="row">
 							<div className="col-lg-12">
-								<div className="single-audio-player flex flex-col justify-center items-center lg:flex-row gap-4">
-									<div className="flex flex-col justify-center items-center lg:flex-row gap-4">
+								<div className="single-audio-player flex flex-col justify-center items-center lg:flex-row gap-2">
+									<div className="flex flex-col justify-center items-center lg:flex-row gap-1">
 
 
 										<div class="single-audio-thumb">
@@ -214,13 +214,13 @@ export default function App() {
 
 													<br />
 
-													{currentSong?.album?.toLowerCase() != 'unknown' ? <><span className="font-normal">Album:</span> <span className="font-bold text-second text-nowrap">{currentSong?.album}</span></> : ''}
+													{/* {currentSong?.album?.toLowerCase() != 'unknown' ? <><span className="font-normal">Album:</span> <span className="font-bold text-second text-nowrap">{currentSong?.album}</span></> : ''}
 
 													<br />
 
 													{currentSong?.artist?.toLowerCase() != 'unknown' ? <>
 														<span className="font-normal">Artist:</span>
-														<span className="font-bold text-second text-nowrap">{currentSong?.artist}</span> </> : ''}
+														<span className="font-bold text-second text-nowrap">{currentSong?.artist}</span> </> : ''} */}
 												</p>
 											}
 											{/* <p className="audio-time text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Next song : {nextSong?.title?.split('.')[0]}</p> */}
@@ -259,7 +259,19 @@ export default function App() {
 
 									<div className="single-audio-content-top flex flex-col justify-center items-center lg:block">
 										<h1 className="text-white text-2xl font-bold text-nowrap mb-2">Song Details: </h1>
-										<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Current song : <span className="font-bold text-second">{currentSong?.title?.split('.')[0]}</span></p>
+										<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>
+											Current song : <span className="font-bold text-second">{currentSong?.title?.split('.')[0]}</span>
+										</p>
+										<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>
+											{currentSong?.album?.toLowerCase() != 'unknown' ? <><span className="font-normal">Album:</span> <span className="font-bold text-second text-nowrap">{currentSong?.album}</span></> : ''}
+										</p>
+
+
+										<p className="audio-time whitespace-break-spaces text-center lg:text-left" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>
+											{currentSong?.artist?.toLowerCase() != 'unknown' ? <>
+												<span className="font-normal">Artist:</span>
+												<span className="font-bold text-second text-nowrap">{currentSong?.artist}</span> </> : ''}
+										</p>
 										{/* <p className="audio-time text-center lg:text-left whitespace-break-spaces" style={{ fontSize: "12px", whiteSpace: 'break-spaces' }}>Next song : <span className='font-bold text-second'>{nextSong?.title?.split('.')[0]}</span></p> */}
 									</div>
 								</div>
