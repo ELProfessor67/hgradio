@@ -25,7 +25,7 @@ const engineers = [
     name: "Pastor Ben Cha Me",
     bio: "Jesus Christ alone can save the World but Jesus cannot save the World alone! Being a former missionary, p. Ben firmly believes that Lost people matters to God and so should we. And I believe that it is a great SIN when you've found water in the middle of the desert and not share it. P. Ben received his seminary degree from Talbot Theological Seminary and Th.M from Fuller. and he serves as the Mission/outreach pastor at Christian Layman Church in Oakland. He is married to one wife Ruth; son Joshua and daughter Rebekah! ..",
     location: "United States",
-    email: "pastor.ben@hallelujahgospel.org ",
+    email: "p.bchame@hgcradio.org",
   },
   {
     id: "Pastor-Harris-and-Voices",
@@ -33,7 +33,7 @@ const engineers = [
     name: "Pastor J'on Harris and Voices",
     bio: "J'on Harris and Voices is a dynamic ensemble of multi-cultural youth from all over the greater Sacramento area. Formed in the spring of 2001 in a small school called Hiram Johnson High School, Voices transformed from being a regular high school choir to a community choir whose music and ministry range from the east to the west. What started as a little performance at a black history program, the group had no idea that God was building them up for a greater calling. After their performance, the high school principal asked if Mr. Harris could help teach the choir class, because the regular choir teacher had become ill and could not finish out the school year. J'on Harris gladly accepted the adventure and began teaching the class the only music he knew - gospel. Toward the end of the school year, the students had developed a love and passion for music and a relationship with God. Friday rehearsals during that summer further united the group. They began singing at different events and eventually became J'on Harris and Voices. Their journey also saw them form a non-profit called EMBRACE where they regularly collaborate with different high schools in the Sacramento area and form after-school choirs all over the city. Through this platform, many of the youth have been saved and built a relationship with God. Over the years, J'on Harris and voices has recorded 3 full lengths CDs. Two of them, Changed and Another level, were played on radio stations from Sacramento to Louisiana. Voices has also recorded over 6 singles and sold over 35,000 CDs all over the country. In 2003, this group embarked on their first Taking Back Our Streets Tour where they traveled for 21 days across the country singing at different churches, events, street corners, and concerts. Voices has sung for gospel artists such as John P. Kee, Shirley Caesar and Kirk Franklin. They have been featured on Good Morning Sacramento KTXL, Channel 10, FOX 40 and in The Sacramento Bee. Today, Voices represents a vast cultural diversity spanning 4 continents, 8 languages and 17 countries worldwide. This group plans to share the Gospel for many years to come both here and abroad and will stop at nothing to fulfill God's purpose",
     location: "United States",
-    email: "jon.harris@hallelujahgospel.org ",
+    email: "p.jharris@hgcradio.org",
   },
   {
     id: "Apostle-Gary-Wyatt",
@@ -41,7 +41,7 @@ const engineers = [
     name: "Apostle Gary L. Wyatt",
     bio: "In March 1994, while living in Baltimore Maryland, Rev. Gary L. Wyatt, Sr. had 3 consecutive dreams about the Hilltop Neighborhood in Tacoma WA.  In the dreams he was walking and talking to people on the Hilltop about Jesus.  After the 3rd dream, Rev. Wyatt woke up early in the morning and went into the family room to pray and seek God as to why He was showing him the Hilltop, which is the neighborhood where Rev. Wyatt was born and raised. God instructed Rev. Wyatt to read the book of 1st Samuel, strategically leading him to  the verse in 1 Samuel 2:35 that says, And I will raise me up a faithful priest, that shall do according to that which is in my heart and in mind: and I will build him a sure house, and he shall walk before my anointed forever. After reading this verse God clearly spoke to Rev. Wyatt and said, you are the priest that I have raised up, I'm sending you back to Tacoma to plant a church on the Hilltop, and the name of the church is sure house.  Rev. Wyatt told God yes, and within a few months he and his family moved back to Tacoma and established SureHouse on August 14, 1994 in the Hilltop Community.",
     location: "United States",
-    email: "gary.wyatt@hallelujahgospel.org ",
+    email: "a.gwyatt@hgcradio.org",
   },
   {
     id: "Dr-Edwards",
@@ -49,7 +49,7 @@ const engineers = [
     name: "Dr Edwards",
     bio: "Dr. Edwards is the Pastoral Leader, and Chief Executive Officer for Save The Youth Incorporated, a non-profit ministry where he provides oversight for education, youth programs, and parental counseling. Minister Edwards is part of the pastoral team at churches in the state of Alabama where he is an Associate Pastor and/or Pulpit Conductor for Revivals & Special Programs.Dr. Edwards has many patents/inventions; numerous journal papers; and was coauthor of two books on Nanotechnology.",
     location: "United States",
-    email: "edwards@hallelujahgospel.org ",
+    email: "dr.eedwards@hgcradio.org",
   },
   {
     id: "Kenny-Andrews",
@@ -57,7 +57,7 @@ const engineers = [
     name: "Kenny Andrews",
     bio: "Kenny Andrews inspires his fans with his smooth traditional and contemporary melodies of God's love and glory and his passion for Christ. Through New Creation Records, Kenny Andrews spreads his inspirational message while touring in music venues and churches throughout the country. Most notable are his numerous Spotlights in Gospel USA Magazine, debuting his singles: Real Special Love, He Reigns, and So Amazing; the New Creature album; and his So Amazing video. From Spokane, Washington, Kenny Andrews was born July 3, 1962 to Reverend Dr. Andrews and First Lady Doris Andrews, the latter a member of the Golden Echoes quartet. With the influence of his father, Kenny began singing at the early age of four. Kenny has always conveyed his emotions and his commitment to God through his music. In 2005, Kenny was the grand prize winner of Washington State KHQ-Northern Quest Casino Gimme the Mike. In 2007, after a career singing pop music, Andrews rededicated his singing to God and, with manager Judy Smith and Chester Andrews of Mutek Productions, organized New Creation Records for this purpose",
     location: "United States",
-    email: "kenny.andrews@hallelujahgospel.org ",
+    email: "k.andrews@hgcradio.org",
   },
   {
     id: "Gregory-Franklin",
@@ -81,7 +81,7 @@ const engineers = [
     name: "Pastor Larry Austin",
     bio: "Pastor Larry Austin, widely known as PLA, is a devoted servant of Christ who walks boldly in his calling as both a local pastor and an international urban missionary. He answered the call to ministry on March 21, 1995, while pursuing a career in professional football. Since that pivotal moment, he has faithfully preached the Gospel and ministered through Christian rap. PLA serves as a pastor at Elevate Gospel Outreach in West Oakland, California every Sunday at 1PM on the corner of 14th & Mandela Parkway. PLA also serves the Body of Christ as an International Mission Motivator under the banner of In The Huddle with PLA, a movement harnesses the power of music to reach the lost and equip churches to fulfill the mission of Jesus.PLA shares his life with his high school sweetheart, Michelle, and together they have three daughters: Amani, Brandy, and Faith. They are also proud grandparents to twin girls, Madisyn and Lexington. Surrounded by strong women, PLA often reflects on how their love continually teaches him the depth of Christ’s love for His Church the Bride of Christ.",
     location: "United States",
-    email: "pastor.larry@hallelujahgospel.org "
+    email: "p.laustin@hgcradio.org"
   }
 ];
 

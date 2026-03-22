@@ -1311,10 +1311,10 @@ const PageWithCreateAccount = () => {
                 <button
                   type="button"
                   onClick={handleNextStep}
-                  className="relative bg-second hover:bg-transparent text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
+                  className="relative bg-[#0d2c7b] hover:bg-transparent text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
                 >
                   <span className="relative z-10">Next</span>
-                  <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                  <span className="absolute inset-0 bg-[#0d2c7b] scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
                 </button>
               ) : (
                 <div className="flex flex-col md:flex-row items-center gap-4">
@@ -1335,7 +1335,7 @@ const PageWithCreateAccount = () => {
                   <button
                     type="submit"
                     disabled={isLoading || (accountType === "seller" && !registerOtpVerified)}
-                    className="relative bg-second hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
+                    className="relative bg-[#0d2c7b] hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
                   >
                     <span className="relative z-10">
                       {isLoading ? <ButtonLoading /> : "Create Account"}
