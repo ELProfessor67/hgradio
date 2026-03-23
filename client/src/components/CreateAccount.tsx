@@ -5,6 +5,7 @@ import bg1 from "@/assets/sponsor.jpg";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { IoIosArrowForward } from "react-icons/io";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useData } from "@/context/Context";
@@ -56,12 +57,15 @@ const PageWithCreateAccount = () => {
   const formRef = useRef<HTMLDivElement | null>(null);
   const searchParams = useSearchParams();
   const [accountType, setAccountType] = useState<"buyer" | "seller">("buyer");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [registerOtp, setRegisterOtp] = useState("");
   const [registerOtpToken, setRegisterOtpToken] = useState("");
   const [registerOtpSent, setRegisterOtpSent] = useState(false);
   const [registerOtpVerified, setRegisterOtpVerified] = useState(false);
   const [registerOtpSending, setRegisterOtpSending] = useState(false);
   const [registerOtpVerifying, setRegisterOtpVerifying] = useState(false);
+  const [resendTimer, setResendTimer] = useState(0);
   const [formData, setFormData] = useState<FormDataType>({
     name: "",
     email: "",
@@ -148,12 +152,13 @@ const PageWithCreateAccount = () => {
     setRegisterOtpVerified(false);
     setRegisterOtpSending(false);
     setRegisterOtpVerifying(false);
+    setResendTimer(0);
   };
 
   const requestSellerOtp = async () => {
     if (!validateEmail(formData.email)) {
       toast.error("Please enter a valid email address first.", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white" },
       });
       return;
     }
@@ -172,7 +177,7 @@ const PageWithCreateAccount = () => {
       const data = await res.json();
       if (!res.ok) {
         toast.error(data?.message || data?.error || "Failed to send OTP", {
-          style: { background: "red", border: "none", color: "white" },
+          style: { background: "#8B0000", border: "none", color: "white" },
         });
         return;
       }
@@ -180,12 +185,53 @@ const PageWithCreateAccount = () => {
       setRegisterOtpSent(true);
       setRegisterOtpVerified(false);
       setRegisterOtpToken("");
+      setResendTimer(60);
       toast.success("OTP sent to your email.", {
-        style: { background: "green", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white" },
       });
     } catch (err: any) {
       toast.error(err?.message || "Failed to send OTP", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white" },
+      });
+    } finally {
+      setRegisterOtpSending(false);
+    }
+  };
+
+  const resendSellerOtp = async () => {
+    if (!validateEmail(formData.email)) {
+      toast.error("Please enter a valid email address first.", {
+        style: { background: "#8B0000", border: "none", color: "white" },
+      });
+      return;
+    }
+
+    setRegisterOtpSending(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/register-otp/resend`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: formData.email.trim().toLowerCase() }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.message || data?.error || "Failed to resend OTP", {
+          style: { background: "#8B0000", border: "none", color: "white" },
+        });
+        return;
+      }
+
+      setResendTimer(60);
+      toast.success("OTP resent to your email.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to resend OTP", {
+        style: { background: "#8B0000", border: "none", color: "white" },
       });
     } finally {
       setRegisterOtpSending(false);
@@ -195,14 +241,14 @@ const PageWithCreateAccount = () => {
   const verifySellerOtp = async () => {
     if (!validateEmail(formData.email)) {
       toast.error("Please enter a valid email address first.", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white" },
       });
       return;
     }
 
     if (!registerOtp || registerOtp.trim().length === 0) {
       toast.error("Please enter OTP.", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white" },
       });
       return;
     }
@@ -224,7 +270,7 @@ const PageWithCreateAccount = () => {
       const data = await res.json();
       if (!res.ok) {
         toast.error(data?.message || data?.error || "OTP verification failed", {
-          style: { background: "red", border: "none", color: "white" },
+          style: { background: "#8B0000", border: "none", color: "white" },
         });
         return;
       }
@@ -236,7 +282,7 @@ const PageWithCreateAccount = () => {
       });
     } catch (err: any) {
       toast.error(err?.message || "OTP verification failed", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white" },
       });
     } finally {
       setRegisterOtpVerifying(false);
@@ -246,26 +292,26 @@ const PageWithCreateAccount = () => {
   const handleNextStep = () => {
     if (!validateEmail(formData.email)) {
       toast.error("Please enter a valid email address.", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white", fontSize: "1.8rem" },
       });
       return;
     }
     const passwordError = validatePassword(formData.password);
     if (passwordError) {
       toast.error(passwordError, {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white", fontSize: "1.8rem" },
       });
       return;
     }
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match.", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white", fontSize: "1.8rem" },
       });
       return;
     }
     if (accountType === "seller" && !registerOtpVerified) {
       toast.error("Seller account requires OTP verification to unlock contract form.", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white", fontSize: "1.8rem" },
       });
       return;
     }
@@ -283,7 +329,7 @@ const PageWithCreateAccount = () => {
     if (!validateEmail(formData.email)) {
       toast.error("Please enter a valid email address.", {
         style: {
-          background: "red",
+          background: "#8B0000",
           border: "none",
           color: "white"
         },
@@ -295,7 +341,7 @@ const PageWithCreateAccount = () => {
     if (passwordError) {
       toast.error(passwordError, {
         style: {
-          background: "red",
+          background: "#8B0000",
           border: "none",
           color: "white"
         },
@@ -306,7 +352,7 @@ const PageWithCreateAccount = () => {
     if (formData.password !== formData.confirmPassword) {
       toast.error("Passwords do not match.", {
         style: {
-          background: "red",
+          background: "#8B0000",
           border: "none",
           color: "white"
         },
@@ -316,7 +362,7 @@ const PageWithCreateAccount = () => {
 
     if (accountType === "seller" && !registerOtpVerified) {
       toast.error("Seller account requires OTP verification to unlock contract form.", {
-        style: { background: "red", border: "none", color: "white" },
+        style: { background: "#8B0000", border: "none", color: "white" },
       });
       return;
     }
@@ -390,7 +436,7 @@ const PageWithCreateAccount = () => {
       if (!res.ok) {
         toast.error(data?.error || "Something went wrong!", {
           style: {
-            background: "red",
+            background: "#8B0000",
             border: "none",
             color: "white"
           },
@@ -415,7 +461,7 @@ const PageWithCreateAccount = () => {
       } else {
         toast.error("Unexpected response.", {
           style: {
-            background: "red",
+            background: "#8B0000",
             border: "none",
             color: "white"
           },
@@ -424,7 +470,7 @@ const PageWithCreateAccount = () => {
     } catch (err: any) {
       toast.error(err.message || "Something went wrong.", {
         style: {
-          background: "red",
+          background: "#8B0000",
           border: "none",
           color: "white"
         },
@@ -443,6 +489,14 @@ const PageWithCreateAccount = () => {
       }, 300); // slight delay to allow form render
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   useEffect(() => {
     // Reset OTP + contract gate whenever switching away from seller
@@ -566,7 +620,7 @@ const PageWithCreateAccount = () => {
               </h2>
             </div>
 
-            {currentStep === 1 && (
+            {(currentStep === 1 && !registerOtpVerified) && (
               <div className="relative z-10 space-y-5 max-w-[1500px] mx-auto px-3">
                 <div className="bg-[#0B1834] p-4 text-white space-y-3">
                   <h3 className="text-xl font-semibold">Select Account Type</h3>
@@ -615,18 +669,39 @@ const PageWithCreateAccount = () => {
                   }, [] as { name: string; placeholder: string; type: string }[][])
                   .map((row, i) => (
                     <div key={i} className="flex flex-col md:flex-row gap-5">
-                      {row.map(({ name, placeholder, type }) => (
-                        <input
-                          key={name}
-                          type={type}
-                          name={name}
-                          placeholder={placeholder}
-                          value={formData[name as keyof typeof formData] || ""}
-                          onChange={handleChange}
-                          className="w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 "
-                          required
-                        />
-                      ))}
+                      {row.map(({ name, placeholder, type }) => {
+                        const isPassword = name === "password";
+                        const isConfirmPassword = name === "confirmPassword";
+                        let inputType = type;
+                        if (isPassword && showPassword) inputType = "text";
+                        if (isConfirmPassword && showConfirmPassword) inputType = "text";
+
+                        return (
+                          <div key={name} className="relative w-full">
+                            <input
+                              type={inputType}
+                              name={name}
+                              placeholder={placeholder}
+                              value={formData[name as keyof typeof formData] || ""}
+                              onChange={handleChange}
+                              className={`w-full text-[1.1rem] py-3 px-4 outline-none bg-[#222F46] text-white placeholder:text-white/60 ${(isPassword || isConfirmPassword) ? 'pr-10' : ''}`}
+                              required
+                            />
+                            {(isPassword || isConfirmPassword) && (
+                              <button
+                                type="button"
+                                onClick={() => isPassword ? setShowPassword(!showPassword) : setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white mt-0.5"
+                              >
+                                {isPassword 
+                                  ? (showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />)
+                                  : (showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />)
+                                }
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ))}
 
@@ -667,6 +742,20 @@ const PageWithCreateAccount = () => {
                             >
                               {registerOtpVerifying ? "Verifying..." : "Verify OTP"}
                             </button>
+                            {resendTimer > 0 ? (
+                              <span className="text-gray-400 font-medium whitespace-nowrap pl-2">
+                                Resend OTP in {resendTimer}s
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={resendSellerOtp}
+                                disabled={registerOtpSending}
+                                className="text-second hover:underline font-medium whitespace-nowrap pl-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                              >
+                                {registerOtpSending ? "Resending..." : "Resend OTP"}
+                              </button>
+                            )}
                           </div>
                         )}
 
@@ -1338,9 +1427,9 @@ const PageWithCreateAccount = () => {
                     className="relative bg-[#0d2c7b] hover:bg-transparent disabled:opacity-60 disabled:cursor-not-allowed text-black overflow-hidden font-medium text-lg w-[12rem] h-[2.70rem] group"
                   >
                     <span className="relative z-10">
-                      {isLoading ? <ButtonLoading /> : "Create Account"}
+                      {isLoading ? <ButtonLoading /> : `Create ${accountType.charAt(0).toUpperCase() + accountType.slice(1)} Account`}
                     </span>
-                    <span className="absolute inset-0 bg-second scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
+                    <span className="absolute inset-0 bg-[#0d2c7b] scale-x-0 origin-center transition-transform duration-300 ease-out group-hover:scale-x-100" />
                   </button>
                 </div>
               )}

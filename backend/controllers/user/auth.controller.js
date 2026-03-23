@@ -257,6 +257,55 @@ export const requestRegisterOtp = async (req, res) => {
   }
 };
 
+export const resendRegisterOtp = async (req, res) => {
+  try {
+    const { email } = req.body || {};
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!normalizedEmail) {
+      return res.status(400).json({ success: false, message: "Email is required." });
+    }
+
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User already exists." });
+    }
+
+    const existing = await RegistrationOtp.findOne({ email: normalizedEmail });
+    if (existing?.lastSentAt) {
+      const diffSeconds = (Date.now() - new Date(existing.lastSentAt).getTime()) / 1000;
+      if (diffSeconds < REGISTER_OTP_MIN_RESEND_SECONDS) {
+        return res.status(429).json({
+          success: false,
+          message: `Please wait ${Math.ceil(
+            REGISTER_OTP_MIN_RESEND_SECONDS - diffSeconds
+          )}s before requesting another OTP.`,
+        });
+      }
+    }
+
+    const otp = generateSixDigitOtp();
+    const otpHash = hashRegisterOtp({ email: normalizedEmail, otp });
+    const expiresAt = new Date(Date.now() + REGISTER_OTP_TTL_MS);
+
+    await RegistrationOtp.findOneAndUpdate(
+      { email: normalizedEmail },
+      { email: normalizedEmail, otpHash, expiresAt, lastSentAt: new Date(), attempts: 0 },
+      { upsert: true, new: true }
+    );
+
+    console.log(otp)
+
+    await sendOtpEmailViaMailer({ email: normalizedEmail, otp });
+
+    return res.status(200).json({ success: true, message: "OTP resent to your email." });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ success: false, message: "Server error", details: error.message });
+  }
+};
+
 export const verifyRegisterOtp = async (req, res) => {
   try {
     const { email, otp } = req.body || {};

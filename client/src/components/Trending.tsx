@@ -62,7 +62,7 @@ const Trending: React.FC = () => {
       <div className="absolute inset-0 bg-black/80 z-0" />
       <div className=' relative z-10 max-w-[1500px] mx-auto px-3 space-y-[5rem] '>
         <div className=' text-center leading-tight  '>
-          <div className=" text-[1.7rem] lg:text-[2rem] font-semibold text-second mb-2 ">Trending</div>
+          <div className=" text-[1.7rem] lg:text-[2rem] font-semibold text-second mb-2 ">Enormous Blessings</div>
           <h2 className=" text-[2.5rem] lg:text-[3rem] font-bold mb-6 text-[#fff] ">Our Top Charts</h2>
         </div>
 

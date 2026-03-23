@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useData } from "@/context/Context";
 import { ButtonLoading } from "@/utils/Loading";
 import { toast } from "sonner";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function Page() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState({
     type: "",
@@ -143,14 +145,23 @@ export default function Page() {
           </div>
           <div>
             <label className="block text-gray-300">Password*</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full mt-1 p-3 bg-[#fff]/10 text-white  focus:ring-2 focus:ring-second transition-all duration-300 ease-out outline-none"
-              placeholder="Enter your password"
-              required
-            />
+            <div className="relative mt-1">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 pr-10 bg-[#fff]/10 text-white focus:ring-2 focus:ring-second transition-all duration-300 ease-out outline-none"
+                placeholder="Enter your password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              >
+                {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+              </button>
+            </div>
           </div>
           <div className="pt-5">
             <button className="w-full relative shadow-inner h-[3rem] bg-second text-[#000] hover:second transition-colors duration-300 ease-in-out  font-medium ">

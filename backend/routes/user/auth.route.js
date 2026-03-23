@@ -8,6 +8,7 @@ import {
   resetPassword,
   requestRegisterOtp,
   verifyRegisterOtp,
+  resendRegisterOtp,
   requestUpgradeOtp,
   verifyUpgradeOtp,
   upgradeToSeller,
@@ -20,6 +21,7 @@ const router = express.Router();
 router.post("/register", registerUser);
 router.post("/register-otp/request", requestRegisterOtp);
 router.post("/register-otp/verify", verifyRegisterOtp);
+router.post("/register-otp/resend", resendRegisterOtp);
 router.post("/login", loginUser);
 router.get("/me/:userId", getCurrentUser);
 router.delete("/delete-user/:userId", deleteUser);

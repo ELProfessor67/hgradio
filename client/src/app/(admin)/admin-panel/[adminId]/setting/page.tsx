@@ -4,6 +4,7 @@ import { useData } from "@/context/Context";
 import { FetchLoading } from "@/utils/Loading";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 
 
@@ -41,6 +42,10 @@ const Page: React.FC<PageProps> = ({ params }) => {
     newPassword: "",
     confirmPassword: "",
   });
+  const [showEmailPassword, setShowEmailPassword] = useState(false);
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     const getUser = async () => {
@@ -291,14 +296,23 @@ const Page: React.FC<PageProps> = ({ params }) => {
       {/* {updateField === "EMAIL" && ( */}
       <form onSubmit={handleChangeEmailSubmit} className=" mt-[2rem] text-[#fff] ">
         <div className=" space-y-2 ">
-          <input
-            type="password"
-            className=" w-full py-2 px-3 bg-transparent border-2 border-[#e4e4e4]  outline-none  "
-            placeholder="Password"
-            name="password"
-            value={emailChangeData.password}
-            onChange={handleEmailChange}
-          />
+          <div className="relative">
+            <input
+              type={showEmailPassword ? "text" : "password"}
+              className=" w-full py-2 px-3 pr-10 bg-transparent border-2 border-[#e4e4e4] outline-none"
+              placeholder="Password"
+              name="password"
+              value={emailChangeData.password}
+              onChange={handleEmailChange}
+            />
+            <button
+              type="button"
+              onClick={() => setShowEmailPassword(!showEmailPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+            >
+              {showEmailPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
+          </div>
           <input
             type="email"
             className=" w-full py-2 px-3 bg-transparent border-2 border-[#e4e4e4]  outline-none  "
@@ -337,30 +351,57 @@ const Page: React.FC<PageProps> = ({ params }) => {
       {/* {updateField === "PASSWORD" && ( */}
       <form onSubmit={handleChangePasswordSubmit} className=" mt-[4rem] ">
         <div className=" space-y-2 ">
-          <input
-            type="password"
-            className=" w-full py-2 px-3 bg-transparent border-2 border-[#e4e4e4]  outline-none  "
-            placeholder="Old Password"
-            name="oldPassword"
-            value={passwordChangeData.oldPassword}
-            onChange={handlePasswordChange}
-          />
-          <input
-            type="password"
-            className=" w-full py-2 px-3 bg-transparent border-2 border-[#e4e4e4]  outline-none  "
-            placeholder="New Password"
-            name="newPassword"
-            value={passwordChangeData.newPassword}
-            onChange={handlePasswordChange}
-          />
-          <input
-            type="password"
-            className=" w-full py-2 px-3 bg-transparent border-2 border-[#e4e4e4]  outline-none  "
-            placeholder="Confirm New Password"
-            name="confirmPassword"
-            value={passwordChangeData.confirmPassword}
-            onChange={handlePasswordChange}
-          />
+          <div className="relative">
+            <input
+              type={showOldPassword ? "text" : "password"}
+              className=" w-full py-2 px-3 pr-10 bg-transparent border-2 border-[#e4e4e4] outline-none"
+              placeholder="Old Password"
+              name="oldPassword"
+              value={passwordChangeData.oldPassword}
+              onChange={handlePasswordChange}
+            />
+            <button
+              type="button"
+              onClick={() => setShowOldPassword(!showOldPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+            >
+              {showOldPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
+          </div>
+          <div className="relative">
+            <input
+              type={showNewPassword ? "text" : "password"}
+              className=" w-full py-2 px-3 pr-10 bg-transparent border-2 border-[#e4e4e4] outline-none"
+              placeholder="New Password"
+              name="newPassword"
+              value={passwordChangeData.newPassword}
+              onChange={handlePasswordChange}
+            />
+            <button
+              type="button"
+              onClick={() => setShowNewPassword(!showNewPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+            >
+              {showNewPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
+          </div>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              className=" w-full py-2 px-3 pr-10 bg-transparent border-2 border-[#e4e4e4] outline-none"
+              placeholder="Confirm New Password"
+              name="confirmPassword"
+              value={passwordChangeData.confirmPassword}
+              onChange={handlePasswordChange}
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+            >
+              {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+            </button>
+          </div>
         </div>
         <button className=" bg-second border-2 border-second text-[#000] w-full py-2  text-center mt-[1rem] ">
           Change Password

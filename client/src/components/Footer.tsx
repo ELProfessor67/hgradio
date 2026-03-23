@@ -125,7 +125,7 @@ export const Footer = () => {
 
       <div className=" text-center border-t border-[#302f50] py-[1.5rem] ">
         <p>
-          © Copyright 2025 All Rights Reserved By - Hallelujah Gospel Globally
+          © Copyright 2026 All Rights Reserved By - Hallelujah Gospel Globally
         </p>
       </div>
     </footer>

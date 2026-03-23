@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 interface LoginFormData {
   email: string;
@@ -18,6 +19,7 @@ interface LoginFormData {
 const LoginForm = () => {
   const { setUserData } = useData();
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const [formData, setFormData] = useState<LoginFormData>({
     email: "",
@@ -130,15 +132,24 @@ const LoginForm = () => {
                 className="w-full text-[1rem] py-3 px-4 outline-none bg-white/10 text-white placeholder:text-white/60 "
                 required
               />
-              <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full text-[1rem] py-3 px-4 outline-none bg-white/10 text-white placeholder:text-white/60 "
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="w-full text-[1rem] py-3 px-4 pr-10 outline-none bg-white/10 text-white placeholder:text-white/60 "
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                >
+                  {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                </button>
+              </div>
             </div>
 
             <div className="flex justify-between items-center text-white text-sm">

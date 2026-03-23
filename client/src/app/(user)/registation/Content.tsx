@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { RiHome9Line } from "react-icons/ri";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { toast } from "sonner";
 import { ButtonLoading } from "@/utils/Loading";
 
@@ -17,6 +18,8 @@ const Page = () => {
     confirmPassword: "",
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [toastMessage, setToastMessage] = useState({
     type: "",
     message: "",
@@ -121,18 +124,18 @@ const Page = () => {
       console.log(data);
       if (data?.user?._id) {
         setIsLoading(false)
-        toast.success("User Registered Successfully!!",{
-                style: {
-                  background: "green",
-                  border : "none",
-                  color : "white"
-                },
-              });
-          setUserData({
-            ...data?.user,
-            token: data?.token,
-          });
-          router.push(`/dashboard/${data?.user?._id}`);
+        toast.success("User Registered Successfully!!", {
+          style: {
+            background: "green",
+            border: "none",
+            color: "white"
+          },
+        });
+        setUserData({
+          ...data?.user,
+          token: data?.token,
+        });
+        router.push(`/dashboard/${data?.user?._id}`);
       } else {
         setToastMessage({
           type: "ERROR",
@@ -244,35 +247,52 @@ const Page = () => {
               </div>
               <div className=" text-[1.1rem] space-y-2 ">
                 <label htmlFor="">Password*</label>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-3 bg-[#fff]/10 text-white  focus:ring-2 focus:ring-[#0400ff] transition-all duration-300 ease-out outline-none"
-                />
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Enter your password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full mt-1 p-3 pr-10 bg-[#fff]/10 text-white  focus:ring-2 focus:ring-[#0400ff] transition-all duration-300 ease-out outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-400 hover:text-white"
+                  >
+                    {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                  </button>
+                </div>
               </div>
               <div className=" text-[1.1rem] space-y-2 ">
                 <label htmlFor="">Confirm Password*</label>
-                <input
-                  type="password"
-                  placeholder="Enter your confirm password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className="w-full mt-1 p-3 bg-[#fff]/10 text-white  focus:ring-2 focus:ring-[#0400ff] transition-all duration-300 ease-out outline-none"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Enter your confirm password"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="w-full mt-1 p-3 pr-10 bg-[#fff]/10 text-white  focus:ring-2 focus:ring-[#0400ff] transition-all duration-300 ease-out outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 mt-0.5 text-gray-400 hover:text-white"
+                  >
+                    {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+                  </button>
+                </div>
               </div>
 
               <div className="  ">
                 {toastMessage && toastMessage.type && toastMessage.message && (
                   <p
-                    className={` text-sm ${
-                      toastMessage.type === "ERROR"
+                    className={` text-sm ${toastMessage.type === "ERROR"
                         ? "text-red-500"
                         : "text-green-500"
-                    } `}
+                      } `}
                   >
                     {toastMessage.message}
                   </p>

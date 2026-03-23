@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ButtonLoading } from "@/utils/Loading";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const ResetPasswordPage = () => {
   const { token } = useParams();
@@ -10,6 +11,8 @@ const ResetPasswordPage = () => {
   
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [toastMessage, setToastMessage] = useState({
     type: "",
@@ -124,28 +127,42 @@ const ResetPasswordPage = () => {
         <h1 className="text-xl font-semibold mb-8 text-[#fff] ">
           Reset Your Password
         </h1>
-        <div>
+        <div className="relative mb-4">
           <input
-            type="password"
-            className="w-full bg-[#28344cdb] outline-none text-[#fff]  px-3 py-3  mb-4"
+            type={showPassword ? "text" : "password"}
+            className="w-full bg-[#28344cdb] outline-none text-[#fff] px-3 py-3 pr-10"
             placeholder="New password"
             value={password}
             onChange={(e) => handlePasswordChange(e.target.value)}
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-[1.1rem] text-gray-400 hover:text-white transition-colors"
+          >
+            {showPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+          </button>
           {validation.password && (
-            <p className="text-red-500 text-sm mb-2">{validation.password}</p>
+            <p className="text-red-500 text-sm mt-2">{validation.password}</p>
           )}
         </div>
-        <div className="  ">
+        <div className="relative mb-4">
           <input
-            type="password"
-            className="w-full bg-[#28344cdb] outline-none  text-[#fff] px-3 py-3  mb-4"
+            type={showConfirmPassword ? "text" : "password"}
+            className="w-full bg-[#28344cdb] outline-none text-[#fff] px-3 py-3 pr-10"
             placeholder="Confirm password"
             value={confirmPassword}
             onChange={(e) => handleConfirmPasswordChange(e.target.value)}
           />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-[1.1rem] text-gray-400 hover:text-white transition-colors"
+          >
+            {showConfirmPassword ? <FaEyeSlash size={20} /> : <FaEye size={20} />}
+          </button>
           {validation.confirmPassword && (
-            <p className="text-red-500 text-sm ">
+            <p className="text-red-500 text-sm mt-2">
               {validation.confirmPassword}
             </p>
           )}
