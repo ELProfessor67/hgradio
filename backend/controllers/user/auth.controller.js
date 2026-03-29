@@ -257,6 +257,9 @@ export const requestRegisterOtp = async (req, res) => {
   }
 };
 
+
+
+
 export const resendRegisterOtp = async (req, res) => {
   try {
     const { email } = req.body || {};
