@@ -23,7 +23,7 @@ const hashRegisterOtp = ({ email, otp }) => {
 
 const sendOtpEmailViaMailer = async ({ email, otp }) => {
   // Keep consistent with existing album-otp mailer approach
-  const resp = await fetch("https://mailing.hgcradio.org/send-email", {
+  const resp = await fetch("https://mail.hgdjlive.com/send-email", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -46,7 +46,7 @@ const sendOtpEmailViaMailer = async ({ email, otp }) => {
 
 
 const sendResetPasswordEmailViaMailer = async ({ email, resetUrl }) => {
-  const resp = await fetch("https://mailing.hgcradio.org/send-email", {
+  const resp = await fetch("https://mail.hgdjlive.com/send-email", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, subject: "Reset Your Password", message: `Click ${resetUrl} to reset your password.` }),

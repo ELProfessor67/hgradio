@@ -105,7 +105,7 @@ export const deleteSponsor = async (req, res) => {
 
 
 const sendSponsorPaymentEmailViaMailer = async ({ email, name, amount, transactionId }) => {
-  const resp = await fetch("https://mailing.hgcradio.org/send-email", {
+  const resp = await fetch("https://mail.hgdjlive.com/send-email", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email, subject: "Sponsorship Payment Successful", message: `Sponsorship payment successful! 🎉

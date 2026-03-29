@@ -22,7 +22,7 @@ const hashOtp = (userId, otp) => {
 };
 
 const sendOtpEmailViaMailer = async ({ email, otp }) => {
-  const resp = await fetch("https://mailing.hgcradio.org/send-email", {
+  const resp = await fetch("https://mail.hgdjlive.com/send-email", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

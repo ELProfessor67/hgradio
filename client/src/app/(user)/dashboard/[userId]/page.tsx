@@ -531,7 +531,7 @@ const Page = () => {
 
           <div className="max-w-[1500px] mx-auto py-5 px-3">
             <div className=" flex justify-between ">
-              <h3 className=" text-[1.5rem] font-medium ">
+              <h3 className=" text-[1.5rem] font-medium hidden md:block">
                 {accountType === "buyer" ? "My Purchased Albums" : "My Albums"}
               </h3>
               {accountType === "seller" ? (

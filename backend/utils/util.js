@@ -1,6 +1,6 @@
 export const sendEmail = async ({ to, subject, html }) => {
     try {
-      const resp = await fetch("https://mailing.hgcradio.org/send-email", {
+      const resp = await fetch("https://mail.hgdjlive.com/send-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email:to, subject, message:html }),
