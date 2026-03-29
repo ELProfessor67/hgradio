@@ -19,7 +19,7 @@ dotenv.config();
 
 dbConnect();
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://radio-station-ten.vercel.app"],
+  origin: ["http://localhost:3000", "https://radio-station-ten.vercel.app", "https://hgcradio.org"],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
