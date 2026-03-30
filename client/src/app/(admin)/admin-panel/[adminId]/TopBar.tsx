@@ -14,9 +14,8 @@ interface TopbarProps {
 const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
   return (
     <div
-      className={` ${
-        isOpenSidebar ? "pl-4 xl:pl-[40px]" : "xl:pl-[340px]"
-      } fixed top-0 left-0 z-50 bg-[#071126] h-[70px] pr-5 xl:pr-10 flex items-center justify-between border-b border-[#0c434d]  w-full transition-all duration-300 ease-in-out text-second`}
+      className={` ${isOpenSidebar ? "pl-4 xl:pl-[40px]" : "xl:pl-[340px]"
+        } fixed top-0 left-0 z-50 bg-[#071126] h-[70px] pr-5 xl:pr-10 flex items-center justify-between border-b border-[#0c434d]  w-full transition-all duration-300 ease-in-out text-second`}
     >
       <div className=" w-[60%] relative flex items-center gap-4 md:gap-6  ">
         <div
@@ -24,9 +23,8 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
           className=" text-[1.3rem] cursor-pointer "
         >
           <BsLayoutSidebar
-            className={` ${
-              isOpenSidebar ? "rotate-180" : "rotate-0"
-            } transition-all duration-300 ease-in-out `}
+            className={` ${isOpenSidebar ? "rotate-180" : "rotate-0"
+              } transition-all duration-300 ease-in-out `}
           />
         </div>
         {/* <input
@@ -39,9 +37,9 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
         <div className=" absolute top-0 right-0 px-4 h-full flex items-center  ">
           <FiSearch className=" text-[#A6ABC8] text-[1.2rem] " />
         </div> */}
-        <h2 className=" text-[1.2rem] md:text-[1.5rem] font-medium ">
+        {/* <h2 className=" text-[1.2rem] md:text-[1.5rem] font-medium ">
           Admin Dashboard
-        </h2>
+        </h2> */}
       </div>
       <div className=" flex items-center gap-5 md:gap-8 ">
         <div className=" relative cursor-pointer ">
@@ -50,9 +48,9 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
             <div className=" w-2 h-2 bg-red-400 rounded-full "></div>
           </div>
         </div>
-        <div className=" w-[3rem] h-[3rem] cursor-pointer p-2 rounded-full bg-[#5A6ACF]/20 flex items-center justify-center overflow-hidden ">
+        {/* <div className=" w-[3rem] h-[3rem] cursor-pointer p-2 rounded-full bg-[#5A6ACF]/20 flex items-center justify-center overflow-hidden ">
           <Image src={MyImg} alt="My Img" className=" rounded-full " />
-        </div>
+        </div> */}
       </div>
     </div>
   );

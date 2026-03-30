@@ -33,10 +33,15 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
     //   icon: <FaHome />,
     //   path: `/admin-panel/${id}`,
     // },
+    // {
+    //   name: "My Profile",
+    //   icon: <CgProfile />,
+    //   path: `/admin-panel/${id}/profile`,
+    // },
     {
-      name: "My Profile",
+      name: "Dashboard Analytics",
       icon: <CgProfile />,
-      path: `/admin-panel/${id}/profile`,
+      path: `/admin-panel/${id}`,
     },
     {
       name: "Contact List",
@@ -77,8 +82,8 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
     <>
       <div
         className={`fixed inset-0 z-[59] ${!isOpenSidebar
-            ? "xl:bg-transparent bg-black/20 xl:w-fit w-full"
-            : "pointer-events-none"
+          ? "xl:bg-transparent bg-black/20 xl:w-fit w-full"
+          : "pointer-events-none"
           }`}
         onClick={() => {
           if (window.innerWidth < 1280) {
@@ -127,22 +132,22 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
                     }}
                     key={idx}
                     className={` ${item.path === currentPath
-                        ? "bg-second/20 text-second"
-                        : " bg-transparent text-second "
+                      ? "bg-second/20 text-second"
+                      : " bg-transparent text-second "
                       } flex items-center gap-3 hover:bg-second/20 py-2 px-4  text-[1.1rem] group  `}
                   >
                     <div
                       className={` ${item.path === currentPath
-                          ? "text-second"
-                          : " text-second "
+                        ? "text-second"
+                        : " text-second "
                         } group-hover:text-second `}
                     >
                       {item.icon}
                     </div>
                     <div
                       className={` ${item.path === currentPath
-                          ? "text-second"
-                          : " text-second"
+                        ? "text-second"
+                        : " text-second"
                         } text-[1rem] group-hover:text-second `}
                     >
                       {item.name}
@@ -208,23 +213,23 @@ const Items = ({ items, currentPath }: ItemsProps) => {
             onClick={() => handleToggle(idx)}
             href={item.subItems ? currentPath : item.path}
             className={` ${item.path === currentPath
-                ? "bg-second/20 text-second"
-                : " bg-transparent text-second "
+              ? "bg-second/20 text-second"
+              : " bg-transparent text-second "
               }  hover:bg-second/20 py-2 px-4  text-[1.1rem] group flex items-center justify-between `}
           >
             <div className=" flex items-center gap-3 ">
               <div
                 className={` ${item.path === currentPath
-                    ? "text-second"
-                    : " text-second "
+                  ? "text-second"
+                  : " text-second "
                   } group-hover:text-second `}
               >
                 {item.icon}
               </div>
               <div
                 className={` ${item.path === currentPath
-                    ? "text-second"
-                    : " text-second"
+                  ? "text-second"
+                  : " text-second"
                   } text-[1rem] group-hover:text-second `}
               >
                 {item.name}
@@ -233,8 +238,8 @@ const Items = ({ items, currentPath }: ItemsProps) => {
             {item.subItems && (
               <div
                 className={` ${item.path === currentPath
-                    ? "text-second"
-                    : " text-second"
+                  ? "text-second"
+                  : " text-second"
                   } text-[1rem] group-hover:text-second `}
               >
                 <IoIosArrowForward
@@ -247,8 +252,8 @@ const Items = ({ items, currentPath }: ItemsProps) => {
 
           <div
             className={`grid overflow-hidden transition-all duration-300 ease-in-out ${isActive === idx
-                ? "grid-rows-[1fr] opacity-100"
-                : "grid-rows-[0fr] opacity-0"
+              ? "grid-rows-[1fr] opacity-100"
+              : "grid-rows-[0fr] opacity-0"
               }`}
           >
             <div className="overflow-hidden *:cursor-pointer pl-4 ">
