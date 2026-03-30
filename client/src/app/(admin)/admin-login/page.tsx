@@ -97,18 +97,18 @@ export default function Page() {
 
       // console.log(data);
       setLoading(false);
-      toast.success("Login Successfully!!",{
-                style: {
-                  background: "green",
-                  border : "none",
-                  color : "white"
-                },
-              });
+      toast.success("Login Successfully!!", {
+        style: {
+          background: "green",
+          border: "none",
+          color: "white"
+        },
+      });
       setUserData({
         ...data?.user,
         token: data?.token,
       });
-      router.push(`/admin-panel/${data?.user?._id}/profile`);
+      router.push(`/admin-panel/${data?.user?._id}`);
     } catch (err: unknown) {
       let message = "Something went wrong";
 
@@ -170,11 +170,10 @@ export default function Page() {
           </div>
           {toastMessage.type && toastMessage.message && (
             <p
-              className={` text-sm ${
-                toastMessage.type === "ERROR"
-                  ? "text-red-500"
-                  : "text-green-500"
-              } `}
+              className={` text-sm ${toastMessage.type === "ERROR"
+                ? "text-red-500"
+                : "text-green-500"
+                } `}
             >
               {toastMessage.message}
             </p>
