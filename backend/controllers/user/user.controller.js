@@ -1067,3 +1067,85 @@ export const getAlbumsByArtist = async (req, res) => {
       .send({ success: false, message: "Server error while fetching albums." });
   }
 };
+
+/* ───────────────────────────────────────────────────────────────
+   Resubmit seller contract form (only when status = "rejected")
+   Updates all contract fields and resets status back to "pending"
+─────────────────────────────────────────────────────────────── */
+export const resubmitSellerForm = async (req, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    if (user.accountType !== "seller") {
+      return res.status(403).json({ success: false, message: "Only seller accounts can resubmit." });
+    }
+
+    if (user.sellerApprovalStatus !== "rejected") {
+      return res.status(400).json({
+        success: false,
+        message: "Form can only be resubmitted when status is 'rejected'.",
+      });
+    }
+
+    const contractFields = [
+      "initialGrantAuthorization",
+      "initialOwnershipRepresentation",
+      "initialLicensingProtection",
+      "initialAffiliateUse",
+      "initialWaiverCompensation",
+      "initialWarranties",
+      "initialIndemnification",
+      "initialPublicityPromotion",
+      "initialLimitationLiability",
+      "initialArbitrationVenue",
+      "initialGoverningLaw",
+      "initialCoverageFullWorks",
+      "initialEntireAgreement",
+      "copyrightOwnerName",
+      "copyrightOwnerSignature",
+      "copyrightOwnerDate",
+      "labelRepresentativeName",
+      "labelRepresentativeSignature",
+      "labelRepresentativeDate",
+    ];
+
+    for (const field of contractFields) {
+      if (req.body[field] !== undefined) {
+        user[field] = req.body[field];
+      }
+    }
+
+    // Reset approval status to pending and clear previous rejection reason
+    user.sellerApprovalStatus = "pending";
+    user.sellerApprovalReason = "";
+    user.sellerReviewedAt = undefined;
+    user.sellerReviewedBy = undefined;
+
+    await user.save();
+
+    // Return fresh user (without password)
+    const updatedUser = await User.findById(userId).select("-password");
+
+    return res.status(200).json({
+      success: true,
+      message: "Form resubmitted successfully. Pending admin approval.",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.error("Resubmit seller form error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to resubmit form",
+      error: error.message,
+    });
+  }
+};
+

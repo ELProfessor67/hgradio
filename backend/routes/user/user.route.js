@@ -15,6 +15,7 @@ import {
   requestAlbumOtp,
   verifyAlbumOtp,
   updateUser,
+  resubmitSellerForm,
 } from "../../controllers/user/user.controller.js";
 import protect from "../../middlewares/auth.middleware.js";
 
@@ -37,6 +38,8 @@ router.post("/albums/:albumId/songs", protect, addAlbumSong);
 router.delete("/albums/:albumId/songs/:songId", protect, deleteAlbumSong);
 router.post("/add-album", protect, createAlbum);
 router.get("/get-albums", protect, getAlbumsByArtist);
+router.patch("/seller-form/resubmit", protect, resubmitSellerForm);
+
 
 
 export default router;

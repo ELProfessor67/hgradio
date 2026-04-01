@@ -99,6 +99,31 @@ const Page = () => {
     labelRepresentativeSignature: "",
     labelRepresentativeDate: "",
   });
+
+  // Resubmit rejected form states
+  const [resubmitModalOpen, setResubmitModalOpen] = useState(false);
+  const [resubmitting, setResubmitting] = useState(false);
+  const [resubmitFormData, setResubmitFormData] = useState({
+    initialGrantAuthorization: "",
+    initialOwnershipRepresentation: "",
+    initialLicensingProtection: "",
+    initialAffiliateUse: "",
+    initialWaiverCompensation: "",
+    initialWarranties: "",
+    initialIndemnification: "",
+    initialPublicityPromotion: "",
+    initialLimitationLiability: "",
+    initialArbitrationVenue: "",
+    initialGoverningLaw: "",
+    initialCoverageFullWorks: "",
+    initialEntireAgreement: "",
+    copyrightOwnerName: "",
+    copyrightOwnerSignature: "",
+    copyrightOwnerDate: "",
+    labelRepresentativeName: "",
+    labelRepresentativeSignature: "",
+    labelRepresentativeDate: "",
+  });
   const accountType = (userData as any)?.accountType as
     | "buyer"
     | "seller"
@@ -455,6 +480,43 @@ const Page = () => {
     }
   };
 
+  const handleResubmit = async () => {
+    setResubmitting(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/seller-form/resubmit`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${userData.token}`,
+          },
+          body: JSON.stringify(resubmitFormData),
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.message || "Resubmit failed", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+        return;
+      }
+      if (data?.user?._id) {
+        setUserData({ ...data.user, token: userData.token });
+      }
+      toast.success("Form resubmitted! Pending admin review.", {
+        style: { background: "green", border: "none", color: "white" },
+      });
+      setResubmitModalOpen(false);
+    } catch (err: any) {
+      toast.error(err?.message || "Resubmit failed", {
+        style: { background: "red", border: "none", color: "white" },
+      });
+    } finally {
+      setResubmitting(false);
+    }
+  };
+
   useEffect(() => {
     setHasMounted(true);
     if (userData?.token) {
@@ -597,27 +659,74 @@ const Page = () => {
 
 
             {accountType === "seller" && sellerApprovalStatus !== "approved" && (
-              <div className="mt-4 bg-[#0b1834]/80 border border-yellow-400/30 p-4 text-white">
-                <div className="font-semibold text-yellow-300">
-                  Your form is not approved. Please contact the admin.
-                </div>
+              <div className={`mt-4 border p-4 text-white rounded-lg ${
+                sellerApprovalStatus === "rejected"
+                  ? "bg-red-500/10 border-red-400/30"
+                  : "bg-yellow-400/10 border-yellow-400/30"
+              }`}>
                 {sellerApprovalStatus === "pending" && (
-                  <div className="text-sm text-gray-200 mt-1">
-                    Status: <span className="font-medium">Pending</span>
+                  <div className="flex items-start gap-3">
+                    <div className="text-yellow-300 text-xl mt-0.5">⏳</div>
+                    <div>
+                      <div className="font-semibold text-yellow-300">Application Under Review</div>
+                      <div className="text-sm text-gray-300 mt-0.5">
+                        Your seller contract has been submitted and is awaiting admin approval. We'll notify you by email once a decision has been made.
+                      </div>
+                    </div>
                   </div>
                 )}
                 {sellerApprovalStatus === "rejected" && (
-                  <div className="text-sm text-gray-200 mt-1">
-                    Status: <span className="font-medium">Disapproved</span>
-                    {sellerApprovalReason ? (
-                      <div className="mt-2">
-                        <span className="font-medium">Reason:</span> {sellerApprovalReason}
+                  <div className="space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className="text-red-400 text-xl mt-0.5">✕</div>
+                      <div className="flex-1">
+                        <div className="font-semibold text-red-300">Application Disapproved</div>
+                        <div className="text-sm text-gray-300 mt-0.5">
+                          Your seller contract submission was not approved. Please review the reason below, update your form, and resubmit.
+                        </div>
+                        {sellerApprovalReason && (
+                          <div className="mt-2 bg-red-500/15 border border-red-400/20 rounded-lg px-3 py-2">
+                            <span className="text-xs text-red-300 uppercase tracking-wide font-semibold">Reason: </span>
+                            <span className="text-sm text-gray-200">{sellerApprovalReason}</span>
+                          </div>
+                        )}
                       </div>
-                    ) : null}
+                    </div>
+                    <button
+                      onClick={() => {
+                        // Pre-fill the form with existing user data
+                        setResubmitFormData({
+                          initialGrantAuthorization: (userData as any)?.initialGrantAuthorization || "",
+                          initialOwnershipRepresentation: (userData as any)?.initialOwnershipRepresentation || "",
+                          initialLicensingProtection: (userData as any)?.initialLicensingProtection || "",
+                          initialAffiliateUse: (userData as any)?.initialAffiliateUse || "",
+                          initialWaiverCompensation: (userData as any)?.initialWaiverCompensation || "",
+                          initialWarranties: (userData as any)?.initialWarranties || "",
+                          initialIndemnification: (userData as any)?.initialIndemnification || "",
+                          initialPublicityPromotion: (userData as any)?.initialPublicityPromotion || "",
+                          initialLimitationLiability: (userData as any)?.initialLimitationLiability || "",
+                          initialArbitrationVenue: (userData as any)?.initialArbitrationVenue || "",
+                          initialGoverningLaw: (userData as any)?.initialGoverningLaw || "",
+                          initialCoverageFullWorks: (userData as any)?.initialCoverageFullWorks || "",
+                          initialEntireAgreement: (userData as any)?.initialEntireAgreement || "",
+                          copyrightOwnerName: (userData as any)?.copyrightOwnerName || "",
+                          copyrightOwnerSignature: (userData as any)?.copyrightOwnerSignature || "",
+                          copyrightOwnerDate: (userData as any)?.copyrightOwnerDate?.split?.("T")?.[0] || "",
+                          labelRepresentativeName: (userData as any)?.labelRepresentativeName || "",
+                          labelRepresentativeSignature: (userData as any)?.labelRepresentativeSignature || "",
+                          labelRepresentativeDate: (userData as any)?.labelRepresentativeDate?.split?.("T")?.[0] || "",
+                        });
+                        setResubmitModalOpen(true);
+                      }}
+                      className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 border border-red-400/40 text-red-200 hover:text-white font-medium px-5 py-2 rounded-lg transition-all text-sm"
+                    >
+                      ✏️ Edit &amp; Resubmit Form
+                    </button>
                   </div>
                 )}
               </div>
             )}
+
 
             {accountType === "buyer" && (
               <div className="mt-4 bg-gradient-to-r from-[#0d2c7b] to-[#0b1834] border border-second/30 p-6 text-white">
@@ -1285,6 +1394,125 @@ const Page = () => {
         )
       }
 
+      {/* Resubmit Form Modal */}
+      {resubmitModalOpen && sellerApprovalStatus === "rejected" && (
+        <div className="fixed inset-0 z-[9999] bg-black/75 flex items-start justify-center px-3 py-6 overflow-y-auto">
+          <div className="w-full max-w-[52rem] bg-[#071126] border border-white/10 rounded-xl text-white shadow-2xl">
+
+            {/* Header */}
+            <div className="sticky top-0 bg-[#071126]/95 backdrop-blur border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-xl z-10">
+              <div>
+                <p className="text-lg font-bold text-[#66FCF1]">Edit &amp; Resubmit Seller Form</p>
+                <p className="text-xs text-gray-400 mt-0.5">Update your contract details and resubmit for admin review.</p>
+              </div>
+              <button onClick={() => setResubmitModalOpen(false)} className="text-white/50 hover:text-white text-2xl leading-none">×</button>
+            </div>
+
+            <div className="px-6 py-6 space-y-6">
+              {/* Rejection reason reminder */}
+              {sellerApprovalReason && (
+                <div className="bg-red-500/10 border border-red-400/20 rounded-lg px-4 py-3">
+                  <p className="text-xs text-red-300 font-semibold uppercase tracking-wide mb-1">Reason for Previous Rejection</p>
+                  <p className="text-sm text-gray-200">{sellerApprovalReason}</p>
+                </div>
+              )}
+
+              {/* Contract sections */}
+              <div className="space-y-5">
+                <h3 className="text-base font-bold text-[#66FCF1] uppercase tracking-wider">Artist's Original Music Consent &amp; Release Form</h3>
+                {([
+                  { title: "1. Grant of Authorization", content: "The Copyright Owner hereby grants Hallelujah Gospel Globally the non-exclusive, royalty-free, worldwide right to broadcast, stream, and distribute the submitted original music.", field: "initialGrantAuthorization" },
+                  { title: "2. Ownership and Copyright Representation", content: "The Copyright Owner affirms that the submitted recordings are original works or fully licensed by the undersigned.", field: "initialOwnershipRepresentation" },
+                  { title: "3. Ironclad Licensing Protection", content: "This agreement supersedes any claim from outside licensing organizations including BMI, ASCAP, SESAC, SoundExchange, RIAA.", field: "initialLicensingProtection" },
+                  { title: "4. Use by Affiliates and Partners", content: "Permission granted herein extends to all platforms owned, operated, or partnered with Hallelujah Gospel Globally.", field: "initialAffiliateUse" },
+                  { title: "5. Waiver of Compensation", content: "The undersigned agrees that no payment is due for use of the submitted content under this agreement.", field: "initialWaiverCompensation" },
+                  { title: "6. Warranties", content: "The undersigned warrants that they own and/or control 100% of the rights in the submitted materials.", field: "initialWarranties" },
+                  { title: "7. Indemnification", content: "The undersigned agrees to indemnify and hold harmless Hallelujah Gospel Globally from any claims, damages, or losses.", field: "initialIndemnification" },
+                  { title: "8. Publicity and Promotion Rights", content: "The undersigned grants Hallelujah Gospel Globally the right to use artist and song information for promotional purposes.", field: "initialPublicityPromotion" },
+                  { title: "9. Limitation of Liability", content: "Any liability under this agreement is strictly limited to $100 USD.", field: "initialLimitationLiability" },
+                  { title: "10. Arbitration and Venue", content: "Any disputes shall be resolved through binding arbitration in California.", field: "initialArbitrationVenue" },
+                  { title: "11. Governing Law", content: "This agreement shall be governed by the laws of the State of California.", field: "initialGoverningLaw" },
+                  { title: "12. Coverage of Full Works", content: "All tracks submitted via album, CD, or digital collection are covered under this agreement.", field: "initialCoverageFullWorks" },
+                  { title: "13. Song / Album Information", content: "Please provide details about your music catalog (Artist Name, Song Name, Album, Genre, Independent Label if any).", field: "initialEntireAgreement" },
+                ] as { title: string; content: string; field: keyof typeof resubmitFormData }[]).map((s, idx) => (
+                  <div key={idx} className="border-b border-white/[0.07] pb-4">
+                    <p className="text-sm font-semibold text-white mb-1">{s.title}</p>
+                    <p className="text-xs text-gray-400 mb-2 leading-relaxed">{s.content}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 whitespace-nowrap">Initial:</span>
+                      <input
+                        type="text"
+                        value={resubmitFormData[s.field]}
+                        onChange={(e) => setResubmitFormData(prev => ({ ...prev, [s.field]: e.target.value }))}
+                        className="flex-1 max-w-[18rem] py-1.5 px-3 bg-white/5 border border-white/10 rounded text-sm text-white outline-none focus:border-[#66FCF1]/40 transition-all"
+                        placeholder="Your initials"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Signatures */}
+              <div className="space-y-4 border-t border-white/10 pt-4">
+                <h3 className="text-base font-bold text-[#66FCF1] uppercase tracking-wider">Signature of Copyright Owner</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { label: "Name (Print)", field: "copyrightOwnerName", type: "text" },
+                    { label: "Signature", field: "copyrightOwnerSignature", type: "text" },
+                    { label: "Date", field: "copyrightOwnerDate", type: "date" },
+                  ].map(({ label, field, type }) => (
+                    <div key={field}>
+                      <label className="text-xs text-gray-400 block mb-1">{label}</label>
+                      <input
+                        type={type}
+                        value={resubmitFormData[field as keyof typeof resubmitFormData]}
+                        onChange={(e) => setResubmitFormData(prev => ({ ...prev, [field]: e.target.value }))}
+                        className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded text-sm text-white outline-none focus:border-[#66FCF1]/40 transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <h3 className="text-base font-bold text-[#66FCF1] uppercase tracking-wider mt-4">Label Representative <span className="text-gray-400 text-xs font-normal">(if applicable)</span></h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {[
+                    { label: "Name (Print)", field: "labelRepresentativeName", type: "text" },
+                    { label: "Signature", field: "labelRepresentativeSignature", type: "text" },
+                    { label: "Date", field: "labelRepresentativeDate", type: "date" },
+                  ].map(({ label, field, type }) => (
+                    <div key={field}>
+                      <label className="text-xs text-gray-400 block mb-1">{label}</label>
+                      <input
+                        type={type}
+                        value={resubmitFormData[field as keyof typeof resubmitFormData]}
+                        onChange={(e) => setResubmitFormData(prev => ({ ...prev, [field]: e.target.value }))}
+                        className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded text-sm text-white outline-none focus:border-[#66FCF1]/40 transition-all"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Sticky footer */}
+            <div className="sticky bottom-0 px-6 py-4 bg-[#071126]/95 backdrop-blur border-t border-white/10 flex justify-end gap-3 rounded-b-xl">
+              <button
+                onClick={() => setResubmitModalOpen(false)}
+                className="px-5 py-2 border border-white/10 rounded-lg text-gray-400 hover:text-white hover:border-white/30 text-sm transition-all"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResubmit}
+                disabled={resubmitting}
+                className="px-6 py-2 bg-[#66FCF1] text-[#060f24] font-bold rounded-lg hover:bg-[#66FCF1]/90 disabled:opacity-60 transition-all text-sm"
+              >
+                {resubmitting ? "Submitting..." : "Resubmit for Review"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </>
   );

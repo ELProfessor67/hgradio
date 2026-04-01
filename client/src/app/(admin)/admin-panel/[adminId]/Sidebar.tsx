@@ -14,6 +14,8 @@ import { FiSettings } from "react-icons/fi";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
 import { FaMoneyBillWave } from "react-icons/fa";
+import { MdOutlineLibraryMusic } from "react-icons/md";
+import { IoNotificationsSharp } from "react-icons/io5";
 
 interface SidebarProps {
   id: string;
@@ -25,7 +27,7 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
 
   const { logout } = useData()
   const router = useRouter()
-  const currentPath = usePathname();
+  const currentPath = usePathname() ?? "";
 
   const items1 = [
     // {
@@ -39,29 +41,39 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
     //   path: `/admin-panel/${id}/profile`,
     // },
     {
-      name: "Dashboard Analytics",
+      name: "Dashboard",
       icon: <CgProfile />,
       path: `/admin-panel/${id}`,
     },
     {
-      name: "Contact List",
+      name: "Contact",
       icon: <LuBookOpen />,
       path: `/admin-panel/${id}/contact-list`,
     },
-    {
-      name: "Sponsor List",
-      icon: <LuBookOpen />,
-      path: `/admin-panel/${id}/sponsor-list`,
-    },
+    // {
+    //   name: "Buyers",
+    //   icon: <LuBookOpen />,
+    //   path: `/admin-panel/${id}/sponsor-list`,
+    // },
     {
       name: "Widthraw Requests",
       icon: <FaMoneyBillWave />,
       path: `/admin-panel/${id}/widthraw-requests`,
     },
     {
-      name: "Requested Users",
+      name: "Users Approval",
       icon: <HiUsers />,
       path: `/admin-panel/${id}/requested-users`,
+    },
+    {
+      name: "Albums Approval",
+      icon: <MdOutlineLibraryMusic />,
+      path: `/admin-panel/${id}/albums-approval`,
+    },
+    {
+      name: "Notifications",
+      icon: <IoNotificationsSharp />,
+      path: `/admin-panel/${id}/notifications`,
     },
     // {
     //   name: "Approved Users",

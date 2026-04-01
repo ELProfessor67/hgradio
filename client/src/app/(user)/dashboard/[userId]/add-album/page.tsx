@@ -456,7 +456,7 @@ const Form = () => {
         // throw new Error(result.message || "Something went wrong");
       }
 
-      toast.success("Album Added Successfully", {
+      toast.success("Album submitted! It is now pending admin approval.", {
         style: {
           background: "green",
           border: "none",
@@ -522,6 +522,13 @@ const Form = () => {
   return (
     <form onSubmit={handleSubmit} className=" mt-[4rem] space-y-3 ">
 
+      {/* Approval notice */}
+      <div className="flex items-start gap-3 bg-yellow-400/10 border border-yellow-400/30 rounded-md px-4 py-3 text-sm text-yellow-200">
+        <span className="text-yellow-400 mt-0.5 text-base flex-shrink-0">⚠</span>
+        <p>
+          Your album will be submitted for <strong>admin review</strong>. It will not be publicly visible until it is approved. You will receive an email notification once a decision is made.
+        </p>
+      </div>
 
       <ImageUpload formData={formData} setFormData={setFormData} />
 

@@ -18,6 +18,10 @@ const albumSchema = new mongoose.Schema(
     description: { type: String, required: true },
     coverImg: { type: String, required: true },
     songs: { type: [audioSchema], default: [] },
+    // Approval
+    approvalStatus: { type: String, enum: ["pending", "approved", "rejected"], default: "pending" },
+    approvalReason: { type: String, default: "" },
+    approvedAt: { type: Date },
     // Sales metrics (updated on successful purchase)
     salesCount: { type: Number, default: 0 },
     totalRevenue: { type: Number, default: 0 },
