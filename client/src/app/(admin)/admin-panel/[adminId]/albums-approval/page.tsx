@@ -35,8 +35,34 @@ interface Album {
   approvalReason?: string;
   songs: Song[];
   artist: Artist;
+  genre?: string;
+  primaryLanguage?: string;
+  ownershipConfirmation?: string;
+  rightsAuthorizationDescription?: string;
+  confirmRights?: boolean;
+  confirmNoInfringement?: boolean;
+  confirmContributorsApproved?: boolean;
+  grantLicense?: boolean;
+  acceptResponsibility?: boolean;
+  understandRemovalPolicy?: boolean;
+  indemnifyHGC?: boolean;
+  agreeGoverningLaw?: boolean;
+  agreeLegalCosts?: boolean;
+  confirmReadUnderstood?: boolean;
+  signatureFullName?: string;
+  signatureTyped?: string;
+  signatureDate?: string;
   createdAt: string;
 }
+
+const AgreementItem = ({ label, value }: { label: string, value?: string | boolean }) => (
+  <div className="flex border-b border-white/5 py-2">
+    <div className="w-1/2 text-xs text-gray-400 font-medium my-auto">{label}</div>
+    <div className="w-1/2 text-sm text-gray-200">
+      {typeof value === 'boolean' ? (value ? <span className="text-green-400">Yes</span> : <span className="text-red-400">No</span>) : (value || '-')}
+    </div>
+  </div>
+);
 
 /* ─── Status badge ───────────────────────────────────────────── */
 const StatusBadge = ({ status }: { status: ApprovalStatus }) => {
@@ -207,6 +233,109 @@ const AlbumModal = ({
               <p className="text-sm text-gray-200 leading-relaxed">{album.description}</p>
             </div>
           )}
+
+          {/* Separator */}
+          <div className="border-t border-white/10" />
+
+          {/* Agreement Formal Info */}
+          {/* Agreement Formal Info */}
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-widest mb-3">Content Submission & Rights Agreement</p>
+            <div className="bg-[#0b1834] rounded-lg p-5 border border-white/10 space-y-6 max-h-[350px] overflow-y-auto text-sm">
+              <div className="text-center border-b border-white/10 pb-4">
+                <h4 className="text-lg font-bold text-[#66FCF1] uppercase tracking-wider mb-1">HGC RADIO CONTENT SUBMISSION & RIGHTS AGREEMENT</h4>
+                <p className="text-gray-400 text-xs">Agreed upon & signed by the user during submission.</p>
+              </div>
+
+              <section className="space-y-2">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">1. CONTENT INFORMATION</h5>
+                <div className="grid grid-cols-2 gap-4 pl-3">
+                  <AgreementItem label="Genre" value={album.genre} />
+                  <AgreementItem label="Primary Language" value={album.primaryLanguage} />
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">2. OWNERSHIP & AUTHORIZATION</h5>
+                <div className="pl-3 space-y-2">
+                  <p className="text-gray-300">Do you own 100% of the rights to this content?</p>
+                  <p className="text-[#66FCF1] font-medium flex gap-2">
+                    <span>{album.ownershipConfirmation === 'sole_owner' ? '☑' : '☐'}</span> Yes – I am the sole rights holder
+                  </p>
+                  <p className="text-[#66FCF1] font-medium flex gap-2">
+                    <span>{album.ownershipConfirmation === 'obtained_permission' ? '☑' : '☐'}</span> No – I have obtained all necessary rights and permissions
+                  </p>
+                  {album.ownershipConfirmation === 'obtained_permission' && (
+                    <div className="mt-2 bg-white/5 p-3 rounded text-gray-300">
+                      <span className="text-gray-500 text-xs block mb-1">Rights Authorization Description:</span>
+                      {album.rightsAuthorizationDescription}
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">3. RIGHTS CONFIRMATION</h5>
+                <div className="pl-3 space-y-2">
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.confirmRights ? '☑' : '☐'}</span> <span className="text-gray-300">I confirm that I own or control all rights necessary for this submission.</span></p>
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.confirmNoInfringement ? '☑' : '☐'}</span> <span className="text-gray-300">I confirm this content does not infringe on any third-party rights.</span></p>
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.confirmContributorsApproved ? '☑' : '☐'}</span> <span className="text-gray-300">I confirm all contributors (artists, producers, collaborators) have approved this submission.</span></p>
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">4. LICENSE GRANT</h5>
+                <div className="pl-3">
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.grantLicense ? '☑' : '☐'}</span> <span className="text-gray-300">I grant HGC Radio a non-exclusive, worldwide license (royalty-based or royalty-free as agreed) to stream/broadcast, promote, distribute, and monetize.</span></p>
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">5. CONTENT RESPONSIBILITY</h5>
+                <div className="pl-3 space-y-2">
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.acceptResponsibility ? '☑' : '☐'}</span> <span className="text-gray-300">I accept full responsibility for the accuracy, legality, and ownership of this content.</span></p>
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.understandRemovalPolicy ? '☑' : '☐'}</span> <span className="text-gray-300">I understand HGC Radio may remove or restrict content that violates policies or is disputed.</span></p>
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">6. INDEMNIFICATION</h5>
+                <div className="pl-3">
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.indemnifyHGC ? '☑' : '☐'}</span> <span className="text-gray-300">I agree to indemnify and hold harmless HGC Radio from claims arising from ownership issues or breaches of this agreement.</span></p>
+                </div>
+              </section>
+
+              <section className="space-y-2">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">7. LEGAL TERMS</h5>
+                <div className="pl-3 space-y-2">
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.agreeGoverningLaw ? '☑' : '☐'}</span> <span className="text-gray-300">Governing Law & Venue: State of California.</span></p>
+                  <p className="flex items-start gap-2"><span className="text-[#66FCF1]">{album.agreeLegalCosts ? '☑' : '☐'}</span> <span className="text-gray-300">Attorney’s Fees & Legal Costs.</span></p>
+                </div>
+              </section>
+
+              <section className="space-y-4 pt-4 border-t border-white/10">
+                <h5 className="font-bold text-white border-l-2 border-[#66FCF1] pl-2">8. AGREEMENT CONFIRMATION</h5>
+                <div className="pl-3">
+                  <p className="flex items-center gap-2 font-semibold text-white"><span className="text-[#66FCF1]">{album.confirmReadUnderstood ? '☑' : '☐'}</span> I confirm that I have read, understood, and agree to all terms of this Agreement.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-black/30 p-4 rounded-lg">
+                  <div>
+                    <label className="text-xs text-gray-500 uppercase">Full Typed Name</label>
+                    <p className="text-white font-medium">{album.signatureFullName || "—"}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 uppercase">Initials</label>
+                    <p className="text-[#66FCF1] font-cursive text-lg">{album.signatureTyped || "—"}</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 uppercase">Date</label>
+                    <p className="text-white font-medium">{album.signatureDate || "—"}</p>
+                  </div>
+                </div>
+              </section>
+
+            </div>
+          </div>
 
           {/* Separator */}
           <div className="border-t border-white/10" />

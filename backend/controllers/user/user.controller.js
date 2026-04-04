@@ -470,6 +470,7 @@ export const requestAlbumOtp = async (req, res) => {
     }
 
     const otp = generateSixDigitOtp();
+    console.log(otp)
     user.albumOtpHash = hashOtp(user._id.toString(), otp);
     user.albumOtpExpiresAt = new Date(Date.now() + ALBUM_OTP_TTL_MS);
     user.albumOtpVerifiedAt = undefined;
@@ -581,8 +582,13 @@ export const verifyAlbumOtp = async (req, res) => {
 
 export const createAlbum = async (req, res) => {
   try {
-    const { title, releaseYear, price, description, coverImg, songs } =
-      req.body;
+    const { 
+      title, releaseYear, price, description, coverImg, songs,
+      genre, primaryLanguage, ownershipConfirmation, rightsAuthorizationDescription,
+      confirmRights, confirmNoInfringement, confirmContributorsApproved, grantLicense,
+      acceptResponsibility, understandRemovalPolicy, indemnifyHGC, agreeGoverningLaw,
+      agreeLegalCosts, confirmReadUnderstood, signatureFullName, signatureTyped, signatureDate
+    } = req.body;
 
     // console.log(title, releaseYear, price, description, coverImg, songs);
 
@@ -639,6 +645,25 @@ export const createAlbum = async (req, res) => {
       coverImg,
       songs,
       artist: req.user.id,
+      genre, 
+      primaryLanguage, 
+      ownershipConfirmation, 
+      rightsAuthorizationDescription,
+      confirmRights, 
+      confirmNoInfringement, 
+      confirmContributorsApproved, 
+      grantLicense,
+      acceptResponsibility, 
+      understandRemovalPolicy, 
+      indemnifyHGC, 
+      agreeGoverningLaw,
+      agreeLegalCosts, 
+      confirmReadUnderstood, 
+      signatureFullName, 
+      signatureTyped, 
+      signatureDate,
+      approvalStatus: "pending",
+      approvalReason: "",
     });
 
     await album.save();
@@ -904,7 +929,13 @@ export const updateOwnedAlbum = async (req, res) => {
   try {
     const artistId = req.user?.id;
     const { albumId } = req.params;
-    const { title, releaseYear, price, description, coverImg } = req.body || {};
+    const { 
+      title, releaseYear, price, description, coverImg, songs,
+      genre, primaryLanguage, ownershipConfirmation, rightsAuthorizationDescription,
+      confirmRights, confirmNoInfringement, confirmContributorsApproved, grantLicense,
+      acceptResponsibility, understandRemovalPolicy, indemnifyHGC, agreeGoverningLaw,
+      agreeLegalCosts, confirmReadUnderstood, signatureFullName, signatureTyped, signatureDate
+    } = req.body || {};
 
     if (!artistId) {
       return res
@@ -931,6 +962,33 @@ export const updateOwnedAlbum = async (req, res) => {
       album.description = description;
     if (coverImg !== undefined && String(coverImg).trim() !== "")
       album.coverImg = coverImg;
+    if (songs !== undefined)
+      album.songs = songs;
+
+    // Agreement fields update
+    if (genre !== undefined) album.genre = genre;
+    if (primaryLanguage !== undefined) album.primaryLanguage = primaryLanguage;
+    if (ownershipConfirmation !== undefined) album.ownershipConfirmation = ownershipConfirmation;
+    if (rightsAuthorizationDescription !== undefined) album.rightsAuthorizationDescription = rightsAuthorizationDescription;
+    if (confirmRights !== undefined) album.confirmRights = confirmRights;
+    if (confirmNoInfringement !== undefined) album.confirmNoInfringement = confirmNoInfringement;
+    if (confirmContributorsApproved !== undefined) album.confirmContributorsApproved = confirmContributorsApproved;
+    if (grantLicense !== undefined) album.grantLicense = grantLicense;
+    if (acceptResponsibility !== undefined) album.acceptResponsibility = acceptResponsibility;
+    if (understandRemovalPolicy !== undefined) album.understandRemovalPolicy = understandRemovalPolicy;
+    if (indemnifyHGC !== undefined) album.indemnifyHGC = indemnifyHGC;
+    if (agreeGoverningLaw !== undefined) album.agreeGoverningLaw = agreeGoverningLaw;
+    if (agreeLegalCosts !== undefined) album.agreeLegalCosts = agreeLegalCosts;
+    if (confirmReadUnderstood !== undefined) album.confirmReadUnderstood = confirmReadUnderstood;
+    if (signatureFullName !== undefined) album.signatureFullName = signatureFullName;
+    if (signatureTyped !== undefined) album.signatureTyped = signatureTyped;
+    if (signatureDate !== undefined) album.signatureDate = signatureDate;
+
+    // IMPORTANT: If album was rejected or already approved, a user updating it triggers a re-review.
+    if (album.approvalStatus === "rejected") {
+      album.approvalStatus = "pending";
+      album.approvalReason = "";
+    }
 
     await album.save();
 
@@ -1115,6 +1173,15 @@ export const resubmitSellerForm = async (req, res) => {
       "labelRepresentativeName",
       "labelRepresentativeSignature",
       "labelRepresentativeDate",
+      "digitalDistributionArtistName",
+      "digitalDistributionArtistSignature",
+      "digitalDistributionArtistDate",
+      "digitalDistributionSummaryName",
+      "digitalDistributionSummarySignature",
+      "digitalDistributionSummaryDate",
+      "digitalDistributionStageName",
+      "artistSignatureUrl",
+      "stageName",
     ];
 
     for (const field of contractFields) {

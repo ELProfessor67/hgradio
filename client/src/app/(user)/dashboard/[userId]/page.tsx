@@ -2,13 +2,37 @@
 
 import Breadcrum from "@/components/Breadcrum";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import bg2 from "@/assets/previous-show.jpg";
 import { useData } from "@/context/Context";
 import { FetchLoading, PageLoading } from "@/utils/Loading";
 import Image from "next/image";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import axios from "axios";
+
+const CLOUD_NAME = "ddlwhkn3b";
+const UPLOAD_PRESET = "images_preset";
+
+async function uploadDataUrlToCloudinary(dataUrl: string): Promise<string | null> {
+  try {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    const file = new File([blob], "artist_signature.png", { type: "image/png" });
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", UPLOAD_PRESET);
+    formData.append("folder", "SIDESONE/signatures");
+    const uploadRes = await axios.post<{ secure_url: string }>(
+      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+      formData
+    );
+    return uploadRes.data.secure_url;
+  } catch (err) {
+    console.error("Signature upload error:", err);
+    return null;
+  }
+}
 
 interface SongType {
   name: string;
@@ -78,52 +102,23 @@ const Page = () => {
   const [upgradeOtpSending, setUpgradeOtpSending] = useState(false);
   const [upgradeOtpVerifying, setUpgradeOtpVerifying] = useState(false);
   const [upgrading, setUpgrading] = useState(false);
-  const [upgradeFormData, setUpgradeFormData] = useState({
-    initialGrantAuthorization: "",
-    initialOwnershipRepresentation: "",
-    initialLicensingProtection: "",
-    initialAffiliateUse: "",
-    initialWaiverCompensation: "",
-    initialWarranties: "",
-    initialIndemnification: "",
-    initialPublicityPromotion: "",
-    initialLimitationLiability: "",
-    initialArbitrationVenue: "",
-    initialGoverningLaw: "",
-    initialCoverageFullWorks: "",
-    initialEntireAgreement: "",
-    copyrightOwnerName: "",
-    copyrightOwnerSignature: "",
-    copyrightOwnerDate: "",
-    labelRepresentativeName: "",
-    labelRepresentativeSignature: "",
-    labelRepresentativeDate: "",
+  // Shared agreement form data (for both upgrade and resubmit)
+  const [agreementForm, setAgreementForm] = useState({
+    agreeTerms: false,
+    confirmAccurate: false,
+    confirmRights: false,
+    fullName: "",
+    stageName: "",
+    signatureTyped: "",
   });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [hasSignature, setHasSignature] = useState(false);
 
   // Resubmit rejected form states
   const [resubmitModalOpen, setResubmitModalOpen] = useState(false);
   const [resubmitting, setResubmitting] = useState(false);
-  const [resubmitFormData, setResubmitFormData] = useState({
-    initialGrantAuthorization: "",
-    initialOwnershipRepresentation: "",
-    initialLicensingProtection: "",
-    initialAffiliateUse: "",
-    initialWaiverCompensation: "",
-    initialWarranties: "",
-    initialIndemnification: "",
-    initialPublicityPromotion: "",
-    initialLimitationLiability: "",
-    initialArbitrationVenue: "",
-    initialGoverningLaw: "",
-    initialCoverageFullWorks: "",
-    initialEntireAgreement: "",
-    copyrightOwnerName: "",
-    copyrightOwnerSignature: "",
-    copyrightOwnerDate: "",
-    labelRepresentativeName: "",
-    labelRepresentativeSignature: "",
-    labelRepresentativeDate: "",
-  });
+
   const accountType = (userData as any)?.accountType as
     | "buyer"
     | "seller"
@@ -401,117 +396,155 @@ const Page = () => {
     }
   };
 
+  // Canvas utilities
+  const getCanvasPoint = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current!;
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    if ("touches" in e) {
+      const touch = e.touches[0];
+      return { x: (touch.clientX - rect.left) * scaleX, y: (touch.clientY - rect.top) * scaleY };
+    }
+    return { x: ((e as React.MouseEvent).clientX - rect.left) * scaleX, y: ((e as React.MouseEvent).clientY - rect.top) * scaleY };
+  };
+
+  const startDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    setIsDrawing(true);
+    setHasSignature(true);
+    const pos = getCanvasPoint(e);
+    const ctx = canvasRef.current?.getContext("2d");
+    if (ctx) {
+      ctx.beginPath();
+      ctx.moveTo(pos.x, pos.y);
+    }
+  };
+
+  const draw = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    if (!isDrawing) return;
+    const pos = getCanvasPoint(e);
+    const ctx = canvasRef.current?.getContext("2d");
+    if (ctx) {
+      ctx.lineTo(pos.x, pos.y);
+      ctx.strokeStyle = "#fff";
+      ctx.lineWidth = 2;
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.stroke();
+    }
+  };
+
+  const stopDrawing = (e: React.MouseEvent<HTMLCanvasElement> | React.TouchEvent<HTMLCanvasElement>) => {
+    if (e) e.preventDefault();
+    setIsDrawing(false);
+  };
+
+  const clearCanvas = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      setHasSignature(false);
+    }
+  };
+
+  const prepareSubmitPayload = async () => {
+    if (!agreementForm.agreeTerms || !agreementForm.confirmAccurate || !agreementForm.confirmRights) {
+      toast.error("Please agree to all the confirmation checkboxes.", { style: { background: "red", border: "none", color: "white" } });
+      return null;
+    }
+    if (!agreementForm.fullName.trim() || !agreementForm.signatureTyped.trim()) {
+      toast.error("Please fill in your full name and typed signature.", { style: { background: "red", border: "none", color: "white" } });
+      return null;
+    }
+
+    let finalSignatureUrl = null;
+    if (hasSignature && canvasRef.current) {
+      const dataUrl = canvasRef.current.toDataURL("image/png");
+      toast.success("Uploading your handwritten signature...", { style: { background: "blue", border: "none", color: "white" } });
+      finalSignatureUrl = await uploadDataUrlToCloudinary(dataUrl);
+      if (!finalSignatureUrl) {
+        toast.error("Failed to upload signature. Please try again.", { style: { background: "red", border: "none", color: "white" } });
+        return null;
+      }
+    }
+
+    return {
+      digitalDistributionArtistName: agreementForm.fullName,
+      digitalDistributionStageName: agreementForm.stageName,
+      digitalDistributionArtistSignature: agreementForm.signatureTyped,
+      artistSignatureUrl: finalSignatureUrl,
+    };
+  };
+
   const handleUpgradeSubmit = async () => {
     if (!upgradeOtpVerified) {
-      toast.error("Please verify OTP first.", {
-        style: { background: "red", border: "none", color: "white" },
-      });
+      toast.error("Please verify OTP first.", { style: { background: "red", border: "none", color: "white" } });
       return;
     }
 
+    const payload = await prepareSubmitPayload();
+    if (!payload) return;
+
     setUpgrading(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/upgrade-to-seller`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: userData._id,
-            otpToken: upgradeOtpToken,
-            ...upgradeFormData,
-          }),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/upgrade-to-seller`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: userData._id, otpToken: upgradeOtpToken, ...payload }),
+      });
 
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data?.error || "Upgrade failed", {
-          style: { background: "red", border: "none", color: "white" },
-        });
+        toast.error(data?.error || "Upgrade failed", { style: { background: "red", border: "none", color: "white" } });
         return;
       }
 
       if (data?.user?._id) {
-        setUserData({
-          ...data.user,
-          token: userData.token,
-        });
-
-        toast.success("Account upgraded to seller! Pending admin approval.", {
-          style: { background: "green", border: "none", color: "white" },
-        });
+        setUserData({ ...data.user, token: userData.token });
+        toast.success("Account upgraded to seller! Pending admin approval.", { style: { background: "green", border: "none", color: "white" } });
         setUpgradeModalOpen(false);
-        // Reset form
         setUpgradeOtp("");
         setUpgradeOtpToken("");
         setUpgradeOtpSent(false);
         setUpgradeOtpVerified(false);
-        setUpgradeFormData({
-          initialGrantAuthorization: "",
-          initialOwnershipRepresentation: "",
-          initialLicensingProtection: "",
-          initialAffiliateUse: "",
-          initialWaiverCompensation: "",
-          initialWarranties: "",
-          initialIndemnification: "",
-          initialPublicityPromotion: "",
-          initialLimitationLiability: "",
-          initialArbitrationVenue: "",
-          initialGoverningLaw: "",
-          initialCoverageFullWorks: "",
-          initialEntireAgreement: "",
-          copyrightOwnerName: "",
-          copyrightOwnerSignature: "",
-          copyrightOwnerDate: "",
-          labelRepresentativeName: "",
-          labelRepresentativeSignature: "",
-          labelRepresentativeDate: "",
-        });
+        setAgreementForm({ agreeTerms: false, confirmAccurate: false, confirmRights: false, fullName: "", stageName: "", signatureTyped: "" });
+        setHasSignature(false);
       }
     } catch (err: any) {
-      toast.error(err?.message || "Upgrade failed", {
-        style: { background: "red", border: "none", color: "white" },
-      });
+      toast.error(err?.message || "Upgrade failed", { style: { background: "red", border: "none", color: "white" } });
     } finally {
       setUpgrading(false);
     }
   };
 
   const handleResubmit = async () => {
+    const payload = await prepareSubmitPayload();
+    if (!payload) return;
+
     setResubmitting(true);
     try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/seller-form/resubmit`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${userData.token}`,
-          },
-          body: JSON.stringify(resubmitFormData),
-        }
-      );
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/seller-form/resubmit`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${userData.token}` },
+        body: JSON.stringify(payload),
+      });
+
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data?.message || "Resubmit failed", {
-          style: { background: "red", border: "none", color: "white" },
-        });
+        toast.error(data?.message || "Resubmit failed", { style: { background: "red", border: "none", color: "white" } });
         return;
       }
       if (data?.user?._id) {
         setUserData({ ...data.user, token: userData.token });
       }
-      toast.success("Form resubmitted! Pending admin review.", {
-        style: { background: "green", border: "none", color: "white" },
-      });
+      toast.success("Form resubmitted! Pending admin review.", { style: { background: "green", border: "none", color: "white" } });
       setResubmitModalOpen(false);
     } catch (err: any) {
-      toast.error(err?.message || "Resubmit failed", {
-        style: { background: "red", border: "none", color: "white" },
-      });
+      toast.error(err?.message || "Resubmit failed", { style: { background: "red", border: "none", color: "white" } });
     } finally {
       setResubmitting(false);
     }
@@ -573,6 +606,285 @@ const Page = () => {
     if (status === "processing") return "bg-yellow-600/20 text-yellow-200 border-yellow-400/20";
     return "bg-blue-600/20 text-blue-200 border-blue-400/20";
   };
+
+  function AgreementSection({
+    num,
+    title,
+    body,
+    bullets,
+    footer,
+  }: {
+    num: string;
+    title: string;
+    body?: string | null;
+    bullets?: string[];
+    footer?: string;
+  }) {
+    return (
+      <div className="space-y-3 border-b border-gray-700/50 pb-7">
+        <h3 className="text-lg font-bold text-[#66FCF1]">
+          {num}. {title}
+        </h3>
+        {body && <p className="text-gray-300">{body}</p>}
+        {bullets && (
+          <ul className="list-disc list-inside text-gray-300 space-y-1 pl-2 text-sm">
+            {bullets.map((b, i) => (
+              <li key={i}>{b}</li>
+            ))}
+          </ul>
+        )}
+        {footer && <p className="text-gray-400 text-sm mt-1">{footer}</p>}
+      </div>
+    );
+  }
+
+  const renderContractText = () => (
+    <div className="space-y-8 bg-[#0B1834]/50 border border-white/10 rounded-lg p-6 mb-8 text-sm">
+      {/* Preamble */}
+      <div className="bg-[#071126] border border-white/10 rounded-lg p-5 space-y-3 text-gray-300">
+        <p>
+          This Digital Distribution &amp; Artist Agreement (&ldquo;Agreement&rdquo;) is entered
+          into by and between{" "}
+          <span className="text-white font-semibold">
+            Hallelujah Gospel Globally (HGC Radio)
+          </span>{" "}
+          (&ldquo;Company&rdquo;) and the registering artist (&ldquo;Artist&rdquo;), effective as
+          of the date of submission and acceptance (&ldquo;Effective Date&rdquo;).
+        </p>
+        <p className="text-[#66FCF1] font-medium">
+          By submitting content or registering, Artist agrees to be bound by the terms
+          of this Agreement.
+        </p>
+      </div>
+
+      <div className="space-y-6">
+        {[
+          {
+            num: "1",
+            title: "PURPOSE",
+            body: "Company operates a faith-based digital music distribution, internet radio, and promotional platform. This Agreement governs the distribution, promotion, monetization, and related use of Artist's content for both ministry and commercial purposes.",
+          },
+          {
+            num: "2",
+            title: "NON-EXCLUSIVITY",
+            body: "This Agreement is non-exclusive. Artist retains full ownership of their content and may distribute, license, or exploit it through other platforms or parties at their sole discretion.",
+          },
+          {
+            num: "3",
+            title: "REPRESENTATIONS & WARRANTIES",
+            body: null,
+            bullets: [
+              "Artist owns or controls 100% of all necessary rights, including master and composition rights (or has secured proper licenses).",
+              "All content submitted is original or properly licensed.",
+              "No content infringes upon any copyright, trademark, or third-party rights.",
+              "All collaborators, producers, and contributors have been properly credited and compensated where required.",
+            ],
+            footer: "Artist agrees to provide documentation upon request.",
+          },
+          {
+            num: "4",
+            title: "LICENSE GRANT",
+            body: "Artist grants Company a worldwide, non-exclusive, royalty-bearing license to:",
+            bullets: [
+              "Distribute, stream, reproduce, and publicly perform the content",
+              "Promote, market, and advertise the content",
+              "Sub-license content to third-party platforms (e.g., DSPs, streaming services)",
+              "Use Artist's name, likeness, image, biography, and branding for promotional purposes",
+            ],
+            footer: "This license remains in effect during the Term of this Agreement.",
+          },
+        ].map((sec) => (
+          <AgreementSection key={sec.num} {...sec} />
+        ))}
+
+        {/* Section 5 Revenue Share */}
+        <div className="space-y-4 border-b border-gray-700/50 pb-8">
+          <h3 className="text-lg font-bold text-[#66FCF1]">5. REVENUE SHARE</h3>
+          <div className="space-y-2">
+            <h4 className="font-semibold text-white">5.1 Definitions</h4>
+            <ul className="list-disc list-inside text-gray-300 space-y-1 pl-2 text-sm">
+              <li><strong>Gross Revenue:</strong> All income derived from exploitation of Artist's content.</li>
+              <li><strong>Net Revenue:</strong> Gross Revenue minus third-party fees, commissions, platform costs, taxes, refunds, and chargebacks.</li>
+              <li><strong>Net Profit (Merchandise):</strong> Merchandise revenue minus production, manufacturing, shipping, transaction fees, taxes, returns, and related costs.</li>
+            </ul>
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-semibold text-white">5.2 Music Distribution Revenue</h4>
+            <p className="text-gray-300 text-sm">
+              Artist shall receive <span className="text-[#66FCF1] font-bold">60%–70%</span> of Net Revenue generated from streaming, downloads, and licensing. The exact percentage may vary depending on promotional campaigns, partnerships, or special agreements.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-semibold text-white">5.3 Merchandise Revenue (Optional)</h4>
+            <p className="text-gray-300 text-sm">
+              If Artist participates in Company's merchandise program: Artist receives{" "}
+              <span className="text-[#66FCF1] font-bold">35%</span> of Net Profit · HGC Radio receives{" "}
+              <span className="text-[#66FCF1] font-bold">65%</span> of Net Profit.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-semibold text-white">5.4 Accounting &amp; Payments</h4>
+            <ul className="list-disc list-inside text-gray-300 space-y-1 pl-2 text-sm">
+              <li>Payments are issued bi-annually (June 30 and December 31)</li>
+              <li>Minimum payout threshold: $100 USD</li>
+              <li>Company reserves the right to carry forward balances below the threshold</li>
+              <li>Statements may be provided upon request</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Sections 6–14 */}
+        {[
+          {
+            num: "6",
+            title: "PROMOTION & BROADCAST RIGHTS",
+            body: "Artist grants Company the right to broadcast content on radio, playlists, and digital channels and use content for promotional campaigns. No additional royalties shall be owed beyond the revenue share outlined in this Agreement unless otherwise agreed in writing.",
+          },
+          {
+            num: "7",
+            title: "CONTENT STANDARDS & REMOVAL",
+            body: "Company reserves the right to reject, remove, or suspend any content that violates platform policies, conflicts with faith-based values, or breaches legal or copyright regulations. Company may act without prior notice where necessary.",
+          },
+          {
+            num: "8",
+            title: "TERM & TERMINATION",
+            bullets: [
+              "This Agreement remains in effect until terminated by either party",
+              "Either party may terminate with 30 days written notice",
+              "Content removal may take up to 90 days due to third-party platform processing",
+              "Sections relating to payments, liability, and legal obligations shall survive termination.",
+            ],
+          },
+          {
+            num: "9",
+            title: "PAYMENTS & TAXES",
+            body: "Artist is responsible for all applicable taxes. Company may require tax documentation prior to payment. Payments may be withheld in cases of fraud, dispute, or policy violations.",
+          },
+          {
+            num: "10",
+            title: "LIABILITY & INDEMNIFICATION",
+            body: "Artist agrees to indemnify, defend, and hold harmless Company, its affiliates, officers, and partners from any claims, damages, liabilities, or legal disputes arising from breach of this Agreement, copyright infringement, or unauthorized use of third-party content. Company shall not be liable for indirect, incidental, or consequential damages or platform outages, delays, or third-party failures.",
+          },
+          {
+            num: "11",
+            title: "LIMITATION OF LIABILITY",
+            body: "To the maximum extent permitted by law, Company's total liability shall not exceed the total amount paid to Artist under this Agreement in the preceding 12 months.",
+          },
+          {
+            num: "12",
+            title: "GOVERNING LAW & DISPUTES",
+            body: "This Agreement shall be governed by the laws of the State of California, USA. Any disputes shall be resolved in the courts of Contra Costa County, California, unless otherwise agreed.",
+          },
+          {
+            num: "13",
+            title: "DIGITAL CONSENT & SIGNATURE",
+            bullets: [
+              "Agrees this constitutes a legally binding electronic signature",
+              "Confirms acceptance of all terms",
+              "Acknowledges that digital submission is enforceable under applicable electronic signature laws",
+            ],
+            body: "By submitting this Agreement electronically, Artist:",
+          },
+          {
+            num: "14",
+            title: "ENTIRE AGREEMENT",
+            body: "This Agreement constitutes the entire understanding between the parties and supersedes all prior agreements or communications. Any amendments must be made in writing and agreed by both parties.",
+          },
+        ].map((sec) => (
+          <AgreementSection key={sec.num} {...sec} />
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderAgreementForm = () => (
+    <div className="bg-[#0B1834] border border-[#66FCF1]/30 rounded-lg p-6 space-y-6">
+      <h3 className="text-xl font-bold text-[#66FCF1] uppercase">Artist Confirmation</h3>
+      
+      <div className="space-y-3">
+        {[
+          { key: "agreeTerms", label: "I have read and agree to the Digital Distribution & Artist Agreement" },
+          { key: "confirmAccurate", label: "I confirm all information provided is accurate" },
+          { key: "confirmRights", label: "I confirm I own or control all rights to submitted content" }
+        ].map(({ key, label }) => (
+          <label key={key} className="flex items-start gap-3 cursor-pointer text-gray-200">
+            <input
+              type="checkbox"
+              checked={agreementForm[key as keyof typeof agreementForm] as boolean}
+              onChange={(e) => setAgreementForm((p) => ({ ...p, [key]: e.target.checked }))}
+              className="mt-1 w-4 h-4 cursor-pointer"
+            />
+            <span className="text-sm">{label}</span>
+          </label>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-1">
+          <label className="text-gray-400 text-sm">Full Name *</label>
+          <input
+            type="text"
+            value={agreementForm.fullName}
+            onChange={(e) => setAgreementForm((p) => ({ ...p, fullName: e.target.value }))}
+            className="w-full py-2 px-4 bg-[#222F46] border-b-2 border-[#445d88] text-white outline-none"
+            required
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-gray-400 text-sm">Stage Name (Optional)</label>
+          <input
+            type="text"
+            value={agreementForm.stageName}
+            onChange={(e) => setAgreementForm((p) => ({ ...p, stageName: e.target.value }))}
+            className="w-full py-2 px-4 bg-[#222F46] border-b-2 border-[#445d88] text-white outline-none"
+          />
+        </div>
+        <div className="space-y-1 md:col-span-2">
+          <label className="text-gray-400 text-sm">Signature (Type Name) *</label>
+          <input
+            type="text"
+            value={agreementForm.signatureTyped}
+            onChange={(e) => setAgreementForm((p) => ({ ...p, signatureTyped: e.target.value }))}
+            className="w-full py-2 px-4 bg-[#222F46] border-b-2 border-[#445d88] text-white outline-none italic"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2 mt-4">
+        <label className="text-gray-400 text-sm block">Draw Signature (Optional but recommended)</label>
+        <div className="border-2 border-dashed border-[#445d88] bg-[#1a2436] rounded-lg overflow-hidden relative select-none touch-none">
+          <canvas
+            ref={canvasRef}
+            width={600}
+            height={150}
+            className="w-full h-[150px] cursor-crosshair touch-none"
+            onMouseDown={startDrawing}
+            onMouseMove={draw}
+            onMouseUp={stopDrawing}
+            onMouseLeave={stopDrawing}
+            onTouchStart={startDrawing}
+            onTouchMove={draw}
+            onTouchEnd={stopDrawing}
+          />
+          {!hasSignature && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-30">
+              <span className="text-xl">Sign Here</span>
+            </div>
+          )}
+        </div>
+        <div className="flex justify-end mt-2">
+          <button
+            type="button"
+            onClick={clearCanvas}
+            className="text-xs text-red-400 hover:text-red-300 transition"
+          >
+            Clear Signature
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -659,11 +971,10 @@ const Page = () => {
 
 
             {accountType === "seller" && sellerApprovalStatus !== "approved" && (
-              <div className={`mt-4 border p-4 text-white rounded-lg ${
-                sellerApprovalStatus === "rejected"
-                  ? "bg-red-500/10 border-red-400/30"
-                  : "bg-yellow-400/10 border-yellow-400/30"
-              }`}>
+              <div className={`mt-4 border p-4 text-white rounded-lg ${sellerApprovalStatus === "rejected"
+                ? "bg-red-500/10 border-red-400/30"
+                : "bg-yellow-400/10 border-yellow-400/30"
+                }`}>
                 {sellerApprovalStatus === "pending" && (
                   <div className="flex items-start gap-3">
                     <div className="text-yellow-300 text-xl mt-0.5">⏳</div>
@@ -695,26 +1006,13 @@ const Page = () => {
                     <button
                       onClick={() => {
                         // Pre-fill the form with existing user data
-                        setResubmitFormData({
-                          initialGrantAuthorization: (userData as any)?.initialGrantAuthorization || "",
-                          initialOwnershipRepresentation: (userData as any)?.initialOwnershipRepresentation || "",
-                          initialLicensingProtection: (userData as any)?.initialLicensingProtection || "",
-                          initialAffiliateUse: (userData as any)?.initialAffiliateUse || "",
-                          initialWaiverCompensation: (userData as any)?.initialWaiverCompensation || "",
-                          initialWarranties: (userData as any)?.initialWarranties || "",
-                          initialIndemnification: (userData as any)?.initialIndemnification || "",
-                          initialPublicityPromotion: (userData as any)?.initialPublicityPromotion || "",
-                          initialLimitationLiability: (userData as any)?.initialLimitationLiability || "",
-                          initialArbitrationVenue: (userData as any)?.initialArbitrationVenue || "",
-                          initialGoverningLaw: (userData as any)?.initialGoverningLaw || "",
-                          initialCoverageFullWorks: (userData as any)?.initialCoverageFullWorks || "",
-                          initialEntireAgreement: (userData as any)?.initialEntireAgreement || "",
-                          copyrightOwnerName: (userData as any)?.copyrightOwnerName || "",
-                          copyrightOwnerSignature: (userData as any)?.copyrightOwnerSignature || "",
-                          copyrightOwnerDate: (userData as any)?.copyrightOwnerDate?.split?.("T")?.[0] || "",
-                          labelRepresentativeName: (userData as any)?.labelRepresentativeName || "",
-                          labelRepresentativeSignature: (userData as any)?.labelRepresentativeSignature || "",
-                          labelRepresentativeDate: (userData as any)?.labelRepresentativeDate?.split?.("T")?.[0] || "",
+                        setAgreementForm({
+                          agreeTerms: true, // assumption since they already agreed initially
+                          confirmAccurate: true,
+                          confirmRights: true,
+                          fullName: (userData as any)?.digitalDistributionArtistName || "",
+                          stageName: (userData as any)?.digitalDistributionStageName || "",
+                          signatureTyped: (userData as any)?.digitalDistributionArtistSignature || "",
                         });
                         setResubmitModalOpen(true);
                       }}
@@ -946,152 +1244,15 @@ const Page = () => {
                     <div className=" space-y-6 ">
                       <div className=" border-t border-gray-500 pt-6 ">
                         <h2 className=" text-[1.8rem] font-semibold mb-4 ">
-                          Artist's Original Music Consent and Release Form
+                          HGC RADIO – DIGITAL DISTRIBUTION & ARTIST AGREEMENT
                         </h2>
                         <p className=" text-gray-300 text-sm mb-4 ">
                           This form is required for your music to be broadcast or distributed by Hallelujah Gospel Globally.
                         </p>
                       </div>
 
-                      {/* Contract Sections */}
-                      {[
-                        {
-                          title: "1. Grant of Authorization",
-                          content: "The Copyright Owner hereby grants Hallelujah Gospel Globally the non-exclusive, royalty-free, worldwide right to broadcast, stream, and distribute the submitted original music.",
-                          field: "initialGrantAuthorization"
-                        },
-                        {
-                          title: "2. Ownership and Copyright Representation",
-                          content: "The Copyright Owner affirms that the submitted recordings are original works or fully licensed by the undersigned.",
-                          field: "initialOwnershipRepresentation"
-                        },
-                        {
-                          title: "3. Ironclad Licensing Protection",
-                          content: "This agreement supersedes any claim from outside licensing organizations including BMI, ASCAP, SESAC, SoundExchange, RIAA.",
-                          field: "initialLicensingProtection"
-                        },
-                        {
-                          title: "4. Use by Affiliates and Partners",
-                          content: "Permission granted herein extends to all platforms owned, operated, or partnered with Hallelujah Gospel Globally.",
-                          field: "initialAffiliateUse"
-                        },
-                        {
-                          title: "5. Waiver of Compensation",
-                          content: "The undersigned agrees that no payment is due for use of the submitted content under this agreement.",
-                          field: "initialWaiverCompensation"
-                        },
-                        {
-                          title: "6. Warranties",
-                          content: "The undersigned warrants that they own and/or control 100% of the rights in the submitted materials.",
-                          field: "initialWarranties"
-                        },
-                        {
-                          title: "7. Indemnification",
-                          content: "The undersigned agrees to indemnify and hold harmless Hallelujah Gospel Globally from any claims, damages, or losses.",
-                          field: "initialIndemnification"
-                        },
-                        {
-                          title: "8. Publicity and Promotion Rights",
-                          content: "The undersigned grants Hallelujah Gospel Globally the right to use artist and song information for promotional purposes.",
-                          field: "initialPublicityPromotion"
-                        },
-                        {
-                          title: "9. Limitation of Liability",
-                          content: "Hallelujah Gospel Globally shall not be liable for any indirect, incidental, or consequential damages.",
-                          field: "initialLimitationLiability"
-                        },
-                        {
-                          title: "10. Arbitration and Venue",
-                          content: "Any disputes shall be resolved through binding arbitration in California.",
-                          field: "initialArbitrationVenue"
-                        },
-                        {
-                          title: "11. Governing Law",
-                          content: "This agreement shall be governed by the laws of the State of California.",
-                          field: "initialGoverningLaw"
-                        },
-                        {
-                          title: "12. Coverage of Full Works",
-                          content: "This consent applies to all current and future works submitted by the Copyright Owner.",
-                          field: "initialCoverageFullWorks"
-                        },
-                        {
-                          title: "13. Song/Album Information",
-                          content: "Please provide details about your music catalog.",
-                          field: "initialEntireAgreement"
-                        }
-                      ].map((section, idx) => (
-                        <div key={idx} className=" border-b border-gray-500 pb-4 ">
-                          <h3 className=" text-[1.2rem] font-semibold mb-2 ">{section.title}</h3>
-                          <p className=" text-gray-300 text-sm mb-3 ">{section.content}</p>
-                          <div className=" flex items-center gap-2 ">
-                            <label className=" text-sm ">Initial:</label>
-                            <input
-                              type="text"
-                              value={upgradeFormData[section.field as keyof typeof upgradeFormData]}
-                              onChange={(e) => setUpgradeFormData(prev => ({ ...prev, [section.field]: e.target.value }))}
-                              className=" w-full max-w-[15rem] py-2 px-3 outline-none bg-[#222F46] border-b-2 border-[#445d88] text-white text-sm "
-                              required
-                            />
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Signature Section */}
-                      <div className=" border-t border-gray-500 pt-6 space-y-6 ">
-                        <h3 className=" text-[1.3rem] font-semibold ">Signatures</h3>
-
-                        <div className=" space-y-3 ">
-                          <h4 className=" font-semibold ">Copyright Owner</h4>
-                          <input
-                            type="text"
-                            placeholder="Full Name"
-                            value={upgradeFormData.copyrightOwnerName}
-                            onChange={(e) => setUpgradeFormData(prev => ({ ...prev, copyrightOwnerName: e.target.value }))}
-                            className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
-                            required
-                          />
-                          <input
-                            type="text"
-                            placeholder="Signature (Type your name)"
-                            value={upgradeFormData.copyrightOwnerSignature}
-                            onChange={(e) => setUpgradeFormData(prev => ({ ...prev, copyrightOwnerSignature: e.target.value }))}
-                            className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
-                            required
-                          />
-                          <input
-                            type="date"
-                            value={upgradeFormData.copyrightOwnerDate}
-                            onChange={(e) => setUpgradeFormData(prev => ({ ...prev, copyrightOwnerDate: e.target.value }))}
-                            className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white text-sm "
-                            required
-                          />
-                        </div>
-
-                        <div className=" space-y-3 ">
-                          <h4 className=" font-semibold ">Label Representative (if applicable)</h4>
-                          <input
-                            type="text"
-                            placeholder="Full Name (optional)"
-                            value={upgradeFormData.labelRepresentativeName}
-                            onChange={(e) => setUpgradeFormData(prev => ({ ...prev, labelRepresentativeName: e.target.value }))}
-                            className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
-                          />
-                          <input
-                            type="text"
-                            placeholder="Signature (optional)"
-                            value={upgradeFormData.labelRepresentativeSignature}
-                            onChange={(e) => setUpgradeFormData(prev => ({ ...prev, labelRepresentativeSignature: e.target.value }))}
-                            className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white placeholder:text-white/60 text-sm "
-                          />
-                          <input
-                            type="date"
-                            value={upgradeFormData.labelRepresentativeDate}
-                            onChange={(e) => setUpgradeFormData(prev => ({ ...prev, labelRepresentativeDate: e.target.value }))}
-                            className=" w-full py-2 px-3 outline-none bg-[#222F46] text-white text-sm "
-                          />
-                        </div>
-                      </div>
+                      {renderContractText()}
+                      {renderAgreementForm()}
 
                       {/* Submit Button */}
                       <div className=" sticky bottom-0 bg-[#0b1834] pt-4 border-t border-white/10 ">
@@ -1213,17 +1374,16 @@ const Page = () => {
 
             {albums.length > 0 ? (
               <div className=" mt-[4rem] grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 xl:grid-cols-4 gap-3 ">
-                {albums.map((album) => (
-                  <Link
-                    key={album._id}
-                    href={
-                      accountType === "buyer"
-                        ? `/albums/${album._id}`
-                        : `/dashboard/${userData._id}/albums/${album._id}`
-                    }
-                    className=" group block "
-                  >
-                    <div className=" w-full h-[17rem] relative overflow-hidden border border-white/10">
+                {albums.map((album: any) => (
+                  <div key={album._id} className=" group block border border-white/10 relative pb-[3rem]">
+                    <Link
+                      href={
+                        accountType === "buyer"
+                          ? `/albums/${album._id}`
+                          : `/dashboard/${userData._id}/albums/${album._id}`
+                      }
+                      className="block w-full h-[17rem] relative overflow-hidden"
+                    >
                       <Image
                         src={album.coverImg}
                         alt="Cover img"
@@ -1231,12 +1391,17 @@ const Page = () => {
                         className="group-hover:scale-110 transition-all duration-300 ease-in-out object-contain"
                       />
                       {accountType === "seller" ? (
-                        <div className=" absolute top-2 left-2 flex gap-2 ">
-                          <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
-                            Sales: {Number(album.salesCount || 0)}
+                        <div className=" absolute top-2 left-2 flex flex-col gap-1 ">
+                          <div className="flex gap-2">
+                            <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
+                              Sales: {Number(album.salesCount || 0)}
+                            </div>
+                            <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
+                              Rev: ${Number(album.totalRevenue || 0).toFixed(2)}
+                            </div>
                           </div>
-                          <div className=" text-xs bg-black/70 px-2 py-1 border border-white/10 ">
-                            Rev: ${Number(album.totalRevenue || 0).toFixed(2)}
+                          <div className={`text-xs px-2 py-1 border border-white/10 uppercase font-bold w-fit ${album.approvalStatus === 'approved' ? 'bg-green-600/80' : album.approvalStatus === 'rejected' ? 'bg-red-600/80' : 'bg-yellow-600/80'}`}>
+                            {album.approvalStatus || 'pending'}
                           </div>
                         </div>
                       ) : (
@@ -1246,18 +1411,26 @@ const Page = () => {
                           </div>
                         </div>
                       )}
-                    </div>
+                    </Link>
                     <div className=" bg-[#0b1834] p-3 ">
                       <div className=" text-[1.4rem] font-medium line-clamp-1 ">
                         {album.title}
                       </div>
-                      <div className=" mt-2 text-xs text-gray-200 ">
-                        {accountType === "buyer"
-                          ? "Click to view album"
-                          : "Click to manage album"}
-                      </div>
+
+                      {album.approvalStatus === 'rejected' && album.approvalReason ? (
+                        <div className="text-xs text-red-400 mt-1 line-clamp-1" title={album.approvalReason}>
+                          Reason: {album.approvalReason}
+                        </div>
+                      ) : (
+                        <div className=" mt-2 text-xs text-gray-200 ">
+                          {accountType === "buyer"
+                            ? "Click to view album"
+                            : "Click to manage album"}
+                        </div>
+                      )}
+
                       <div className=" mt-3 flex items-center gap-3 ">
-                        <div className=" relative w-[3.5rem] h-[3.5rem] rounded-full bg-blue-900 ">
+                        <div className=" relative w-[3.5rem] h-[3.5rem] rounded-full bg-blue-900 border border-white/20">
                           {userData.profileImg && (
                             <Image
                               src={userData.profileImg}
@@ -1270,7 +1443,14 @@ const Page = () => {
                         <div>{userData.name}</div>
                       </div>
                     </div>
-                  </Link>
+                    {album.approvalStatus === "rejected" && accountType === "seller" && (
+                      <div className="absolute bottom-0 left-0 w-full">
+                        <Link href={`/dashboard/${userData._id}/edit-album/${album._id}`} className="block w-full py-2 bg-red-600 hover:bg-red-500 text-white text-center text-sm font-semibold transition-colors">
+                          Fix & Resubmit Album
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 ))}
               </div>
             ) : (
@@ -1280,12 +1460,35 @@ const Page = () => {
                   : (
                     <div className=" text-gray-200 text-center h-[10rem] flex items-center justify-center flex-col gap-2 ">
                       <p>There are no album yet please add some albums</p>
-                      <Link
-                        href={`/dashboard/${userData._id}/add-album`}
-                        className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
-                      >
-                        Add Album
-                      </Link>
+                      {sellerApprovalStatus === "approved" ? (
+                        <Link
+                          href={`/dashboard/${userData._id}/add-album`}
+                          className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out w-[8rem] text-center py-2 "
+                        >
+                          Add Album
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            toast.error(
+                              "Your form is not approved. Please contact the admin.",
+                              {
+                                style: {
+                                  background: "red",
+                                  border: "none",
+                                  color: "white",
+                                },
+                              }
+                            );
+                          }}
+                          disabled
+                          className=" bg-second/40 text-[#000] transition-all duration-300 ease-in-out w-[8rem] text-center py-2 cursor-not-allowed opacity-70 "
+                          title="Not approved yet"
+                        >
+                          Add Album
+                        </button>
+                      )}
                     </div>
                   )}
               </div>
@@ -1419,78 +1622,10 @@ const Page = () => {
 
               {/* Contract sections */}
               <div className="space-y-5">
-                <h3 className="text-base font-bold text-[#66FCF1] uppercase tracking-wider">Artist's Original Music Consent &amp; Release Form</h3>
-                {([
-                  { title: "1. Grant of Authorization", content: "The Copyright Owner hereby grants Hallelujah Gospel Globally the non-exclusive, royalty-free, worldwide right to broadcast, stream, and distribute the submitted original music.", field: "initialGrantAuthorization" },
-                  { title: "2. Ownership and Copyright Representation", content: "The Copyright Owner affirms that the submitted recordings are original works or fully licensed by the undersigned.", field: "initialOwnershipRepresentation" },
-                  { title: "3. Ironclad Licensing Protection", content: "This agreement supersedes any claim from outside licensing organizations including BMI, ASCAP, SESAC, SoundExchange, RIAA.", field: "initialLicensingProtection" },
-                  { title: "4. Use by Affiliates and Partners", content: "Permission granted herein extends to all platforms owned, operated, or partnered with Hallelujah Gospel Globally.", field: "initialAffiliateUse" },
-                  { title: "5. Waiver of Compensation", content: "The undersigned agrees that no payment is due for use of the submitted content under this agreement.", field: "initialWaiverCompensation" },
-                  { title: "6. Warranties", content: "The undersigned warrants that they own and/or control 100% of the rights in the submitted materials.", field: "initialWarranties" },
-                  { title: "7. Indemnification", content: "The undersigned agrees to indemnify and hold harmless Hallelujah Gospel Globally from any claims, damages, or losses.", field: "initialIndemnification" },
-                  { title: "8. Publicity and Promotion Rights", content: "The undersigned grants Hallelujah Gospel Globally the right to use artist and song information for promotional purposes.", field: "initialPublicityPromotion" },
-                  { title: "9. Limitation of Liability", content: "Any liability under this agreement is strictly limited to $100 USD.", field: "initialLimitationLiability" },
-                  { title: "10. Arbitration and Venue", content: "Any disputes shall be resolved through binding arbitration in California.", field: "initialArbitrationVenue" },
-                  { title: "11. Governing Law", content: "This agreement shall be governed by the laws of the State of California.", field: "initialGoverningLaw" },
-                  { title: "12. Coverage of Full Works", content: "All tracks submitted via album, CD, or digital collection are covered under this agreement.", field: "initialCoverageFullWorks" },
-                  { title: "13. Song / Album Information", content: "Please provide details about your music catalog (Artist Name, Song Name, Album, Genre, Independent Label if any).", field: "initialEntireAgreement" },
-                ] as { title: string; content: string; field: keyof typeof resubmitFormData }[]).map((s, idx) => (
-                  <div key={idx} className="border-b border-white/[0.07] pb-4">
-                    <p className="text-sm font-semibold text-white mb-1">{s.title}</p>
-                    <p className="text-xs text-gray-400 mb-2 leading-relaxed">{s.content}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-gray-400 whitespace-nowrap">Initial:</span>
-                      <input
-                        type="text"
-                        value={resubmitFormData[s.field]}
-                        onChange={(e) => setResubmitFormData(prev => ({ ...prev, [s.field]: e.target.value }))}
-                        className="flex-1 max-w-[18rem] py-1.5 px-3 bg-white/5 border border-white/10 rounded text-sm text-white outline-none focus:border-[#66FCF1]/40 transition-all"
-                        placeholder="Your initials"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Signatures */}
-              <div className="space-y-4 border-t border-white/10 pt-4">
-                <h3 className="text-base font-bold text-[#66FCF1] uppercase tracking-wider">Signature of Copyright Owner</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { label: "Name (Print)", field: "copyrightOwnerName", type: "text" },
-                    { label: "Signature", field: "copyrightOwnerSignature", type: "text" },
-                    { label: "Date", field: "copyrightOwnerDate", type: "date" },
-                  ].map(({ label, field, type }) => (
-                    <div key={field}>
-                      <label className="text-xs text-gray-400 block mb-1">{label}</label>
-                      <input
-                        type={type}
-                        value={resubmitFormData[field as keyof typeof resubmitFormData]}
-                        onChange={(e) => setResubmitFormData(prev => ({ ...prev, [field]: e.target.value }))}
-                        className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded text-sm text-white outline-none focus:border-[#66FCF1]/40 transition-all"
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                <h3 className="text-base font-bold text-[#66FCF1] uppercase tracking-wider mt-4">Label Representative <span className="text-gray-400 text-xs font-normal">(if applicable)</span></h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    { label: "Name (Print)", field: "labelRepresentativeName", type: "text" },
-                    { label: "Signature", field: "labelRepresentativeSignature", type: "text" },
-                    { label: "Date", field: "labelRepresentativeDate", type: "date" },
-                  ].map(({ label, field, type }) => (
-                    <div key={field}>
-                      <label className="text-xs text-gray-400 block mb-1">{label}</label>
-                      <input
-                        type={type}
-                        value={resubmitFormData[field as keyof typeof resubmitFormData]}
-                        onChange={(e) => setResubmitFormData(prev => ({ ...prev, [field]: e.target.value }))}
-                        className="w-full py-2 px-3 bg-white/5 border border-white/10 rounded text-sm text-white outline-none focus:border-[#66FCF1]/40 transition-all"
-                      />
-                    </div>
-                  ))}
-                </div>
+                <h3 className="text-base font-bold text-[#66FCF1] uppercase tracking-wider">HGC RADIO – DIGITAL DISTRIBUTION & ARTIST AGREEMENT</h3>
+                <p className="text-sm text-gray-300 mb-4">Please complete the Artist Confirmation below to resubmit your agreement.</p>
+                {renderContractText()}
+                {renderAgreementForm()}
               </div>
             </div>
 

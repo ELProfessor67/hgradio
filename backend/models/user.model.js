@@ -78,6 +78,7 @@ const userSchema = new mongoose.Schema(
     digitalDistributionArtistName: { type: String, default: "" },
     digitalDistributionArtistSignature: { type: String, default: "" },
     digitalDistributionArtistDate: { type: Date },
+    digitalDistributionStageName: { type: String, default: "" },
     digitalDistributionRepName: { type: String, default: "" },
     digitalDistributionRepTitle: { type: String, default: "" },
     digitalDistributionRepSignature: { type: String, default: "" },
@@ -86,9 +87,12 @@ const userSchema = new mongoose.Schema(
     digitalDistributionSummaryName: { type: String, default: "" },
     digitalDistributionSummarySignature: { type: String, default: "" },
     digitalDistributionSummaryDate: { type: Date },
+    artistSignatureUrl: { type: String, default: "" },
   },
   { timestamps: true }
 );
+
+
 
 userSchema.pre("save", async function (next) {
   try {

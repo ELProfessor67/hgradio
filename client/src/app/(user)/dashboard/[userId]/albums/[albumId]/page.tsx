@@ -6,7 +6,7 @@ import { FetchLoading, PageLoading } from "@/utils/Loading";
 import { uploadFile, uploadVideo } from "@/utils/imageUpload";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -26,12 +26,15 @@ interface AlbumType {
   coverImg: string;
   salesCount?: number;
   totalRevenue?: number;
+  approvalStatus?: "pending" | "approved" | "rejected";
+  approvalReason?: string;
   songs: SongType[];
 }
 
-const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
+const Page = () => {
   const { userData } = useData();
   const router = useRouter();
+  const params = useParams();
   const [hasMounted, setHasMounted] = useState(false);
 
   const [loading, setLoading] = useState(false);
@@ -111,11 +114,11 @@ const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
   };
 
   const fetchAlbum = async () => {
-    if (!userData?.token) return;
+    if (!userData?.token || !params?.albumId || params.albumId === "undefined") return;
     setLoading(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/albums/${params.albumId}/owner`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/albums/${params?.albumId}/owner`,
         {
           method: "GET",
           headers: { Authorization: `Bearer ${userData.token}` },
@@ -258,7 +261,7 @@ const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
     if (!userData?.token) return;
     fetchAlbum();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userData?.token, params.albumId]);
+  }, [userData?.token, params?.albumId]);
 
   if (!hasMounted) return <PageLoading />;
 
@@ -287,10 +290,10 @@ const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
     <div className=" min-h-[100vh] ">
       <Breadcrum mainTitle="Manage Album" subTitle="Sales, revenue and editing" />
 
-      <div className=" max-w-[1500px] mx-auto py-5 px-3 text-white ">
+      <div className=" max-w-[1500px] mx-auto py-5 px-3 text-white bg-[#071126]">
         <div className=" flex items-center justify-between gap-3 ">
           <Link
-            href={`/dashboard/${params.userId}`}
+            href={`/dashboard/${params?.userId}`}
             className=" text-sm underline underline-offset-4 "
           >
             Back to Dashboard
@@ -305,24 +308,58 @@ const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
           </div>
         )}
 
+        {album?.approvalStatus === "rejected" && (
+          <div className="mt-4 bg-red-500/10 border border-red-500/30 rounded-xl p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-red-400 font-bold text-lg flex items-center gap-2">
+                ⚠️ Album Submission Rejected
+              </h3>
+              <p className="text-gray-300 text-sm mt-1">
+                Your album was not approved. <strong className="text-white">Reason:</strong> {album.approvalReason || "No specific reason provided."}
+              </p>
+            </div>
+            <Link
+              href={`/dashboard/${params?.userId}/edit-album/${params?.albumId}`}
+              className="px-6 py-2.5 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-colors whitespace-nowrap shadow-lg shadow-red-500/20"
+            >
+              Fix & Resubmit Contract
+            </Link>
+          </div>
+        )}
+
         {album && !loading && (
           <div className=" mt-4 grid grid-cols-1 lg:grid-cols-3 gap-4 ">
             <div className=" lg:col-span-1 bg-[#0b1834]/80 border border-white/10 p-4 ">
-              <div className=" w-full h-[18rem] relative overflow-hidden border border-white/10 object-contain ">
-                <Image
-                  src={album.coverImg}
-                  alt="Album cover"
-                  fill
-                  className=" object-contain "
-                />
+              <div className=" w-full h-[18rem] relative overflow-hidden rounded-xl border border-white/10 object-contain bg-black/40 ">
+                {album.coverImg ? (
+                  <Image
+                    src={album.coverImg}
+                    alt="Album cover"
+                    fill
+                    className=" object-contain "
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-500">No Cover</div>
+                )}
               </div>
 
-              <div className=" mt-3 text-[1.4rem] font-semibold ">
-                {album.title}
+              <div className=" mt-4 text-[1.6rem] font-bold tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-white to-gray-400 ">
+                {album.title || "Untitled Album"}
               </div>
-              <div className=" mt-1 text-sm text-gray-200 ">
+              <div className=" mt-1 text-sm text-[#66FCF1] font-medium ">
                 {album.releaseYear} • ${Number(album.price || 0).toFixed(2)}
               </div>
+
+              {album.approvalStatus && (
+                <div className="mt-3">
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider border ${album.approvalStatus === 'approved' ? 'bg-green-500/10 text-green-400 border-green-500/30' :
+                    album.approvalStatus === 'rejected' ? 'bg-red-500/10 text-red-400 border-red-500/30' :
+                      'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
+                    }`}>
+                    {album.approvalStatus}
+                  </span>
+                </div>
+              )}
 
               <div className=" mt-4 grid grid-cols-2 gap-2 ">
                 <div className=" bg-black/30 border border-white/10 p-3 ">
@@ -350,27 +387,36 @@ const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
                   Edit Album Details
                 </div>
 
-                <div className=" mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 ">
-                  <input
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    placeholder="Title"
-                    className=" w-full px-3 py-2 bg-transparent border border-white/20 outline-none text-white "
-                  />
-                  <input
-                    value={releaseYear}
-                    onChange={(e) => setReleaseYear(e.target.value)}
-                    placeholder="Release year"
-                    className=" w-full px-3 py-2 bg-transparent border border-white/20 outline-none text-white "
-                  />
-                  <input
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    placeholder="Price"
-                    className=" w-full px-3 py-2 bg-transparent border border-white/20 outline-none text-white "
-                  />
+                <div className=" mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 ">
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-400 uppercase tracking-widest pl-1">Title</label>
+                    <input
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      placeholder="Album Title"
+                      className=" w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg outline-none text-white focus:border-[#66FCF1]/50 transition-colors "
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-gray-400 uppercase tracking-widest pl-1">Release Year</label>
+                    <input
+                      value={releaseYear}
+                      onChange={(e) => setReleaseYear(e.target.value)}
+                      placeholder="e.g. 2024"
+                      className=" w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg outline-none text-white focus:border-[#66FCF1]/50 transition-colors "
+                    />
+                  </div>
+                  <div className="space-y-1 md:col-span-2">
+                    <label className="text-xs text-gray-400 uppercase tracking-widest pl-1">Price ($)</label>
+                    <input
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="0.00"
+                      className=" w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg outline-none text-white focus:border-[#66FCF1]/50 transition-colors "
+                    />
+                  </div>
                 </div>
-                <div className=" mt-3 border border-white/10 bg-black/20 p-3 ">
+                <div className=" mt-4 border border-white/10 bg-black/20 p-4 rounded-xl ">
                   <div className=" text-sm font-medium ">Cover Image</div>
                   <div className=" mt-2 flex flex-col md:flex-row md:items-center gap-3 ">
                     <input
@@ -390,26 +436,31 @@ const Page = ({ params }: { params: { userId: string; albumId: string } }) => {
                           : "No cover uploaded yet"}
                     </div>
                   </div>
-                  {coverImg && (
+                  {/* {coverImg && (
                     <div className=" mt-2 text-xs text-gray-200 break-all ">
                       {coverImg}
                     </div>
-                  )}
+                  )} */}
                 </div>
-                <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Description"
-                  className=" mt-3 w-full px-3 py-2 bg-transparent border border-white/20 outline-none text-white min-h-[8rem] "
-                />
+                <div className="mt-4 space-y-1">
+                  <label className="text-xs text-gray-400 uppercase tracking-widest pl-1">Description</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Write a captivating description..."
+                    className=" w-full px-4 py-3 bg-black/40 border border-white/10 rounded-lg outline-none text-white min-h-[8rem] focus:border-[#66FCF1]/50 transition-colors resize-none "
+                  />
+                </div>
 
-                <button
-                  onClick={saveAlbum}
-                  disabled={saving}
-                  className=" mt-3 bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out px-4 py-2 disabled:opacity-60 "
-                >
-                  {saving ? "Saving..." : "Save Changes"}
-                </button>
+                <div className="pt-2">
+                  <button
+                    onClick={saveAlbum}
+                    disabled={saving}
+                    className=" w-full sm:w-auto bg-gradient-to-r from-[#66FCF1] to-[#45a29e] hover:opacity-90 text-black font-bold transition-all duration-300 ease-in-out px-8 py-3 rounded-lg shadow-lg disabled:opacity-60 "
+                  >
+                    {saving ? "Saving Changes..." : "Save Details"}
+                  </button>
+                </div>
               </div>
 
               <div className=" bg-[#0b1834]/80 border border-white/10 p-4 ">

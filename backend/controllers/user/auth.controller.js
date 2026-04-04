@@ -580,6 +580,7 @@ export const requestUpgradeOtp = async (req, res) => {
     }
 
     const otp = generateSixDigitOtp();
+    console.log(otp)
     const otpHash = hashRegisterOtp({ email: normalizedEmail, otp });
     const expiresAt = new Date(Date.now() + REGISTER_OTP_TTL_MS);
 
@@ -673,6 +674,7 @@ export const upgradeToSeller = async (req, res) => {
       digitalDistributionArtistName,
       digitalDistributionArtistSignature,
       digitalDistributionArtistDate,
+      digitalDistributionStageName,
       digitalDistributionRepName,
       digitalDistributionRepTitle,
       digitalDistributionRepSignature,
@@ -681,6 +683,7 @@ export const upgradeToSeller = async (req, res) => {
       digitalDistributionSummaryName,
       digitalDistributionSummarySignature,
       digitalDistributionSummaryDate,
+      artistSignatureUrl,
     } = req.body || {};
 
     if (!userId || !otpToken) {
@@ -744,6 +747,7 @@ export const upgradeToSeller = async (req, res) => {
     user.digitalDistributionArtistName = digitalDistributionArtistName;
     user.digitalDistributionArtistSignature = digitalDistributionArtistSignature;
     user.digitalDistributionArtistDate = digitalDistributionArtistDate;
+    user.digitalDistributionStageName = digitalDistributionStageName;
     user.digitalDistributionRepName = digitalDistributionRepName;
     user.digitalDistributionRepTitle = digitalDistributionRepTitle;
     user.digitalDistributionRepSignature = digitalDistributionRepSignature;
@@ -752,6 +756,7 @@ export const upgradeToSeller = async (req, res) => {
     user.digitalDistributionSummaryName = digitalDistributionSummaryName;
     user.digitalDistributionSummarySignature = digitalDistributionSummarySignature;
     user.digitalDistributionSummaryDate = digitalDistributionSummaryDate;
+    user.artistSignatureUrl = artistSignatureUrl || "";
 
     await user.save();
 

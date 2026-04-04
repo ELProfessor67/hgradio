@@ -11,7 +11,7 @@ import { FaXmark } from "react-icons/fa6";
 import Image from "next/image";
 import { FaCloudUploadAlt, FaTrash } from "react-icons/fa";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 interface SongType {
   name: string;
@@ -242,12 +242,12 @@ const Page = () => {
 
         <div className="max-w-[1300px] mx-auto py-[2rem] px-3">
           <div className=" flex items-center justify-between ">
-            <h3 className=" text-[1.5rem] text-second ">Add Album</h3>
+            <h3 className=" text-[1.5rem] text-second ">Edit Album</h3>
             <Link
               href={`/dashboard/${userData._id}`}
               className=" bg-second text-[#000] hover:bg-second/90 transition-all duration-300 ease-in-out px-7 py-2 "
             >
-              Dashboards
+              Dashboard
             </Link>
           </div>
 
@@ -439,6 +439,52 @@ const Form = () => {
   const [loading, setLoading] = useState(false);
   const { userData } = useData();
   const router = useRouter();
+  const params = useParams();
+
+  useEffect(() => {
+    const fetchAlbum = async () => {
+      if (!userData?.token || !params?.albumId || params.albumId === "undefined") return;
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/albums/${params?.albumId}/owner`, {
+          headers: { Authorization: `Bearer ${userData.token}` }
+        });
+        const result = await response.json();
+        if (response.ok && result.album) {
+          const a = result.album;
+          setFormData({
+            title: a.title || "",
+            description: a.description || "",
+            coverImg: a.coverImg || "",
+            price: a.price || "",
+            releaseYear: a.releaseYear || "",
+            songs: a.songs || [],
+            genre: a.genre || "",
+            primaryLanguage: a.primaryLanguage || "",
+            ownershipConfirmation: a.ownershipConfirmation || "",
+            rightsAuthorizationDescription: a.rightsAuthorizationDescription || "",
+            confirmRights: Boolean(a.confirmRights),
+            confirmNoInfringement: Boolean(a.confirmNoInfringement),
+            confirmContributorsApproved: Boolean(a.confirmContributorsApproved),
+            grantLicense: Boolean(a.grantLicense),
+            acceptResponsibility: Boolean(a.acceptResponsibility),
+            understandRemovalPolicy: Boolean(a.understandRemovalPolicy),
+            indemnifyHGC: Boolean(a.indemnifyHGC),
+            agreeGoverningLaw: Boolean(a.agreeGoverningLaw),
+            agreeLegalCosts: Boolean(a.agreeLegalCosts),
+            confirmReadUnderstood: Boolean(a.confirmReadUnderstood),
+            signatureFullName: a.signatureFullName || "",
+            signatureTyped: a.signatureTyped || "",
+            signatureDate: a.signatureDate || "",
+          });
+          // To start, they should review agreement again on resubmit
+          // Setting step to 1 forces them to go through the agreement wrapper again for edit.
+        }
+      } catch (err) {
+        console.error("Failed to fetch album", err);
+      }
+    };
+    fetchAlbum();
+  }, [userData?.token, params?.albumId]);
 
   const accountType = (userData as any)?.accountType as
     | "buyer"
@@ -617,9 +663,9 @@ const Form = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/add-album`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/albums/${params?.albumId}`,
         {
-          method: "POST",
+          method: "PATCH",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userData.token}`,
@@ -642,7 +688,7 @@ const Form = () => {
         // throw new Error(result.message || "Something went wrong");
       }
 
-      toast.success("Album submitted! It is now pending admin approval.", {
+      toast.success("Album updated/resubmitted! It is now pending admin approval.", {
         style: {
           background: "green",
           border: "none",
@@ -680,7 +726,7 @@ const Form = () => {
       }, 2000);
 
     } catch (error: unknown) {
-      let message = "An error occurred while creating the album.";
+      let message = "An error occurred while updating the album.";
 
       if (error instanceof Error) {
         message = error.message;
@@ -693,7 +739,7 @@ const Form = () => {
           color: "white",
         },
       });
-      console.error("Error creating album:", error);
+      console.error("Error updating album:", error);
     } finally {
       setLoading(false);
     }
@@ -880,7 +926,7 @@ const Form = () => {
               className=" bg-second w-[10rem] h-[2.7rem] text-[#000] relative disabled:opacity-60 disabled:cursor-not-allowed "
             >
               {
-                loading ? <ButtonLoading /> : "Submit Album"
+                loading ? <ButtonLoading /> : "Update Album"
               }
             </button>
           </div>

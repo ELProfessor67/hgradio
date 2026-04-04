@@ -61,7 +61,24 @@ const StatusBadge = ({ status }: { status: string }) => {
   );
 };
 
-/* ─── Full Contract Popup ───────────────────────────────────────── */
+/* ─── Agreement Section (read-only view) ───────────────────────── */
+const AgreementSectionView = ({
+  num, title, body, bullets, footer,
+}: {
+  num: string; title: string; body?: string | null; bullets?: string[]; footer?: string;
+}) => (
+  <div className="space-y-3 border-b border-gray-700 pb-7 mb-6">
+    <h3 className="text-lg font-bold text-[#66FCF1]">{num}. {title}</h3>
+    {body && <p className="text-gray-300 text-sm">{body}</p>}
+    {bullets && (
+      <ul className="list-disc list-inside text-gray-300 space-y-1 pl-2 text-sm">
+        {bullets.map((b, i) => <li key={i}>{b}</li>)}
+      </ul>
+    )}
+    {footer && <p className="text-gray-400 text-xs mt-1">{footer}</p>}
+  </div>
+);
+
 const SellerFormModal = ({
   user,
   onClose,
@@ -94,7 +111,7 @@ const SellerFormModal = ({
         {/* ── Sticky header ── */}
         <div className="sticky top-0 z-10 bg-[#071126]/95 backdrop-blur border-b border-white/10 px-6 py-4 flex items-center justify-between rounded-t-xl">
           <div>
-            <p className="text-lg font-bold text-[#66FCF1]">Seller Application Form</p>
+            <p className="text-lg font-bold text-[#66FCF1]">Artist Registration — View Form</p>
             <p className="text-sm text-gray-400">{user?.name} — {user?.email}</p>
           </div>
           <div className="flex items-center gap-3">
@@ -139,20 +156,19 @@ const SellerFormModal = ({
           </div>
         </div>
 
-        <div className="px-6 py-6 space-y-0">
+        <div className="px-6 py-8">
 
-          {/* ── ACCOUNT INFO ── */}
+          {/* Account Info */}
           <Section title="Account Information">
             <div className="grid grid-cols-2 gap-3">
               <FormRow label="Full Name" value={user?.name} />
               <FormRow label="Email" value={user?.email} />
-              <FormRow label="Account Type" value={user?.accountType} />
-              <FormRow label="Approval Status" value={user?.sellerApprovalStatus} />
               <FormRow label="City" value={user?.city} />
               <FormRow label="State" value={user?.state} />
               <FormRow label="Country" value={user?.country} />
               <FormRow label="Zip Code" value={user?.zipCode} />
               <FormRow label="Registered On" value={user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"} />
+              <FormRow label="Approval Status" value={user?.sellerApprovalStatus} />
             </div>
             {user?.sellerApprovalStatus === "rejected" && user?.sellerApprovalReason && (
               <div className="mt-3 bg-red-500/10 border border-red-400/20 rounded-lg p-3">
@@ -162,196 +178,143 @@ const SellerFormModal = ({
             )}
           </Section>
 
-          {/* ── FORM 1: ARTIST'S ORIGINAL MUSIC CONSENT AND RELEASE ── */}
-          <Section title="Artist's Original Music Consent and Release Form">
-            <p className="text-sm text-gray-400 leading-relaxed">
-              The undersigned Artist, Band, Independent Label, Recording Company, or Copyright Holder ("Copyright Owner") hereby grants <strong className="text-white">Hallelujah Gospel Globally</strong>, a California Limited Liability Company, and its affiliates, licensees, successors, and assigns the following rights and protections:
+          {/* Agreement Title */}
+          <div className="text-center py-6 border-b border-gray-700 mb-8">
+            <h2 className="text-xl md:text-2xl font-extrabold text-[#66FCF1] uppercase tracking-wide">
+              HGC RADIO &ndash; DIGITAL DISTRIBUTION &amp; ARTIST AGREEMENT
+            </h2>
+            <div className="w-full border-t border-gray-600 mt-4" />
+          </div>
+
+          {/* Preamble */}
+          <div className="bg-[#0B1834] border border-white/10 rounded-lg p-5 space-y-3 text-gray-300 mb-8">
+            <p className="text-sm">
+              This Digital Distribution &amp; Artist Agreement is entered into by and between{" "}
+              <span className="text-white font-semibold">Hallelujah Gospel Globally (HGC Radio)</span>{" "}
+              (&ldquo;Company&rdquo;) and the registering artist (&ldquo;Artist&rdquo;), effective as of the date of submission.
             </p>
-
-            {/* Section 1 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">1. Grant of Authorization</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                The Copyright Owner hereby grants Hallelujah Gospel Globally the non-exclusive, royalty-free, worldwide right to broadcast, stream, distribute, and use excerpts of the work for promotional purposes.
-              </p>
-              <InitialBadge value={user?.initialGrantAuthorization} />
-            </div>
-
-            {/* Section 2 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">2. Ownership and Copyright Representation</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                The Copyright Owner affirms that the submitted recordings are original works or fully licensed, and all necessary rights have been secured.
-              </p>
-              <InitialBadge value={user?.initialOwnershipRepresentation} />
-            </div>
-
-            {/* Section 3 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">3. Ironclad Licensing Protection and Outside Interference</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                This agreement supersedes any claim from outside licensing organizations (BMI, ASCAP, SESAC, SoundExchange, RIAA, etc.). This clause is binding, irrevocable, and non-negotiable.
-              </p>
-              <InitialBadge value={user?.initialLicensingProtection} />
-            </div>
-
-            {/* Section 4 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">4. Use by Affiliates and Partners</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Permission extends to all platforms owned or partnered with Hallelujah Gospel Globally, including Hallelujah Gospel Choice Radio, website, mobile apps, live and virtual events.
-              </p>
-              <InitialBadge value={user?.initialAffiliateUse} />
-            </div>
-
-            {/* Section 5 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">5. Waiver of Compensation</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                The undersigned agrees that no payment is due for use of the submitted content under this agreement, including airplay, performance, mechanical, or synchronization royalties.
-              </p>
-              <InitialBadge value={user?.initialWaiverCompensation} />
-            </div>
-
-            {/* Section 6 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">6. Warranties</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                The undersigned warrants that they own 100% of rights in the submitted materials, are not bound by conflicting agreements, material is original, and no submission will trigger external claims.
-              </p>
-              <InitialBadge value={user?.initialWarranties} />
-            </div>
-
-            {/* Section 7 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">7. Indemnification</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                The undersigned agrees to indemnify and hold harmless Hallelujah Gospel Globally and its representatives from any claims, damages, or losses arising out of the submitted content.
-              </p>
-              <InitialBadge value={user?.initialIndemnification} />
-            </div>
-
-            {/* Section 8 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">8. Publicity and Promotion Rights</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                The undersigned grants Hallelujah Gospel Globally the right to use artist and song information — names, logos, bios, photos, album art, song/album titles and credits — for all promotional use.
-              </p>
-              <InitialBadge value={user?.initialPublicityPromotion} />
-            </div>
-
-            {/* Section 9 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">9. Limitation of Liability</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Any liability by either party under this agreement is strictly limited to <strong className="text-white">$100 USD</strong>. No party shall be liable for indirect or consequential damages.
-              </p>
-              <InitialBadge value={user?.initialLimitationLiability} />
-            </div>
-
-            {/* Section 10 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">10. Arbitration and Legal Venue</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Any disputes shall be resolved exclusively through binding arbitration in Contra Costa County, California, under the rules of the American Arbitration Association.
-              </p>
-              <InitialBadge value={user?.initialArbitrationVenue} />
-            </div>
-
-            {/* Section 11 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">11. Governing Law</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                This agreement is governed by the laws of the United States and the State of California.
-              </p>
-              <InitialBadge value={user?.initialGoverningLaw} />
-            </div>
-
-            {/* Section 12 */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">12. Coverage of Full Works</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                All tracks submitted via album, CD, or digital collection are covered under this agreement, including every track listed or embedded unless otherwise stated.
-              </p>
-              <InitialBadge value={user?.initialCoverageFullWorks} />
-            </div>
-
-            {/* Section 13 — Song/Album Info */}
-            <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">Song / Album Information</p>
-              <p className="text-xs text-gray-400">Artist Name · Song Name · Album · Genre · Independent Label (if any)</p>
-              <div className="bg-white/5 border border-white/10 rounded px-3 py-2 text-sm">
-                <Val value={user?.initialEntireAgreement} />
-              </div>
-            </div>
-
-            {/* Signature of Copyright Owner */}
-            <div className="mt-4 p-4 bg-white/[0.03] border border-white/10 rounded-lg space-y-3">
-              <p className="text-sm font-semibold text-white">Signature of Copyright Owner</p>
-              <div className="grid grid-cols-2 gap-3">
-                <FormRow label="Name (Print)" value={user?.copyrightOwnerName} />
-                <FormRow label="Signature" value={user?.copyrightOwnerSignature} />
-                <FormRow label="Date" value={user?.copyrightOwnerDate ? new Date(user.copyrightOwnerDate).toLocaleDateString() : user?.copyrightOwnerDate} />
-              </div>
-            </div>
-
-            {/* Label Representative */}
-            <div className="mt-2 p-4 bg-white/[0.03] border border-white/10 rounded-lg space-y-3">
-              <p className="text-sm font-semibold text-white">Label Representative <span className="font-normal text-gray-400">(if applicable)</span></p>
-              <div className="grid grid-cols-2 gap-3">
-                <FormRow label="Name (Print)" value={user?.labelRepresentativeName} />
-                <FormRow label="Signature" value={user?.labelRepresentativeSignature} />
-                <FormRow label="Date" value={user?.labelRepresentativeDate ? new Date(user.labelRepresentativeDate).toLocaleDateString() : user?.labelRepresentativeDate} />
-              </div>
-            </div>
-          </Section>
-
-          {/* ── FORM 2: DIGITAL MUSIC DISTRIBUTION AGREEMENT ── */}
-          <Section title="HGC Radio – Digital Music Distribution and Merchandise Agreement">
-            <p className="text-sm text-gray-400 leading-relaxed">
-              This Agreement is entered into by and between <strong className="text-white">Hallelujah Gospel Globally</strong>, operating as HGC Radio and Hallelujah Gospel Choice Radio ("Company"), and the Artist. The Company distributes, promotes, markets, broadcasts, and sells digital music and related merchandise worldwide to glorify God and advance Kingdom purposes.
+            <p className="text-[#66FCF1] font-medium text-sm">
+              By submitting content or registering, Artist agrees to be bound by the terms of this Agreement.
             </p>
+          </div>
 
-            {/* Digital Store Option */}
+          {/* Sections 1–4 */}
+          {[
+            { num: "1", title: "PURPOSE", body: "Company operates a faith-based digital music distribution, internet radio, and promotional platform. This Agreement governs the distribution, promotion, monetization, and related use of Artist's content for both ministry and commercial purposes." },
+            { num: "2", title: "NON-EXCLUSIVITY", body: "This Agreement is non-exclusive. Artist retains full ownership of their content and may distribute, license, or exploit it through other platforms or parties at their sole discretion." },
+            { num: "3", title: "REPRESENTATIONS & WARRANTIES", body: "Artist represents and warrants that:", bullets: ["Artist owns or controls 100% of all necessary rights, including master and composition rights (or has secured proper licenses).", "All content submitted is original or properly licensed.", "No content infringes upon any copyright, trademark, or third-party rights.", "All collaborators, producers, and contributors have been properly credited and compensated where required."], footer: "Artist agrees to provide documentation upon request." },
+            { num: "4", title: "LICENSE GRANT", body: "Artist grants Company a worldwide, non-exclusive, royalty-bearing license to:", bullets: ["Distribute, stream, reproduce, and publicly perform the content", "Promote, market, and advertise the content", "Sub-license content to third-party platforms (e.g., DSPs, streaming services)", "Use Artist's name, likeness, image, biography, and branding for promotional purposes"], footer: "This license remains in effect during the Term of this Agreement." },
+          ].map((s) => <AgreementSectionView key={s.num} {...s} />)}
+
+          {/* Section 5 Revenue Share */}
+          <div className="space-y-4 border-b border-gray-700 pb-7 mb-6">
+            <h3 className="text-lg font-bold text-[#66FCF1]">5. REVENUE SHARE</h3>
+            <div>
+              <h4 className="font-semibold text-white text-sm mb-1">5.1 Definitions</h4>
+              <ul className="list-disc list-inside text-gray-300 space-y-1 pl-2 text-sm">
+                <li><strong>Gross Revenue:</strong> All income derived from exploitation of Artist&apos;s content.</li>
+                <li><strong>Net Revenue:</strong> Gross Revenue minus third-party fees, commissions, platform costs, taxes, refunds, and chargebacks.</li>
+                <li><strong>Net Profit (Merchandise):</strong> Merchandise revenue minus production, manufacturing, shipping, transaction fees, taxes, returns, and related costs.</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white text-sm mb-1">5.2 Music Distribution Revenue</h4>
+              <p className="text-gray-300 text-sm">Artist shall receive <span className="text-[#66FCF1] font-bold">60%&ndash;70%</span> of Net Revenue generated from streaming, downloads, and licensing.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white text-sm mb-1">5.3 Merchandise Revenue (Optional)</h4>
+              <p className="text-gray-300 text-sm">Artist receives <span className="text-[#66FCF1] font-bold">35%</span> &middot; HGC Radio receives <span className="text-[#66FCF1] font-bold">65%</span> of Net Profit.</p>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white text-sm mb-1">5.4 Accounting &amp; Payments</h4>
+              <ul className="list-disc list-inside text-gray-300 space-y-1 pl-2 text-sm">
+                <li>Payments issued bi-annually (June 30 and December 31)</li>
+                <li>Minimum payout threshold: $100 USD</li>
+                <li>Balances below threshold carried forward</li>
+                <li>Statements available upon request</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Sections 6–14 */}
+          {[
+            { num: "6", title: "PROMOTION & BROADCAST RIGHTS", body: "Artist grants Company the right to broadcast content on radio, playlists, and digital channels and use content for promotional campaigns. No additional royalties shall be owed beyond the revenue share unless otherwise agreed in writing." },
+            { num: "7", title: "CONTENT STANDARDS & REMOVAL", body: "Company reserves the right to reject, remove, or suspend any content that violates platform policies, conflicts with faith-based values, or breaches legal or copyright regulations. Company may act without prior notice where necessary." },
+            { num: "8", title: "TERM & TERMINATION", bullets: ["This Agreement remains in effect until terminated by either party", "Either party may terminate with 30 days written notice", "Content removal may take up to 90 days due to third-party platform processing", "Sections relating to payments, liability, and legal obligations shall survive termination."] },
+            { num: "9", title: "PAYMENTS & TAXES", body: "Artist is responsible for all applicable taxes. Company may require tax documentation prior to payment. Payments may be withheld in cases of fraud, dispute, or policy violations." },
+            { num: "10", title: "LIABILITY & INDEMNIFICATION", body: "Artist agrees to indemnify, defend, and hold harmless Company, its affiliates, officers, and partners from any claims, damages, liabilities, or legal disputes arising from breach of this Agreement, copyright infringement, or unauthorized use of third-party content. Company shall not be liable for indirect, incidental, or consequential damages." },
+            { num: "11", title: "LIMITATION OF LIABILITY", body: "To the maximum extent permitted by law, Company's total liability shall not exceed the total amount paid to Artist under this Agreement in the preceding 12 months." },
+            { num: "12", title: "GOVERNING LAW & DISPUTES", body: "This Agreement shall be governed by the laws of the State of California, USA. Any disputes shall be resolved in the courts of Contra Costa County, California, unless otherwise agreed." },
+            { num: "13", title: "DIGITAL CONSENT & SIGNATURE", body: "By submitting this Agreement electronically, Artist:", bullets: ["Agrees this constitutes a legally binding electronic signature", "Confirms acceptance of all terms", "Acknowledges that digital submission is enforceable under applicable electronic signature laws"] },
+            { num: "14", title: "ENTIRE AGREEMENT", body: "This Agreement constitutes the entire understanding between the parties and supersedes all prior agreements or communications. Any amendments must be made in writing and agreed by both parties." },
+          ].map((s) => <AgreementSectionView key={s.num} {...s} />)}
+
+          {/* Artist Confirmation — read-only */}
+          <div className="bg-[#0B1834] border border-[#66FCF1]/30 rounded-lg p-6 space-y-6">
+            <h3 className="text-lg font-bold text-[#66FCF1] uppercase">Artist Confirmation</h3>
+
+            {/* Checkboxes — confirmed since user submitted */}
+            <div className="space-y-3">
+              {[
+                "I have read and agree to this Agreement",
+                "I confirm all information provided is accurate",
+                "I confirm I own or control all rights to submitted content",
+              ].map((label, i) => (
+                <div key={i} className="flex items-start gap-3 text-gray-200 text-sm">
+                  <div className="mt-0.5 w-4 h-4 bg-[#66FCF1]/20 border border-[#66FCF1]/50 rounded flex items-center justify-center flex-shrink-0">
+                    <FaCheckCircle size={10} className="text-[#66FCF1]" />
+                  </div>
+                  <span>{label}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Name / Signature fields — styled like the form */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wide">Full Name</span>
+                <div className="w-full py-2 px-4 bg-[#222F46] border-b-2 border-[#445d88] text-white text-sm min-h-[38px] flex items-center">
+                  {user?.digitalDistributionArtistName || <span className="italic text-gray-500">&mdash;</span>}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wide">Stage Name (Optional)</span>
+                <div className="w-full py-2 px-4 bg-[#222F46] border-b-2 border-[#445d88] text-white text-sm min-h-[38px] flex items-center">
+                  {user?.stageName || <span className="italic text-gray-500">&mdash;</span>}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wide">Signature (Typed Name)</span>
+                <div className="w-full py-2 px-4 bg-[#222F46] border-b-2 border-[#445d88] text-white text-sm min-h-[38px] flex items-center italic font-medium">
+                  {user?.digitalDistributionArtistSignature || user?.digitalDistributionSummarySignature || <span className="not-italic font-normal text-gray-500">&mdash;</span>}
+                </div>
+              </div>
+              <div className="space-y-1">
+                <span className="text-gray-400 text-xs uppercase tracking-wide">Date</span>
+                <div className="w-full py-2 px-4 bg-[#1a2540] border-b-2 border-[#445d88] text-gray-400 text-sm min-h-[38px] flex items-center">
+                  {user?.digitalDistributionArtistDate
+                    ? new Date(user.digitalDistributionArtistDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                    : user?.digitalDistributionSummaryDate
+                    ? new Date(user.digitalDistributionSummaryDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                    : "—"}
+                </div>
+              </div>
+            </div>
+
+            {/* Drawn signature from Cloudinary */}
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-white">Digital Store Distribution Option</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
-                Artist may authorize Company to distribute the Work to third-party digital stores and streaming platforms.
-              </p>
-              <InitialBadge value={user?.digitalDistributionDigitalStoreOption} />
+              <span className="text-gray-400 text-xs uppercase tracking-wide block">Drawn Signature</span>
+              {user?.artistSignatureUrl ? (
+                <div className="border border-white/20 rounded overflow-hidden bg-[#111827]">
+                  <img src={user.artistSignatureUrl} alt="Artist Signature" className="w-full max-h-[180px] object-contain" />
+                </div>
+              ) : (
+                <div className="border border-white/10 rounded bg-[#111827] h-[80px] flex items-center justify-center text-gray-500 text-sm italic">
+                  No drawn signature provided
+                </div>
+              )}
             </div>
-
-            {/* Signatures */}
-            <div className="mt-2 p-4 bg-white/[0.03] border border-white/10 rounded-lg space-y-3">
-              <p className="text-sm font-semibold text-white">Artist / Authorized Representative</p>
-              <div className="grid grid-cols-2 gap-3">
-                <FormRow label="Name of Artist" value={user?.digitalDistributionArtistName} />
-                <FormRow label="Signature" value={user?.digitalDistributionArtistSignature} />
-                <FormRow label="Date" value={user?.digitalDistributionArtistDate ? new Date(user.digitalDistributionArtistDate).toLocaleDateString() : user?.digitalDistributionArtistDate} />
-              </div>
-            </div>
-
-            <div className="mt-2 p-4 bg-white/[0.03] border border-white/10 rounded-lg space-y-3">
-              <p className="text-sm font-semibold text-white">Representative / Manager / Record Label <span className="font-normal text-gray-400">(if applicable)</span></p>
-              <div className="grid grid-cols-2 gap-3">
-                <FormRow label="Representative / Label Name" value={user?.digitalDistributionRepName} />
-                <FormRow label="Title / Relationship" value={user?.digitalDistributionRepTitle} />
-                <FormRow label="Signature" value={user?.digitalDistributionRepSignature} />
-                <FormRow label="Date" value={user?.digitalDistributionRepDate ? new Date(user.digitalDistributionRepDate).toLocaleDateString() : user?.digitalDistributionRepDate} />
-              </div>
-            </div>
-
-            {/* Faith-Based Summary */}
-            <div className="mt-2 p-4 bg-white/[0.03] border border-white/10 rounded-lg space-y-3">
-              <p className="text-sm font-semibold text-white">Faith-Based Artist-Friendly Summary — Artist Acknowledgment</p>
-              <p className="text-xs text-gray-400">I have read the summary and understand how HGC Radio will distribute, promote, and manage my music for Kingdom impact.</p>
-              <div className="grid grid-cols-2 gap-3">
-                <FormRow label="Name" value={user?.digitalDistributionSummaryName} />
-                <FormRow label="Signature" value={user?.digitalDistributionSummarySignature} />
-                <FormRow label="Date" value={user?.digitalDistributionSummaryDate ? new Date(user.digitalDistributionSummaryDate).toLocaleDateString() : user?.digitalDistributionSummaryDate} />
-              </div>
-            </div>
-          </Section>
+          </div>
 
         </div>
 

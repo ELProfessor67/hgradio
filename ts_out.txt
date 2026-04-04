@@ -1,0 +1,11 @@
+next.config.ts(4,3): error TS2353: Object literal may only specify known properties, and 'eslint' does not exist in type 'NextConfig'.
+src/app/(user)/payment/page.tsx(29,16): error TS18047: 'searchParams' is possibly 'null'.
+src/app/(user)/reset-password/[token]/page.tsx(9,11): error TS2339: Property 'token' does not exist on type 'Record<string, string | string[]> | null'.
+src/app/(user)/sponsor/page.tsx(516,99): error TS2339: Property 'address' does not exist on type '{ heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { ...; }'.
+  Property 'address' does not exist on type '{ heading: string; content: string; id: string; label: string; }'.
+src/app/(user)/sponsor/page.tsx(520,99): error TS2339: Property 'id' does not exist on type '{ heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { ...; }'.
+  Property 'id' does not exist on type '{ heading: string; content: string; address: string; label: string; }'.
+src/app/(user)/sponsor/page.tsx(528,100): error TS2339: Property 'address' does not exist on type '{ heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { ...; }'.
+  Property 'address' does not exist on type '{ heading: string; content: string; id: string; label: string; }'.
+src/app/(user)/sponsor/page.tsx(529,100): error TS2339: Property 'id' does not exist on type '{ heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { heading: string; content: string; id: string; label: string; } | { ...; }'.
+  Property 'id' does not exist on type '{ heading: string; content: string; address: string; label: string; }'.
