@@ -98,97 +98,24 @@ export const adminApproveSeller = async (req, res) => {
       await sendEmail({
         to: user.email,
         subject: "🎉 Your HGCRadio Seller Account Has Been Approved!",
-        html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Seller Account Approved</title>
-</head>
-<body style="margin:0;padding:0;background-color:#060f24;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#e2e8f0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#060f24;padding:40px 16px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#071126;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;">
+        html: `Dear ${artistName},
 
-          <!-- Header -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#071126 0%,#0b1c3a 100%);padding:36px 40px;text-align:center;border-bottom:1px solid rgba(102,252,241,0.2);">
-              <p style="margin:0;font-size:28px;font-weight:800;letter-spacing:2px;color:#66FCF1;">HGCRadio</p>
-              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Hallelujah Gospel Globally</p>
-            </td>
-          </tr>
+🎉 Congratulations!
 
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px 40px 32px;">
+We are pleased to inform you that your seller account on HGCRadio has been successfully reviewed and approved by our admin team.
 
-              <p style="margin:0 0 20px;font-size:22px;font-weight:700;color:#ffffff;">Dear ${artistName},</p>
+Your contract has been accepted, and your account is now fully activated. You can start adding and managing your albums right away.
 
-              <p style="margin:0 0 24px;font-size:18px;font-weight:600;color:#66FCF1;">🎉 Congratulations!</p>
+To get started, please visit your dashboard and navigate to your album page:
+${dashboardLink}
 
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                We are pleased to inform you that your seller account on <strong style="color:#ffffff;">HGCRadio</strong> has been successfully reviewed and <strong style="color:#4ade80;">approved</strong> by our admin team.
-              </p>
+We're excited to have you onboard and look forward to your contributions to the Kingdom through your music.
 
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                Your contract has been accepted, and your account is now <strong style="color:#ffffff;">fully activated</strong>. You can start adding and managing your albums right away.
-              </p>
+If you have any questions or need assistance, feel free to contact our support team at: support@hgcradio.org
 
-              <p style="margin:0 0 8px;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                To get started, please visit your dashboard and navigate to your album page:
-              </p>
-
-              <!-- CTA Button -->
-              <table cellpadding="0" cellspacing="0" style="margin:24px 0;">
-                <tr>
-                  <td style="border-radius:8px;background-color:#66FCF1;">
-                    <a href="${dashboardLink}" target="_blank"
-                       style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#060f24;text-decoration:none;border-radius:8px;letter-spacing:0.5px;">
-                      Go to My Dashboard →
-                    </a>
-                  </td>
-                </tr>
-              </table>
-
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                We're excited to have you onboard and look forward to your contributions to the Kingdom through your music.
-              </p>
-
-              <p style="margin:0;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                If you have any questions or need assistance, feel free to contact our support team at:<br/>
-                <a href="mailto:support@hgcradio.org" style="color:#66FCF1;font-weight:600;text-decoration:none;">support@hgcradio.org</a>
-              </p>
-            </td>
-          </tr>
-
-          <!-- Divider -->
-          <tr>
-            <td style="padding:0 40px;">
-              <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:0;" />
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding:24px 40px;text-align:center;">
-              <p style="margin:0 0 4px;font-size:13px;color:#64748b;">Best regards,</p>
-              <p style="margin:0;font-size:14px;font-weight:700;color:#94a3b8;">HGCRadio Team</p>
-              <p style="margin:8px 0 0;font-size:12px;color:#475569;">
-                <a href="https://hgcradio.org" style="color:#66FCF1;text-decoration:none;">hgcradio.org</a>
-                &nbsp;·&nbsp;
-                <a href="mailto:support@hgcradio.org" style="color:#66FCF1;text-decoration:none;">support@hgcradio.org</a>
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`,
+Best regards,
+HGCRadio Team
+hgcradio.org · support@hgcradio.org`,
       });
     } catch (e) {
       // Don't fail the approval if email fails
@@ -248,90 +175,24 @@ export const adminRejectSeller = async (req, res) => {
       await sendEmail({
         to: user.email,
         subject: "Update on Your HGCRadio Seller Account Application",
-        html: `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Seller Account Application Update</title>
-</head>
-<body style="margin:0;padding:0;background-color:#060f24;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;color:#e2e8f0;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#060f24;padding:40px 16px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#071126;border:1px solid rgba(255,255,255,0.08);border-radius:12px;overflow:hidden;">
+        html: `Dear ${artistName},
 
-          <!-- Header -->
-          <tr>
-            <td style="background:linear-gradient(135deg,#071126 0%,#0b1c3a 100%);padding:36px 40px;text-align:center;border-bottom:1px solid rgba(255,255,255,0.08);">
-              <p style="margin:0;font-size:28px;font-weight:800;letter-spacing:2px;color:#66FCF1;">HGCRadio</p>
-              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;letter-spacing:1px;text-transform:uppercase;">Hallelujah Gospel Globally</p>
-            </td>
-          </tr>
+Thank you for your interest in becoming a seller on HGCRadio.
 
-          <!-- Body -->
-          <tr>
-            <td style="padding:40px 40px 32px;">
+After careful review, we regret to inform you that your contract submission has not been approved at this time.
 
-              <p style="margin:0 0 20px;font-size:22px;font-weight:700;color:#ffffff;">Dear ${artistName},</p>
+Reason for Rejection:
+${cleanReason}
 
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                Thank you for your interest in becoming a seller on <strong style="color:#ffffff;">HGCRadio</strong>.
-              </p>
+We encourage you to review the feedback provided above and make the necessary updates if you wish to reapply.
 
-              <p style="margin:0 0 24px;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                After careful review, we regret to inform you that your contract submission has <strong style="color:#f87171;">not been approved</strong> at this time.
-              </p>
+If you have any questions or need further clarification, please don't hesitate to reach out to our support team at: support@hgcradio.org
 
-              <!-- Rejection Reason Box -->
-              <table cellpadding="0" cellspacing="0" width="100%" style="margin:0 0 24px;">
-                <tr>
-                  <td style="background-color:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:20px 24px;">
-                    <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#f87171;text-transform:uppercase;letter-spacing:1px;">Reason for Rejection</p>
-                    <p style="margin:0;font-size:15px;line-height:1.6;color:#e2e8f0;">${cleanReason}</p>
-                  </td>
-                </tr>
-              </table>
+Thank you for your understanding.
 
-              <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                We encourage you to review the feedback provided above and make the necessary updates if you wish to reapply.
-              </p>
-
-              <p style="margin:0;font-size:15px;line-height:1.7;color:#cbd5e1;">
-                If you have any questions or need further clarification, please don't hesitate to reach out to our support team at:<br/>
-                <a href="mailto:support@hgcradio.org" style="color:#66FCF1;font-weight:600;text-decoration:none;">support@hgcradio.org</a>
-              </p>
-            </td>
-          </tr>
-
-          <!-- Divider -->
-          <tr>
-            <td style="padding:0 40px;">
-              <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:0;" />
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding:24px 40px;text-align:center;">
-              <p style="margin:0 0 4px;font-size:13px;color:#64748b;">Thank you for your understanding.</p>
-              <p style="margin:4px 0 0;font-size:13px;color:#64748b;">Best regards,</p>
-              <p style="margin:4px 0 0;font-size:14px;font-weight:700;color:#94a3b8;">HGCRadio Team</p>
-              <p style="margin:8px 0 0;font-size:12px;color:#475569;">
-                <a href="https://hgcradio.org" style="color:#66FCF1;text-decoration:none;">hgcradio.org</a>
-                &nbsp;·&nbsp;
-                <a href="mailto:support@hgcradio.org" style="color:#66FCF1;text-decoration:none;">support@hgcradio.org</a>
-              </p>
-            </td>
-          </tr>
-
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`,
+Best regards,
+HGCRadio Team
+hgcradio.org · support@hgcradio.org`,
       });
     } catch (e) {
       console.error("Rejection email failed:", e?.message || e);
