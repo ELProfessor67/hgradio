@@ -99,7 +99,7 @@ const Page = () => {
           )}
 
           <div className="mt-[4rem] grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 xl:grid-cols-4 gap-3">
-            {albums.map((album, idx) => (
+            {albums.filter((al: any) => al?.approvalStatus == "approved").map((album, idx) => (
               <Link
                 href={`/albums/${album._id}`}
                 key={album._id}
