@@ -89,7 +89,7 @@ export const adminApproveAlbum = async (req, res) => {
         await sendEmail({
           to: album.artist.email,
           subject: "Your Album Has Been Approved",
-          html: `<p>Hello ${album.artist.name || ""},</p><p>Great news! Your album <strong>${album.title}</strong> has been approved and is now live.</p>`,
+          html: `Hello ${album.artist.name || ""},Great news! Your album ${album.title} has been approved and is now live.`,
         });
       }
     } catch (e) {
@@ -142,7 +142,7 @@ export const adminRejectAlbum = async (req, res) => {
         await sendEmail({
           to: album.artist.email,
           subject: "Your Album Submission Was Rejected",
-          html: `<p>Hello ${album.artist.name || ""},</p><p>Your album <strong>${album.title}</strong> has been rejected.</p><p><strong>Reason:</strong> ${cleanReason}</p><p>Please contact the admin for more information.</p>`,
+          html: `Hello ${album.artist.name || ""},Your album ${album.title} has been rejected. Reason: ${cleanReason} Please contact the admin for more information.`,
         });
       }
     } catch (e) {
