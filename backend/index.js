@@ -16,6 +16,7 @@ import SponsorRoutes from "./routes/public/sponsor.route.js";
 import publicAlbumRoutes from "./routes/public/album.route.js";
 import commentRoutes from "./routes/comment/comment.route.js";
 import userWithdrawRoutes from "./routes/user/withdraw.route.js";
+import playlistRoutes from "./routes/user/playlist.route.js";
 const app = express();
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use("/api/admin/notifications", adminNotificationRoutes);
 app.use("/api/user/auth", userAuthRoutes);
 app.use("/api/user/", userRoutes);
 app.use("/api/user/withdraw-requests", userWithdrawRoutes);
+app.use("/api/playlist", playlistRoutes);
 
 // New Added
 app.use("/api/contact", userContactRoutes);

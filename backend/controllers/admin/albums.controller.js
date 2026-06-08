@@ -1,6 +1,7 @@
 import Album from "../../models/album.model.js";
 import Notification from "../../models/notification.model.js";
 import { sendEmail } from "../../utils/util.js";
+import { syncAlbumToHGDJ } from "../../utils/hgdjSync.js";
 
 const parseStatus = (value) => {
   const s = String(value || "").toLowerCase();
@@ -82,6 +83,14 @@ export const adminApproveAlbum = async (req, res) => {
     album.approvalReason = "";
     album.approvedAt = new Date();
     await album.save();
+
+    // Sync album + songs to HGDJLive (fail-safe)
+    try {
+      const artistName = album.artist?.name || "";
+      await syncAlbumToHGDJ(album, artistName);
+    } catch (e) {
+      console.error("[adminApproveAlbum] HGDJLive sync failed:", e?.message || e);
+    }
 
     // Notify artist
     try {

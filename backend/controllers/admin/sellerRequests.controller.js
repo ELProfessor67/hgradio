@@ -1,6 +1,7 @@
 import User from "../../models/user.model.js";
 import Notification from "../../models/notification.model.js";
 import { sendEmail } from "../../utils/util.js";
+import { syncPlaylist } from "../../utils/hgdjSync.js";
 
 const parseStatus = (value) => {
   const s = String(value || "").toLowerCase();
@@ -90,6 +91,19 @@ export const adminApproveSeller = async (req, res) => {
     user.sellerReviewedAt = new Date();
     user.sellerReviewedBy = adminId;
     await user.save();
+
+    // Sync artist playlist to HGDJLive (fail-safe)
+    try {
+      await syncPlaylist({
+        _id:         String(user._id),
+        title:       user.name || "Artist",
+        description: `Playlist for artist: ${user.name || user.email}`,
+        artist:      user.name || "",
+        isTemp:      false,
+      });
+    } catch (e) {
+      console.error("[adminApproveSeller] HGDJLive playlist sync failed:", e?.message || e);
+    }
 
     // Notify seller via email
     try {
