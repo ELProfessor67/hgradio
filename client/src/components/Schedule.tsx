@@ -28,6 +28,7 @@ interface ScheduleEntry {
   endTime: string;
   timezone: string;
   days: string[];
+  eventName?: string;
 }
 
 type ScheduleData = Record<string, ScheduleEntry[]>;
@@ -236,13 +237,24 @@ const Schedule = () => {
                         alt="Schedule background"
                         className="object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-110"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent transition-opacity duration-300 flex flex-col justify-between p-4">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent transition-opacity duration-300 flex flex-col p-4">
                         <div>
-                          <h3 className="text-xl font-semibold">
+                          <h3 className="text-xl font-semibold drop-shadow-md">
                             {formatTime(show.startTime)} – {formatTime(show.endTime)}
                           </h3>
                         </div>
-                        <div className="flex items-center gap-4 text-white">
+                        
+                        <div className="flex-1 flex items-center justify-center z-10 px-2">
+                          {show.eventName && (
+                            <div className="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-lg shadow-xl transform transition-all duration-300 group-hover:scale-105 group-hover:bg-white/20">
+                              <h2 className="text-base md:text-lg font-bold text-center text-white drop-shadow-md tracking-wide line-clamp-2">
+                                {show.eventName}
+                              </h2>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-4 text-white mt-auto">
                           <Avatar
                             name={show.name}
                             profilePicUrl={show.profilePicUrl}

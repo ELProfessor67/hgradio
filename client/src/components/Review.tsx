@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 // import Slider from "react-slick";
 import Team2 from "@/assets/Team2.jpeg";
 import Team3 from "@/assets/Team3.jpg";
@@ -144,6 +144,34 @@ const Review = () => {
   //   prevArrow: <SamplePrevArrow />,
   // };
 
+  const [dynamicReviews, setDynamicReviews] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:7501'}/api/public/testimonials?page=${page}&limit=6`);
+        const data = await res.json();
+        if (res.ok) {
+          if (page === 1) {
+            setDynamicReviews(data.testimonials);
+          } else {
+            setDynamicReviews((prev) => [...prev, ...data.testimonials]);
+          }
+          setHasMore(data.hasMore);
+        }
+      } catch (err) {
+        console.error("Failed to fetch testimonials:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchReviews();
+  }, [page]);
+
   return (
     <div
       className="relative bg-cover bg-center bg-no-repeat overflow-hidden min-h-[50rem] py-[7rem]"
@@ -165,15 +193,32 @@ const Review = () => {
         </p>
       </div>
 
-      {/* slider-container */}
       <div className="max-w-[1500px] mx-auto px-3 overflow-hidden mt-[1rem] pb-[3rem] relative">
-        {/* <Slider {...settings}> */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {reviews.map((review, idx) => (
-            <ReviewCard key={idx} review={review} />
+            <ReviewCard key={`static-${idx}`} review={review} />
+          ))}
+          {dynamicReviews.map((review, idx) => (
+            <ReviewCard key={`dynamic-${review._id || idx}`} review={{
+              name: review.name,
+              designation: review.designation || "Listener",
+              message: review.message,
+              img: review.img || "https://ui-avatars.com/api/?name=" + encodeURIComponent(review.name) + "&background=random"
+            }} />
           ))}
         </div>
-        {/* </Slider> */}
+
+        {hasMore && (
+          <div className="flex justify-center mt-10">
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={loading}
+              className="bg-second text-black px-8 py-3 rounded-full font-bold text-lg hover:bg-second/80 transition-all disabled:opacity-50"
+            >
+              {loading ? "Loading..." : "Load More"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

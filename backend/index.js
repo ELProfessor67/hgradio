@@ -43,12 +43,16 @@ app.get("/", (req, res) => {
   });
 });
 
+import adminTestimonialRoutes from "./routes/admin/testimonial.route.js";
+import publicTestimonialRoutes from "./routes/public/testimonial.route.js";
+
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/withdraw", adminWithdrawRoutes);
 app.use("/api/admin/seller-requests", adminSellerRequestsRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
 app.use("/api/admin/albums", adminAlbumRoutes);
 app.use("/api/admin/notifications", adminNotificationRoutes);
+app.use("/api/admin/testimonials", adminTestimonialRoutes);
 app.use("/api/user/auth", userAuthRoutes);
 app.use("/api/user/", userRoutes);
 app.use("/api/user/withdraw-requests", userWithdrawRoutes);
@@ -59,6 +63,7 @@ app.use("/api/contact", userContactRoutes);
 app.use("/api/sponsor", SponsorRoutes);
 
 app.use("/api/public/album", publicAlbumRoutes)
+app.use("/api/public/testimonials", publicTestimonialRoutes)
 app.use("/api/comment", commentRoutes)
 
 const PORT = process.env.PORT || 7501;
