@@ -85,49 +85,21 @@ const Review = () => {
     designation: string;
     message: string;
   }[] = [
-    {
-      img: Team3,
-      name: "Aposite Gary L. Wyatt",
-      designation: "Music Artist",
-      message:
-        "Welcome, Our Lovely Listener, to a world of captivating melodies and engaging conversations. Join us for an enriching radio experience!",
-    },
-    {
-      img: Team2,
-      name: "Jon Harris and Voices",
-      designation: "Music Artist",
-      message:
-        "Dear Listener, Embrace the Joy of Music and Connection. Join Our Community for Inspiring Tunes and Meaningful Conversations.",
-    },
-    {
-      img: Review3,
-      name: "Kenny Andrews",
-      designation: "Music Artist",
-      message:
-        "Hello, Beloved Listener! Dive into a world of music and stories, where every tune resonates with your heart. Join us today!",
-    },
-    {
-      img: Team2,
-      name: "Jon Harris and Voices",
-      designation: "Music Artist",
-      message:
-        "Dear Listener, Embrace the Joy of Music and Connection. Join Our Community for Inspiring Tunes and Meaningful Conversations.",
-    },
-    {
-      img: "/greg.webp",
-      name: "Greg",
-      designation: "Kingdom Visionary",
-      message:
-        "Thank You, Jesus. You always show up. I give God all the glory — this vision was never meant for one person alone; it was designed for shared purpose and shared impact in the Kingdom of God. Hallelujah Gospel Globally is the main hub God is establishing for the Gospel to go forth into the world. This Gospel must be preached around the world. To anyone who has been given a vision or a dream from God: stand. Because what God has spoken, He will bring to pass. Your breakthrough is not just coming — it is already in motion.",
-    },
-    {
-      img: "/fuazia.jpeg",
-      name: "Faiza Noreen",
-      designation: "District Coordinator, Human Rights & Minority Affairs",
-      message:
-        "I have learned about the Lord Jesus Christ my entire life, and I believe in Him and love Him with my entire being. My husband Michael and I believe Jesus is calling us to the ministry of sharing His truth and His love with others. We desire to teach the Word of God to people — many who cannot read — and to share His love with the desperately poor.",
-    },
-  ];
+      {
+        img: "/greg.webp",
+        name: "Greg",
+        designation: "Kingdom Visionary",
+        message:
+          "Thank You, Jesus. You always show up. I give God all the glory — this vision was never meant for one person alone; it was designed for shared purpose and shared impact in the Kingdom of God. Hallelujah Gospel Globally is the main hub God is establishing for the Gospel to go forth into the world. This Gospel must be preached around the world. To anyone who has been given a vision or a dream from God: stand. Because what God has spoken, He will bring to pass. Your breakthrough is not just coming — it is already in motion.",
+      },
+      {
+        img: "/fuazia.jpeg",
+        name: "Faiza Noreen",
+        designation: "District Coordinator, Human Rights & Minority Affairs",
+        message:
+          "I have learned about the Lord Jesus Christ my entire life, and I believe in Him and love Him with my entire being. My husband Michael and I believe Jesus is calling us to the ministry of sharing His truth and His love with others. We desire to teach the Word of God to people — many who cannot read — and to share His love with the desperately poor.",
+      },
+    ];
 
   // const settings = {
   //   dots: true,
@@ -180,17 +152,20 @@ const Review = () => {
       }}
     >
       <div className="absolute inset-0 bg-black/50 z-0" />
-      <div className="relative z-10 text-center leading-tight mb-[2rem]">
+      <div className="relative z-10 text-center leading-tight mb-[2rem] flex flex-col items-center">
         <div className="text-[2rem] font-semibold text-second mb-2">
           What Our Lovely Listeners Say
         </div>
         <h2 className="text-[3rem] font-bold mb-6 text-[#fff]">Testimonials</h2>
-        <p className="text-[#fff] text-base md:text-lg text-center">
+        <p className="text-[#fff] text-base md:text-lg text-center mb-6">
           Share your testimonial at{" "}
-          <a className="underline" href="mailto:info@hgcradio.org">
-            admin@hgcradio.org
+          <a className="underline text-second hover:text-white transition-colors" href="mailto:info@hgcradio.org">
+            testify@hgcradio.org
           </a>
         </p>
+        <div className="flex justify-center w-full px-4">
+          <img src="/banner.png" alt="testify" className="object-contain w-full max-w-[500px] h-auto rounded-lg shadow-lg hover:scale-105 transition-transform duration-300" />
+        </div>
       </div>
 
       <div className="max-w-[1500px] mx-auto px-3 overflow-hidden mt-[1rem] pb-[3rem] relative">
