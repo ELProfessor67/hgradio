@@ -47,7 +47,7 @@ const Hero = () => {
           <div className=" text-[#19e234] font-semibold text-[1.1rem] md:text-[1.3rem] flex items-center hover:underline" style={{ marginBottom: "3rem" }}>
             Hallelujah Choice Radio Gospel Charting God&apos;s Enormous Blessings
             Below.
-            &#8594;
+            &#8595;
           </div>
         </Link>
 
