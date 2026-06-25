@@ -124,7 +124,7 @@ const Popup = () => {
             className={`fixed bottom-4 left-1/2 -translate-x-1/2 w-[95%] max-w-[900px] z-[9999] transition-all duration-1000 ease-out transform ${hide ? 'translate-y-[150%] opacity-0 pointer-events-none' : 'translate-y-0 opacity-100'
                 }`}
         >
-            <div className="relative flex flex-col md:flex-row w-full rounded-lg overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-[#D8B257]/40 bg-[#070D18]">
+            <div className="relative flex flex-col md:flex-row w-full rounded-lg overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.6)] border border-[#D8B257]/40 bg-[#070D18]/60 backdrop-blur-xl">
 
                 {/* Close Button */}
                 <button
@@ -156,11 +156,11 @@ const Popup = () => {
                 </div>
 
                 {/* Center Section */}
-                <div className="bg-gradient-to-b from-[#E2C37E] to-[#B08632] md:w-[260px] flex flex-col items-center justify-center p-4 md:p-6 relative z-10 border-l border-r border-black/30 shadow-2xl">
-                    <div className="text-black font-sans font-extrabold text-xl md:text-2xl mb-2 md:mb-3 tracking-wider uppercase">
+                <div className="bg-gradient-to-b from-[#E2C37E]/30 to-[#B08632]/30 backdrop-blur-xl md:w-[260px] flex flex-col items-center justify-center p-4 md:p-6 relative z-10 border-l border-r border-white/20 shadow-[0_8px_32px_rgba(226,195,126,0.2)]">
+                    <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-sans font-extrabold text-xl md:text-2xl mb-2 md:mb-3 tracking-wider uppercase">
                         {status === 'live' ? 'LIVE NOW!' : 'JOIN US!'}
                     </div>
-                    <div className="bg-[#070D18] w-full rounded-lg p-3 md:p-4 border border-white/10 flex flex-col items-center shadow-inner">
+                    <div className="bg-[#070D18]/60 backdrop-blur-md w-full rounded-lg p-3 md:p-4 border border-white/10 flex flex-col items-center shadow-inner">
                         <div className="flex gap-1.5 md:gap-2 mb-2 md:mb-3">
                             {displayDays.map((day, idx) => (
                                 <div key={idx} className="w-8 h-8 md:w-10 md:h-10 border-2 border-white rounded flex items-center justify-center text-white font-sans font-bold text-lg md:text-xl">
