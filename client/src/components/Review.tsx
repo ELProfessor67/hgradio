@@ -153,10 +153,10 @@ const Review = () => {
     >
       <div className="absolute inset-0 bg-black/50 z-0" />
       <div className="relative z-10 text-center leading-tight mb-[2rem] flex flex-col items-center">
-        <div className="text-[2rem] font-semibold text-second mb-2">
-          What Our Lovely Listeners Say
-        </div>
         <h2 className="text-[3rem] font-bold mb-6 text-[#fff]">Testimonials</h2>
+        <div className="text-[2rem] font-semibold text-second mb-2">
+          What Our Listeners Are Saying
+        </div>
         <p className="text-[#fff] text-base md:text-lg text-center mb-6">
           Share your testimonial at{" "}
           <a className="underline text-second hover:text-white transition-colors" href="mailto:info@hgcradio.org">
