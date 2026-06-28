@@ -139,10 +139,10 @@ const Popup = () => {
 
                 {/* Left Section */}
                 <div className="flex-1 p-4 md:p-6 flex flex-col justify-center border-b md:border-b-0 relative z-10">
-                    <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-serif font-bold tracking-tight mb-1 md:mb-2">
+                    <h2 className="text-white text-2xl md:text-3xl lg:text-4xl font-serif font-bold tracking-tight mb-1 md:mb-2 uppercase">
                         HALLELUJAH
                     </h2>
-                    <h2 className="text-[#D8B257] text-xl md:text-2xl lg:text-3xl font-sans font-bold tracking-widest mb-2 md:mb-4">
+                    <h2 className="text-[#D8B257] text-xl md:text-2xl lg:text-3xl font-serif font-bold tracking-widest mb-2 md:mb-4 uppercase">
                         GOSPEL GLOBALLY
                     </h2>
                     <div className="text-white text-sm md:text-base font-sans font-bold tracking-widest mb-2 md:mb-4 uppercase">
@@ -150,29 +150,29 @@ const Popup = () => {
                     </div>
                     {/* Glowing Line */}
                     <div className="h-[2px] w-[80%] bg-gradient-to-r from-[#D8B257] via-[#FFF3B0] to-transparent shadow-[0_0_12px_rgba(216,178,87,0.9)] mb-2 md:mb-4"></div>
-                    <div className="text-[#D8B257] italic text-sm md:text-lg font-serif">
+                    <div className="text-[#D8B257] text-sm md:text-lg font-sans uppercase">
                         Broadcasts That Uplift & Inspire
                     </div>
                 </div>
 
                 {/* Center Section */}
                 <div className="bg-gradient-to-b from-[#E2C37E]/30 to-[#B08632]/30 backdrop-blur-xl md:backdrop-blur-none md:w-[260px] flex flex-col items-center justify-center p-4 md:p-6 relative z-10 border-l border-r border-white/20 shadow-[0_8px_32px_rgba(226,195,126,0.2)]">
-                    <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-sans font-extrabold text-xl md:text-2xl mb-2 md:mb-3 tracking-wider uppercase">
+                    <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-serif font-extrabold text-xl md:text-2xl mb-2 md:mb-3 tracking-wider uppercase">
                         {status === 'live' ? 'LIVE NOW!' : 'JOIN US!'}
                     </div>
                     <div className="bg-[#070D18]/60 backdrop-blur-md md:backdrop-blur-none w-full rounded-lg p-3 md:p-4 border border-white/10 flex flex-col items-center shadow-inner">
                         <div className="flex gap-1.5 md:gap-2 mb-2 md:mb-3">
                             {displayDays.map((day, idx) => (
-                                <div key={idx} className="w-8 h-8 md:w-10 md:h-10 border-2 border-white rounded flex items-center justify-center text-white font-sans font-bold text-lg md:text-xl">
+                                <div key={idx} className="w-8 h-8 md:w-10 md:h-10 border-2 border-white rounded flex items-center justify-center text-white font-sans font-bold text-lg md:text-xl uppercase">
                                     {day}
                                 </div>
                             ))}
                         </div>
-                        <div className="text-white font-sans font-bold text-lg md:text-xl whitespace-nowrap mb-1 tracking-wide">
+                        <div className="text-white font-sans font-bold text-lg md:text-xl whitespace-nowrap mb-1 tracking-wide uppercase">
                             {utcToPacificAmPm(show.startTime)} – {utcToPacificAmPm(show.endTime)}
                         </div>
 
-                        <div className="text-white font-sans font-semibold text-xs md:text-sm tracking-widest">
+                        <div className="text-white font-sans font-semibold text-xs md:text-sm tracking-widest uppercase">
                             LOS ANGELES, CA
                         </div>
                     </div>
@@ -180,10 +180,10 @@ const Popup = () => {
 
                 {/* Right Section */}
                 <div className="flex-1 p-4 md:p-6 flex flex-col justify-center items-center text-center relative z-10">
-                    <div className="text-[#D8B257] font-sans font-bold text-xl md:text-2xl lg:text-3xl tracking-widest mb-1 uppercase">
+                    <div className="text-white text-2xl md:text-3xl lg:text-4xl font-serif font-bold tracking-tight mb-1 md:mb-2 uppercase">
                         {show.name.split(' ')[0]} {show.name.split(' ')[1] || ''}
                     </div>
-                    <div className="text-[#D8B257] font-serif italic text-2xl md:text-3xl lg:text-4xl mb-3 md:mb-4">
+                    <div className="text-[#D8B257] text-xl md:text-2xl lg:text-3xl font-serif font-bold tracking-widest mb-2 md:mb-4 uppercase">
                         {show.eventName || 'Special'}
                     </div>
                     <p className="text-white font-sans text-xs md:text-sm font-semibold tracking-widest mb-3 md:mb-4 max-w-[280px] leading-relaxed uppercase">

@@ -146,29 +146,29 @@ const Review = () => {
 
   return (
     <div
-      className="relative bg-cover bg-center bg-no-repeat overflow-hidden min-h-[50rem] py-[7rem]"
+      className="relative bg-cover bg-center bg-no-repeat overflow-hidden py-[3rem] md:py-[4rem]"
       style={{
         backgroundImage: `url(${Review1.src})`,
       }}
     >
       <div className="absolute inset-0 bg-black/50 z-0" />
-      <div className="relative z-10 text-center leading-tight mb-[2rem] flex flex-col items-center">
-        <h2 className="text-[3rem] font-bold mb-6 text-[#fff]">Testimonials</h2>
-        <div className="text-[2rem] font-semibold text-second mb-2">
+      <div className="relative z-10 text-center leading-tight mb-[1rem] flex flex-col items-center">
+        <h2 className="text-[2.5rem] md:text-[3rem] font-bold mb-2 md:mb-4 text-[#fff]">Testimonials</h2>
+        <div className="text-[1.5rem] md:text-[2rem] font-semibold text-second mb-2">
           What Our Listeners Are Saying
         </div>
-        <p className="text-[#fff] text-base md:text-lg text-center mb-6">
+        <p className="text-[#fff] text-base md:text-lg text-center mb-4">
           Share your testimonial at{" "}
           <a className="underline text-second hover:text-white transition-colors" href="mailto:info@hgcradio.org">
             testify@hgcradio.org
           </a>
         </p>
         <div className="flex justify-center w-full px-4">
-          <img src="/banner.png" alt="testify" className="object-contain w-full max-w-[500px] h-auto rounded-lg shadow-lg hover:scale-105 transition-transform duration-300" />
+          <img src="/banner.png" alt="testify" className="object-contain w-full max-w-[700px] h-auto rounded-lg shadow-lg hover:scale-105 transition-transform duration-300" />
         </div>
       </div>
 
-      <div className="max-w-[1500px] mx-auto px-3 overflow-hidden mt-[1rem] pb-[3rem] relative">
+      <div className="max-w-[1500px] mx-auto px-3 overflow-hidden mt-0 pb-[3rem] relative">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 items-start">
           {reviews.map((review, idx) => (
             <ReviewCard key={`static-${idx}`} review={review} />
