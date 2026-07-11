@@ -4,3 +4,4 @@ backend/node_modules
 
 frontend/.env.*
 backend/.env
+audio_stream

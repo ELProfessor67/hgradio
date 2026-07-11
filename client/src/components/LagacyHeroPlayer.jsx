@@ -16,6 +16,7 @@ import { IoPlayOutline } from "react-icons/io5";
 import { IoPauseOutline } from "react-icons/io5";
 import { IoChatboxEllipsesOutline } from "react-icons/io5";
 import { useRadio } from '@/context/RadioContext';
+import LiveBufferBar from '@/components/LiveBufferBar';
 
 
 
@@ -252,6 +253,12 @@ export default function App() {
 
 											</div>
 
+											<LiveBufferBar
+												isLive={isLive}
+												isPlay={isPlay}
+												roomActive={roomActive}
+												currentSong={currentSong}
+											/>
 
 										</div>
 
