@@ -19,6 +19,8 @@ export const LiveProvider = ({ children }) => {
     const [IsTonePlayingMessage, setIsTonePlayingMessage] = useState(null);
     // 'hd' | 'lo' — exposed so UI can show current auto-selected quality.
     const [audioQuality, setAudioQuality] = useState('hd');
+    // 'excellent' | 'good' | 'poor' | 'lost' | 'unknown' — this listener's network.
+    const [connectionQuality, setConnectionQuality] = useState('unknown');
 
     const isPlayRef = useRef(false);
     const desiredQualityRef = useRef('hd');
@@ -138,6 +140,8 @@ export const LiveProvider = ({ children }) => {
         roomRef.current.on(RoomEvent.ConnectionQualityChanged, (quality, participant) => {
             if (!participant?.isLocal) return;
 
+            setConnectionQuality(quality);
+
             const want =
                 (quality === ConnectionQuality.Poor || quality === ConnectionQuality.Lost)
                     ? 'lo'
@@ -181,7 +185,7 @@ export const LiveProvider = ({ children }) => {
     }, []);
 
     return (
-        <LiveContext.Provider value={{ isConnected, roomRef, isLive, setIsLive, roomActive, setRoomActive, isPlay, setIsPlay, IsTonePlayingMessage, setIsTonePlayingMessage, audioQuality }}>
+        <LiveContext.Provider value={{ isConnected, roomRef, isLive, setIsLive, roomActive, setRoomActive, isPlay, setIsPlay, IsTonePlayingMessage, setIsTonePlayingMessage, audioQuality, connectionQuality }}>
             {children}
         </LiveContext.Provider>
     )

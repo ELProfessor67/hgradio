@@ -17,6 +17,7 @@ import { IoPauseOutline } from "react-icons/io5";
 import { IoChatboxEllipsesOutline } from "react-icons/io5";
 import { useRadio } from '@/context/RadioContext';
 import LiveBufferBar from '@/components/LiveBufferBar';
+import SignalMeter from '@/components/SignalMeter';
 
 
 
@@ -238,6 +239,7 @@ export default function App() {
 														}
 													</button>
 													<button className=" text-xs border-none bg-none outline-none text-white disabled:cursor-[not-allowed]  cursor-pointer disabled:opacity-25 mr-2" disabled={!isLive} title="live chat" onClick={() => setChatOpen(true)}><IoChatboxEllipsesOutline size={35} /></button>
+													<SignalMeter className="ml-2" />
 												</div>
 												{/* <div className="md:w-[50%] w-full flex items-center">
 													<button className="text-gray-300 mr-3" onClick={() => volume === 0 ? setVolume(0.5) : setVolume(0)}>
