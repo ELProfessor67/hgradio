@@ -563,26 +563,7 @@ const Page = () => {
     }
   }, [userData?.token, accountType]);
 
-  useEffect(() => {
-    // Refresh user info (approval status etc.) when entering dashboard
-    const refreshMe = async () => {
-      if (!userData?._id) return;
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/me/${userData._id}`
-        );
-        const data = await res.json();
-        if (!res.ok || !data?.user?._id) return;
-        setUserData((prev) => ({
-          ...data.user,
-          token: prev.token,
-        }));
-      } catch {
-        // ignore
-      }
-    };
-    refreshMe();
-  }, [userData?._id, setUserData]);
+  // User/approval refresh is handled globally in FormProvider (Context.tsx)
 
   if (!hasMounted) return <PageLoading />;
 
