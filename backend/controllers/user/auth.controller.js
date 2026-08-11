@@ -413,20 +413,11 @@ export const getCurrentUser = async (req, res) => {
       return res.status(404).send({ error: "User not found" });
     }
 
-    const remainingDays = calculateRemainingPlanDays(user);
-
-    if (user.isPlanActive && remainingDays === 0) {
-      user.isPlanActive = false;
-      user.planDuration = 0;
-      await user.save();
-    }
-
-    const userObj = user.toObject();
-    userObj.remainingDays = remainingDays;
-
+    // Plan fields were removed from the user model; return the live user
+    // document so the client can refresh sellerApprovalStatus etc.
     return res.status(200).send({
       success: true,
-      user: userObj,
+      user: user.toObject(),
     });
   } catch (error) {
     return res.status(500).send({
