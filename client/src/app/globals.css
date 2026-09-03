@@ -482,3 +482,19 @@ input[type="range"]::-webkit-slider-thumb {
 .scrollbar-hide::-webkit-scrollbar-thumb:hover {
   background: #55555562;
 }
+/**
+ * Keep a focused form field clear of both the fixed site header and the
+ * on-screen keyboard when the browser scrolls it into view.
+ *
+ * The header is `fixed top-0` and roughly 5.5rem tall, so a field the browser
+ * scrolls to the top of the viewport ends up underneath it. The bottom margin
+ * gives the same breathing room above the keyboard on a phone, which is the
+ * client's "my keyboard blocks it... I should be able to bring it up a little
+ * higher so I can see what I'm typing".
+ */
+input,
+textarea,
+select {
+  scroll-margin-top: 7rem;
+  scroll-margin-bottom: 7rem;
+}

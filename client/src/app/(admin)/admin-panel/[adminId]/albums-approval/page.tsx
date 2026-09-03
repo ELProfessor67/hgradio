@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import { PageLoading } from "@/utils/Loading";
 import Image from "next/image";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
 import { FaCheckCircle, FaTimesCircle, FaEye, FaMusic, FaSearch, FaClock } from "react-icons/fa";
@@ -428,6 +430,11 @@ const AlbumsApprovalPage = () => {
   const [loading, setLoading] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const focusedRef = useRef<string | null>(null);
+
   const fetchAlbums = useCallback(async () => {
     if (!token) return;
     setLoading(true);
@@ -458,6 +465,33 @@ const AlbumsApprovalPage = () => {
   useEffect(() => {
     fetchAlbums();
   }, [fetchAlbums]);
+
+  /* Deep link from an admin notification: ?focus=<albumId> opens that album's
+     review modal directly, even when it is not on the current page of results. */
+  useEffect(() => {
+    const focusId = searchParams.get("focus");
+    if (!token || !focusId || focusedRef.current === focusId) return;
+    focusedRef.current = focusId;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/albums/${focusId}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Album not found");
+        setSelectedAlbum(data.album);
+      } catch (err: any) {
+        toast.error(err.message || "Could not open that album", {
+          style: { background: "red", color: "white", border: "none" },
+        });
+      } finally {
+        // drop the param so closing the modal does not reopen it
+        router.replace(pathname);
+      }
+    })();
+  }, [token, searchParams, router, pathname]);
 
   const handleStatusChange = (id: string, newStatus: ApprovalStatus) => {
     setAlbums((prev) =>
@@ -637,4 +671,11 @@ const AlbumsApprovalPage = () => {
   );
 };
 
-export default AlbumsApprovalPage;
+/* useSearchParams (for the ?focus deep link) needs a Suspense boundary */
+const AlbumsApprovalPageWrapper = () => (
+  <Suspense fallback={<PageLoading />}>
+    <AlbumsApprovalPage />
+  </Suspense>
+);
+
+export default AlbumsApprovalPageWrapper;

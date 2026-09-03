@@ -20,6 +20,20 @@ interface Contact {
 
 const LIMIT = 10;
 
+/* Submissions carry their kind as a prefix on the first line of the comment —
+   there is no type column, so the backend filters on that prefix. */
+type ContactType = "" | "testimony" | "prayer" | "greeting" | "guestbook" | "other";
+
+const TABS: { value: ContactType; label: string; key: string }[] = [
+  { value: "", label: "All", key: "all" },
+  { value: "testimony", label: "Testimonies", key: "testimony" },
+  { value: "prayer", label: "Prayer Requests", key: "prayer" },
+  { value: "greeting", label: "Greetings", key: "greeting" },
+  { value: "guestbook", label: "Guestbook", key: "guestbook" },
+  { value: "other", label: "Other", key: "other" },
+];
+
+
 const Page = () => {
   const { userData } = useData();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -33,6 +47,8 @@ const Page = () => {
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [type, setType] = useState<ContactType>("");
+  const [typeCounts, setTypeCounts] = useState<Record<string, number>>({});
 
   const fetchContacts = async () => {
     try {
@@ -42,7 +58,7 @@ const Page = () => {
           process.env.NEXT_PUBLIC_BACKEND_URL
         }/api/contact?search=${encodeURIComponent(
           debouncedSearchQuery
-        )}&page=${page}&limit=${LIMIT}`
+        )}&page=${page}&limit=${LIMIT}&type=${type}`
       );
 
       const data = await res.json();
@@ -51,6 +67,7 @@ const Page = () => {
 
       setContacts(data.data);
       setTotalPages(data.totalPages || 1);
+      setTypeCounts(data.typeCounts || {});
       setError("");
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
@@ -62,7 +79,8 @@ const Page = () => {
 
   useEffect(() => {
     fetchContacts();
-  }, [debouncedSearchQuery, page]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchQuery, page, type]);
 
   const handleDelete = async () => {
     try {
@@ -111,10 +129,32 @@ const Page = () => {
     <div>
       <h2 className="text-2xl font-semibold mb-4">Contact Messages</h2>
 
+      {/* Filter by submission kind */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        {TABS.map((t) => {
+          const count = typeCounts[t.key];
+          const active = type === t.value;
+          return (
+            <button
+              key={t.key}
+              onClick={() => { setType(t.value); setPage(1); }}
+              className={`px-3.5 py-1.5 text-sm font-medium border transition-all ${
+                active
+                  ? "bg-second/15 border-second/40 text-second"
+                  : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {t.label}
+              {count !== undefined ? ` (${count})` : ""}
+            </button>
+          );
+        })}
+      </div>
+
       <div className="mb-4 relative w-full md:w-[40%]">
         <input
           type="text"
-          placeholder="Search by email..."
+          placeholder="Search name, email or message..."
           className="w-full pl-4 pr-10 py-2  bg-[#25233bb4] outline-none"
           value={searchQuery}
           onChange={(e) => {

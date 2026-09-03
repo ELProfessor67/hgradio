@@ -3,55 +3,17 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { IoNotificationsSharp, IoCheckmarkDoneSharp } from "react-icons/io5";
 import { BsLayoutSidebar } from "react-icons/bs";
-import { FaCheckCircle, FaTimesCircle, FaFileContract, FaBell } from "react-icons/fa";
-import { MdOutlineLibraryMusic } from "react-icons/md";
-import { IoTrashSharp } from "react-icons/io5";
 import { useData } from "@/context/Context";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-
-/* ─── Types ────────────────────────────────────────────────────── */
-type NotifType =
-  | "album_approved"
-  | "album_rejected"
-  | "seller_approved"
-  | "seller_rejected"
-  | "contract_approved"
-  | "contract_rejected"
-  | "general";
-
-interface Notification {
-  _id: string;
-  type: NotifType;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-}
-
-/* ─── Helpers ──────────────────────────────────────────────────── */
-const isApproved = (type: NotifType) =>
-  ["album_approved", "seller_approved", "contract_approved"].includes(type);
-
-const typeIcon: Record<NotifType, React.ReactNode> = {
-  album_approved: <MdOutlineLibraryMusic size={14} />,
-  album_rejected: <MdOutlineLibraryMusic size={14} />,
-  seller_approved: <FaCheckCircle size={13} />,
-  seller_rejected: <FaTimesCircle size={13} />,
-  contract_approved: <FaFileContract size={13} />,
-  contract_rejected: <FaFileContract size={13} />,
-  general: <FaBell size={13} />,
-};
-
-const timeAgo = (dateStr: string) => {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  return `${Math.floor(h / 24)}d ago`;
-};
+import { useParams, useRouter } from "next/navigation";
+import {
+  AdminNotification,
+  needsReview,
+  notifIcon,
+  notifTone,
+  reviewLink,
+  timeAgo,
+} from "@/utils/adminNotifications";
 
 /* ─── TopBar Props ─────────────────────────────────────────────── */
 interface TopbarProps {
@@ -64,11 +26,13 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
   const { userData } = useData();
   const token = (userData as any)?.token as string;
   const params = useParams();
+  const router = useRouter();
   const adminId = params?.adminId as string;
 
   const [open, setOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
   const [loadingNotifs, setLoadingNotifs] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -85,6 +49,7 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
       const data = await res.json();
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount ?? 0);
+      setPendingCount(data.pendingCount ?? 0);
     } catch { /* silent */ }
   }, [token]);
 
@@ -140,6 +105,16 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
     } catch { /* silent */ }
   };
 
+  /* open the submission a notification points at, straight into its review modal */
+  const handleNotifClick = (n: AdminNotification) => {
+    if (!n.isRead) markRead(n._id);
+    const href = reviewLink(n, adminId);
+    if (href) {
+      setOpen(false);
+      router.push(href);
+    }
+  };
+
   return (
     <div
       className={`${isOpenSidebar ? "pl-4 xl:pl-[40px]" : "xl:pl-[340px]"} fixed top-0 left-0 z-50 bg-[#071126] h-[70px] pr-5 xl:pr-10 flex items-center justify-between border-b border-[#0c434d] w-full transition-all duration-300 ease-in-out text-second`}
@@ -164,7 +139,11 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
             id="admin-notification-bell"
             onClick={handleBellClick}
             className="relative cursor-pointer group"
-            aria-label="Notifications"
+            aria-label={
+              pendingCount > 0
+                ? `Notifications, ${pendingCount} awaiting review`
+                : "Notifications"
+            }
           >
             <IoNotificationsSharp
               className={`text-[1.5rem] transition-colors ${open ? "text-[#66FCF1]" : "text-[#8ea0a8] group-hover:text-[#66FCF1]"}`}
@@ -201,6 +180,20 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
                 )}
               </div>
 
+              {/* Awaiting-review summary */}
+              {pendingCount > 0 && (
+                <Link
+                  href={adminId ? `/admin-panel/${adminId}/notifications?view=pending` : "#"}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between px-4 py-2 bg-amber-500/10 border-b border-amber-400/20 text-amber-300 text-xs font-medium hover:bg-amber-500/15 transition-colors"
+                >
+                  <span>
+                    {pendingCount} submission{pendingCount === 1 ? "" : "s"} awaiting your review
+                  </span>
+                  <span>→</span>
+                </Link>
+              )}
+
               {/* Notification list */}
               <div className="max-h-[320px] overflow-y-auto divide-y divide-white/5">
                 {loadingNotifs ? (
@@ -215,36 +208,27 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
                   </div>
                 ) : (
                   notifications.map((n) => {
-                    const approved = isApproved(n.type);
+                    const tone = notifTone(n.type);
+                    const actionable = needsReview(n);
                     return (
                       <div
                         key={n._id}
-                        onClick={() => { if (!n.isRead) markRead(n._id); }}
+                        onClick={() => handleNotifClick(n)}
                         className={`flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-white/5 transition-colors ${
                           !n.isRead ? "bg-white/[0.035]" : ""
                         }`}
                       >
                         {/* Icon */}
                         <div
-                          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                            approved
-                              ? "bg-green-500/15 text-green-300"
-                              : n.type === "general"
-                              ? "bg-[#66FCF1]/10 text-[#66FCF1]"
-                              : "bg-red-500/15 text-red-300"
-                          }`}
+                          className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm ${tone.bubble}`}
                         >
-                          {typeIcon[n.type] || typeIcon.general}
+                          {notifIcon(n.type, 13)}
                         </div>
 
                         {/* Text */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span
-                              className={`text-xs font-bold ${approved ? "text-green-400" : n.type === "general" ? "text-[#66FCF1]" : "text-red-400"}`}
-                            >
-                              {approved ? "✔" : n.type === "general" ? "●" : "✕"}
-                            </span>
+                            <span className={`text-xs font-bold ${tone.text}`}>{tone.mark}</span>
                             <span className={`text-xs font-semibold truncate ${n.isRead ? "text-gray-300" : "text-white"}`}>
                               {n.title}
                             </span>
@@ -253,7 +237,12 @@ const TopBar = ({ isOpenSidebar, setIsOpenSidebar }: TopbarProps) => {
                           {n.message && (
                             <p className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">{n.message}</p>
                           )}
-                          <p className="text-[10px] text-gray-600 mt-0.5">{timeAgo(n.createdAt)}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <p className="text-[10px] text-gray-600">{timeAgo(n.createdAt)}</p>
+                            {actionable && (
+                              <span className="text-[10px] font-semibold text-amber-300">Review →</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

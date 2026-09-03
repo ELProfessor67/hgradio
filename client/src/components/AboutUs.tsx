@@ -130,7 +130,7 @@ export const Stats = () => {
       <div className=" max-w-[1300px] mx-auto px-3 flex items-center md:flex-row flex-col md:gap-0 gap-5 ">
         <div className=" md:w-[40%] space-y-3 ">
           <h2 className=" md:text-[2.5rem] text-[2rem] lg:text-[3rem] md:text-left text-center font-semibold leading-tight ">
-           <span className="text-green-400">Vision:</span> Serving Over 2.6 Billion People One Faith, One Future.
+           <span className="text-green-400">Vision:</span> Reaching Over 2.6 Billion People One Faith, One Future.
           </h2>
           <p className=" text-gray-300 md:text-left text-center ">
             We're leading a global outreach powered by faith and vision impacting lives

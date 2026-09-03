@@ -11,6 +11,9 @@ import adminSellerRequestsRoutes from "./routes/admin/sellerRequests.route.js";
 import adminAnalyticsRoutes from "./routes/admin/analytics.route.js";
 import adminAlbumRoutes from "./routes/admin/albums.route.js";
 import adminNotificationRoutes from "./routes/admin/notifications.route.js";
+import adminLoveGiftRoutes from "./routes/admin/loveGifts.route.js";
+import adminPayoutRoutes from "./routes/admin/payouts.route.js";
+import loveGiftRoutes from "./routes/public/loveGift.route.js";
 import userContactRoutes from "./routes/public/contact.route.js";
 import SponsorRoutes from "./routes/public/sponsor.route.js";
 import publicAlbumRoutes from "./routes/public/album.route.js";
@@ -52,6 +55,8 @@ app.use("/api/admin/seller-requests", adminSellerRequestsRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
 app.use("/api/admin/albums", adminAlbumRoutes);
 app.use("/api/admin/notifications", adminNotificationRoutes);
+app.use("/api/admin/love-gifts", adminLoveGiftRoutes);
+app.use("/api/admin/payouts", adminPayoutRoutes);
 app.use("/api/admin/testimonials", adminTestimonialRoutes);
 app.use("/api/user/auth", userAuthRoutes);
 app.use("/api/user/", userRoutes);
@@ -61,6 +66,7 @@ app.use("/api/playlist", playlistRoutes);
 // New Added
 app.use("/api/contact", userContactRoutes);
 app.use("/api/sponsor", SponsorRoutes);
+app.use("/api/love-gift", loveGiftRoutes);
 
 app.use("/api/public/album", publicAlbumRoutes)
 app.use("/api/public/testimonials", publicTestimonialRoutes)

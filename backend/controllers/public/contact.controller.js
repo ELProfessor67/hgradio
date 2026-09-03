@@ -16,18 +16,81 @@ export const createContact = async (req, res) => {
 };
 
 
+/*
+  Submissions carry their kind as a prefix on the first line of `comment` —
+  the app and the website guestbook both write it. There is no type column, so
+  filtering means matching that prefix.
+
+  `^` anchors to the start so a testimony that merely mentions the word "prayer"
+  in its body is not mistaken for a prayer request.
+*/
+// Regex literals, not strings — the brackets must stay escaped or "[TESTIMONY]"
+// is read as a character class and matches almost nothing.
+const TYPE_PREFIX = {
+  testimony: /^\[TESTIMONY\]/,
+  prayer: /^\[PRAYER REQUEST\]/,
+  greeting: /^\[GREETING \/ SHOUT-OUT\]/,
+  guestbook: /^Guestbook Submission/,
+};
+
+const ANY_TAGGED = /^\[TESTIMONY\]|^\[PRAYER REQUEST\]|^\[GREETING \/ SHOUT-OUT\]|^Guestbook Submission/;
+
+// Anything that is not one of the tagged kinds above
+const UNTAGGED = { comment: { $not: ANY_TAGGED } };
+
 export const getAllContact = async (req, res) => {
   try {
     const search = req.query.search || "";
+    const type = String(req.query.type || "");
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const filter = {
-      email: { $regex: search, $options: "i" },
-    };
+    const filter = {};
 
-    const total = await Contact.countDocuments(filter);
+    if (TYPE_PREFIX[type]) {
+      filter.comment = { $regex: TYPE_PREFIX[type] };
+    } else if (type === "other") {
+      Object.assign(filter, UNTAGGED);
+    }
+
+    // Search across sender and message, not email alone — the message is where
+    // the useful text lives, and it was previously unsearchable.
+    if (search) {
+      filter.$or = [
+        { email: { $regex: search, $options: "i" } },
+        { firstName: { $regex: search, $options: "i" } },
+        { lastName: { $regex: search, $options: "i" } },
+        { comment: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Per-type counts so the admin tabs can show how many of each there are
+    const countFor = (t) =>
+      Contact.countDocuments(
+        t === "other" ? UNTAGGED : { comment: { $regex: TYPE_PREFIX[t] } }
+      );
+
+    const [total, counts] = await Promise.all([
+      Contact.countDocuments(filter),
+      Promise.all([
+        countFor("testimony"),
+        countFor("prayer"),
+        countFor("greeting"),
+        countFor("guestbook"),
+        countFor("other"),
+        Contact.countDocuments({}),
+      ]),
+    ]);
+
+    const typeCounts = {
+      testimony: counts[0],
+      prayer: counts[1],
+      greeting: counts[2],
+      guestbook: counts[3],
+      other: counts[4],
+      all: counts[5],
+    };
     const contact = await Contact.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -38,6 +101,7 @@ export const getAllContact = async (req, res) => {
       total,
       page,
       totalPages: Math.ceil(total / limit),
+      typeCounts,
     });
   } catch (err) {
     res.status(500).json({ message: "Failed to get contacts" });

@@ -13,7 +13,7 @@ import { HiUsers } from "react-icons/hi2";
 import { FiSettings } from "react-icons/fi";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
-import { FaMoneyBillWave, FaCommentDots } from "react-icons/fa";
+import { FaMoneyBillWave, FaCommentDots, FaGift, FaMoneyCheckAlt } from "react-icons/fa";
 import { MdOutlineLibraryMusic } from "react-icons/md";
 import { IoNotificationsSharp } from "react-icons/io5";
 
@@ -55,6 +55,16 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
     //   icon: <LuBookOpen />,
     //   path: `/admin-panel/${id}/sponsor-list`,
     // },
+    {
+      name: "Love Gifts",
+      icon: <FaGift />,
+      path: `/admin-panel/${id}/love-gifts`,
+    },
+    {
+      name: "Artist Payouts",
+      icon: <FaMoneyCheckAlt />,
+      path: `/admin-panel/${id}/payouts`,
+    },
     {
       name: "Widthraw Requests",
       icon: <FaMoneyBillWave />,

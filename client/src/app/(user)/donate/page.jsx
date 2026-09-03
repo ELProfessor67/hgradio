@@ -1,9 +1,9 @@
 "use client";
 import Breadcrum from '@/components/Breadcrum'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ButtonLoading } from '@/utils/Loading'
-import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle, FaMoneyCheck, FaEnvelope, FaShieldAlt } from 'react-icons/fa'
+import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle, FaMoneyCheck, FaEnvelope, FaShieldAlt, FaHandHoldingHeart } from 'react-icons/fa'
 
 
 const methodsContent = {
@@ -49,7 +49,31 @@ const page = () => {
         expiryYear: "",
         cvv: "",
         comment: "",
+        recipientType: "station",
+        artistId: "",
     })
+
+    const [artists, setArtists] = useState([])
+    const [artistsLoading, setArtistsLoading] = useState(false)
+
+    // Only approved artists are offered; the server re-checks the choice on submit
+    useEffect(() => {
+        let cancelled = false
+        const loadArtists = async () => {
+            setArtistsLoading(true)
+            try {
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/love-gift/artists`)
+                const data = await res.json()
+                if (!cancelled && res.ok) setArtists(data.artists || [])
+            } catch {
+                if (!cancelled) setArtists([])
+            } finally {
+                if (!cancelled) setArtistsLoading(false)
+            }
+        }
+        loadArtists()
+        return () => { cancelled = true }
+    }, [])
 
     const years = useMemo(() => {
         const current = new Date().getFullYear()
@@ -74,6 +98,7 @@ const page = () => {
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "Valid email is required"
         const amountNum = Number(form.amount)
         if (!amountNum || amountNum <= 0) return "Enter a valid amount"
+        if (form.recipientType === "artist" && !form.artistId) return "Choose the artist this gift is for"
         if (!/^\d{13,19}$/.test(form.cardNumber.replace(/\s+/g, ""))) return "Enter a valid card number"
         if (!/^\d{2}$/.test(form.expiryMonth) || Number(form.expiryMonth) < 1 || Number(form.expiryMonth) > 12) return "Enter valid expiry month"
         if (!/^\d{4}$/.test(form.expiryYear)) return "Enter valid expiry year"
@@ -90,7 +115,7 @@ const page = () => {
         }
         setLoading(true)
         try {
-            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contact/process-payment`, {
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/love-gift/process-payment`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -103,6 +128,8 @@ const page = () => {
                     expiryYear: form.expiryYear,
                     cvv: form.cvv,
                     comment: form.comment,
+                    recipientType: form.recipientType,
+                    artistId: form.recipientType === 'artist' ? form.artistId : undefined,
                 })
             })
             const data = await res.json()
@@ -111,7 +138,7 @@ const page = () => {
             }
 
             toast.success('Donation successful! Thank you!', { style: { background: 'green', border: 'none', color: 'white' } })
-            setForm({ firstName: "", lastName: "", email: "", amount: "", cardNumber: "", expiryMonth: "", expiryYear: "", cvv: "", comment: "" })
+            setForm({ firstName: "", lastName: "", email: "", amount: "", cardNumber: "", expiryMonth: "", expiryYear: "", cvv: "", comment: "", recipientType: "station", artistId: "" })
         } catch (error) {
             toast.error(error.message || 'Something went wrong', { style: { background: 'red', border: 'none', color: 'white' } })
         } finally {
@@ -136,12 +163,48 @@ const page = () => {
                                 <input type="email" name="email" value={form.email} onChange={handleChange} placeholder="Email" className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full " />
                                 <input type="number" name="amount" value={form.amount} onChange={handleChange} placeholder="Amount (USD)" className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full " />
                             </div>
-                            <div>
+                            <div className=" space-y-3 ">
+                                <p className=" font-semibold flex items-center gap-2 "><FaHandHoldingHeart className=" text-second " /> Who is this gift for?</p>
+                                <div className=" grid md:grid-cols-2 grid-cols-1 gap-4 ">
+                                    <select
+                                        name="recipientType"
+                                        value={form.recipientType}
+                                        onChange={handleChange}
+                                        className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full "
+                                    >
+                                        <option value="station" className=" text-black ">HGC Radio (general fund)</option>
+                                        <option value="artist" className=" text-black ">A specific artist</option>
+                                    </select>
+
+                                    {form.recipientType === 'artist' && (
+                                        <select
+                                            name="artistId"
+                                            value={form.artistId}
+                                            onChange={handleChange}
+                                            disabled={artistsLoading}
+                                            className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full disabled:opacity-60 "
+                                        >
+                                            <option value="" className=" text-black ">
+                                                {artistsLoading ? 'Loading artists…' : 'Select an artist'}
+                                            </option>
+                                            {artists.map(a => (
+                                                <option key={a._id} value={a._id} className=" text-black ">{a.name}</option>
+                                            ))}
+                                        </select>
+                                    )}
+                                </div>
+
+                                {form.recipientType === 'artist' && !artistsLoading && artists.length === 0 && (
+                                    <p className=" text-sm text-red-300 ">
+                                        No artists are available to receive gifts right now. Please choose HGC Radio instead.
+                                    </p>
+                                )}
+
                                 <textarea
                                     name="comment"
                                     value={form.comment}
                                     onChange={handleChange}
-                                    placeholder="Artist Name or Purpose of Donation (Optional)"
+                                    placeholder="Add a message with your gift (optional)"
                                     rows={3}
                                     className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full resize-none "
                                 />

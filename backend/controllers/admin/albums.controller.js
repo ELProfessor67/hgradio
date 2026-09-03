@@ -2,6 +2,7 @@ import Album from "../../models/album.model.js";
 import Notification from "../../models/notification.model.js";
 import { sendEmail } from "../../utils/util.js";
 import { syncAlbumToHGDJ } from "../../utils/hgdjSync.js";
+import { resolveAdminNotifications } from "../../utils/notify.js";
 
 const parseStatus = (value) => {
   const s = String(value || "").toLowerCase();
@@ -116,6 +117,8 @@ export const adminApproveAlbum = async (req, res) => {
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
 
+    await resolveAdminNotifications(album._id, "Album");
+
     return res.status(200).json({ success: true, message: "Album approved", album });
   } catch (error) {
     return res.status(500).json({
@@ -168,6 +171,8 @@ export const adminRejectAlbum = async (req, res) => {
         refModel: "Album",
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
+
+    await resolveAdminNotifications(album._id, "Album");
 
     return res.status(200).json({ success: true, message: "Album rejected", album });
   } catch (error) {

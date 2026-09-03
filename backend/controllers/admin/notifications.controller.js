@@ -1,22 +1,32 @@
 import Notification from "../../models/notification.model.js";
 
-// GET /api/admin/notifications?page=1&limit=20&unreadOnly=false
+// The admin feed is only notifications addressed to no one in particular.
+// Anything with a recipient belongs to that artist and must never appear here.
+const ADMIN_SCOPE = { recipient: null };
+const PENDING_FILTER = { ...ADMIN_SCOPE, requiresAction: true, resolvedAt: null };
+
+// GET /api/admin/notifications?page=1&limit=20&view=all|unread|pending
 export const adminListNotifications = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 20));
     const skip = (page - 1) * limit;
-    const unreadOnly = req.query.unreadOnly === "true";
 
-    const filter = unreadOnly ? { isRead: false } : {};
+    // `unreadOnly` kept for backwards compatibility with older clients
+    const view = req.query.unreadOnly === "true" ? "unread" : String(req.query.view || "all");
 
-    const [total, notifications, unreadCount] = await Promise.all([
+    let filter = { ...ADMIN_SCOPE };
+    if (view === "unread") filter = { ...ADMIN_SCOPE, isRead: false };
+    else if (view === "pending") filter = PENDING_FILTER;
+
+    const [total, notifications, unreadCount, pendingCount] = await Promise.all([
       Notification.countDocuments(filter),
       Notification.find(filter)
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
-      Notification.countDocuments({ isRead: false }),
+      Notification.countDocuments({ ...ADMIN_SCOPE, isRead: false }),
+      Notification.countDocuments(PENDING_FILTER),
     ]);
 
     return res.status(200).json({
@@ -26,6 +36,7 @@ export const adminListNotifications = async (req, res) => {
       total,
       totalPages: Math.ceil(total / limit),
       unreadCount,
+      pendingCount,
       notifications,
     });
   } catch (error) {
@@ -37,8 +48,8 @@ export const adminListNotifications = async (req, res) => {
 export const markNotificationRead = async (req, res) => {
   try {
     const { id } = req.params;
-    await Notification.findByIdAndUpdate(id, { isRead: true });
-    const unreadCount = await Notification.countDocuments({ isRead: false });
+    await Notification.updateOne({ _id: id, ...ADMIN_SCOPE }, { isRead: true });
+    const unreadCount = await Notification.countDocuments({ ...ADMIN_SCOPE, isRead: false });
     return res.status(200).json({ success: true, unreadCount });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Failed to mark read", error: error.message });
@@ -48,7 +59,7 @@ export const markNotificationRead = async (req, res) => {
 // PATCH /api/admin/notifications/read-all
 export const markAllNotificationsRead = async (req, res) => {
   try {
-    await Notification.updateMany({ isRead: false }, { isRead: true });
+    await Notification.updateMany({ ...ADMIN_SCOPE, isRead: false }, { isRead: true });
     return res.status(200).json({ success: true, unreadCount: 0 });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Failed to mark all as read", error: error.message });
@@ -59,8 +70,8 @@ export const markAllNotificationsRead = async (req, res) => {
 export const deleteNotification = async (req, res) => {
   try {
     const { id } = req.params;
-    await Notification.findByIdAndDelete(id);
-    const unreadCount = await Notification.countDocuments({ isRead: false });
+    await Notification.deleteOne({ _id: id, ...ADMIN_SCOPE });
+    const unreadCount = await Notification.countDocuments({ ...ADMIN_SCOPE, isRead: false });
     return res.status(200).json({ success: true, unreadCount });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Failed to delete notification", error: error.message });
@@ -70,7 +81,7 @@ export const deleteNotification = async (req, res) => {
 // DELETE /api/admin/notifications/clear-all
 export const clearAllNotifications = async (req, res) => {
   try {
-    await Notification.deleteMany({});
+    await Notification.deleteMany({ ...ADMIN_SCOPE });
     return res.status(200).json({ success: true });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Failed to clear notifications", error: error.message });

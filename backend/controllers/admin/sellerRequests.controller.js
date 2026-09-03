@@ -2,6 +2,7 @@ import User from "../../models/user.model.js";
 import Notification from "../../models/notification.model.js";
 import { sendEmail } from "../../utils/util.js";
 import { syncPlaylist } from "../../utils/hgdjSync.js";
+import { resolveAdminNotifications } from "../../utils/notify.js";
 
 const parseStatus = (value) => {
   const s = String(value || "").toLowerCase();
@@ -147,6 +148,8 @@ hgcradio.org · support@hgcradio.org`,
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
 
+    await resolveAdminNotifications(user._id, "User");
+
     return res.status(200).json({
       success: true,
       message: "Seller approved",
@@ -222,6 +225,8 @@ hgcradio.org · support@hgcradio.org`,
         refModel: "User",
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
+
+    await resolveAdminNotifications(user._id, "User");
 
     return res.status(200).json({
       success: true,

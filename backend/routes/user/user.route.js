@@ -18,8 +18,19 @@ import {
   resubmitSellerForm,
 } from "../../controllers/user/user.controller.js";
 import protect from "../../middlewares/auth.middleware.js";
+import {
+  listMyNotifications,
+  markMyNotificationRead,
+  markAllMyNotificationsRead,
+  getMyGiftsAndPayouts,
+} from "../../controllers/user/notifications.controller.js";
 
 const router = express.Router();
+
+router.get("/notifications", protect, listMyNotifications);
+router.patch("/notifications/read-all", protect, markAllMyNotificationsRead);
+router.patch("/notifications/:id/read", protect, markMyNotificationRead);
+router.get("/my-gifts", protect, getMyGiftsAndPayouts);
 
 router.put("/update", protect, updateUser);
 router.put("/:userId/change-email", protect, changeEmail);

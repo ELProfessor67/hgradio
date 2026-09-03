@@ -5,6 +5,7 @@ import crypto from "crypto";
 import { UAParser } from "ua-parser-js";
 import RegistrationOtp from "../../models/registrationOtp.model.js";
 import UpgradeOtp from "../../models/upgradeOtp.model.js";
+import { notifyAdmin } from "../../utils/notify.js";
 
 const REGISTER_OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const REGISTER_OTP_MIN_RESEND_SECONDS = 60;
@@ -197,6 +198,19 @@ export const registerUser = async (req, res) => {
       digitalDistributionSummarySignature,
       digitalDistributionSummaryDate,
     });
+
+    if (effectiveAccountType === "seller") {
+      await notifyAdmin({
+        type: "seller_submitted",
+        title: "New seller account awaiting approval",
+        message: `${user.name} registered as a seller and submitted the contract for review.`,
+        refId: user._id,
+        refModel: "User",
+        actorName: user.name,
+        actorEmail: user.email,
+        requiresAction: true,
+      });
+    }
 
     const token = generateToken(user._id);
 
@@ -750,6 +764,17 @@ export const upgradeToSeller = async (req, res) => {
     user.artistSignatureUrl = artistSignatureUrl || "";
 
     await user.save();
+
+    await notifyAdmin({
+      type: "seller_submitted",
+      title: "New seller account awaiting approval",
+      message: `${user.name} upgraded to a seller account and submitted the contract for review.`,
+      refId: user._id,
+      refModel: "User",
+      actorName: user.name,
+      actorEmail: user.email,
+      requiresAction: true,
+    });
 
     const { password: _, ...userData } = user._doc;
 

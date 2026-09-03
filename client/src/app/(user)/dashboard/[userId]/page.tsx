@@ -1,6 +1,7 @@
 "use client";
 
 import Breadcrum from "@/components/Breadcrum";
+import ArtistGifts from "@/components/ArtistGifts";
 import Link from "next/link";
 import React, { useEffect, useState, useRef } from "react";
 import bg2 from "@/assets/previous-show.jpg";
@@ -1344,6 +1345,8 @@ const Page = () => {
                 )}
               </div>
             ) : null}
+
+            {accountType === "seller" && <ArtistGifts />}
 
             {error && <p className=" text-sm text-red-500 my-2 ">{error}</p>}
 

@@ -1059,7 +1059,7 @@ const Stats = () => {
             Music Shows
           </h3>
           <div className=" text-[2rem] lg:text-[3rem] font-bold leading-tight ">
-            <span className="text-green-400">Vision:</span> Serving Over 2.6 Billion People One Faith, One Future.
+            <span className="text-green-400">Vision:</span> Reaching Over 2.6 Billion People One Faith, One Future.
           </div>
           <p className=" text-lg my-[2rem] lg:my-[3rem] text-gray-200 ">
             Let the soul-stirring melodies of gospel music uplift you on our

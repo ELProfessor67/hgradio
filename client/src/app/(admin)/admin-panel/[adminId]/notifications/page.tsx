@@ -1,90 +1,25 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
+import { PageLoading } from "@/utils/Loading";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import {
   IoNotificationsSharp,
   IoCheckmarkDoneSharp,
   IoTrashSharp,
 } from "react-icons/io5";
-import { FaCheckCircle, FaTimesCircle, FaFileContract, FaBell } from "react-icons/fa";
-import { MdOutlineLibraryMusic } from "react-icons/md";
+import {
+  AdminNotification,
+  needsReview,
+  notifIcon,
+  notifTone,
+  reviewLink,
+  timeAgo,
+} from "@/utils/adminNotifications";
 
-/* ─── Types ─────────────────────────────────────────────────── */
-type NotifType =
-  | "album_approved"
-  | "album_rejected"
-  | "seller_approved"
-  | "seller_rejected"
-  | "contract_approved"
-  | "contract_rejected"
-  | "general";
-
-interface Notification {
-  _id: string;
-  type: NotifType;
-  title: string;
-  message: string;
-  isRead: boolean;
-  createdAt: string;
-}
-
-/* ─── Icon & colour per type ─────────────────────────────────── */
-const typeConfig: Record<
-  NotifType,
-  { icon: React.ReactNode; dot: string; badge: string }
-> = {
-  album_approved: {
-    icon: <MdOutlineLibraryMusic size={18} />,
-    dot: "bg-green-400",
-    badge: "text-green-300",
-  },
-  album_rejected: {
-    icon: <MdOutlineLibraryMusic size={18} />,
-    dot: "bg-red-400",
-    badge: "text-red-300",
-  },
-  seller_approved: {
-    icon: <FaCheckCircle size={16} />,
-    dot: "bg-green-400",
-    badge: "text-green-300",
-  },
-  seller_rejected: {
-    icon: <FaTimesCircle size={16} />,
-    dot: "bg-red-400",
-    badge: "text-red-300",
-  },
-  contract_approved: {
-    icon: <FaFileContract size={16} />,
-    dot: "bg-green-400",
-    badge: "text-green-300",
-  },
-  contract_rejected: {
-    icon: <FaFileContract size={16} />,
-    dot: "bg-red-400",
-    badge: "text-red-300",
-  },
-  general: {
-    icon: <FaBell size={16} />,
-    dot: "bg-[#66FCF1]",
-    badge: "text-[#66FCF1]",
-  },
-};
-
-const isApproved = (type: NotifType) =>
-  ["album_approved", "seller_approved", "contract_approved"].includes(type);
-
-const timeAgo = (dateStr: string) => {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1) return "just now";
-  if (m < 60) return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-};
+type View = "all" | "unread" | "pending";
 
 /* ─── Single notification row ────────────────────────────────── */
 const NotifRow = ({
@@ -92,14 +27,16 @@ const NotifRow = ({
   token,
   onRead,
   onDelete,
+  onReview,
 }: {
-  notif: Notification;
+  notif: AdminNotification;
   token: string;
   onRead: (id: string) => void;
   onDelete: (id: string) => void;
+  onReview: (notif: AdminNotification) => void;
 }) => {
-  const cfg = typeConfig[notif.type] || typeConfig.general;
-  const approved = isApproved(notif.type);
+  const tone = notifTone(notif.type);
+  const actionable = needsReview(notif);
 
   const handleRead = async () => {
     if (notif.isRead) return;
@@ -133,29 +70,26 @@ const NotifRow = ({
     >
       {/* Icon circle */}
       <div
-        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
-          approved ? "bg-green-500/15 text-green-300" : notif.type === "general" ? "bg-[#66FCF1]/10 text-[#66FCF1]" : "bg-red-500/15 text-red-300"
-        }`}
+        className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${tone.bubble}`}
       >
-        {cfg.icon}
+        {notifIcon(notif.type, 16)}
       </div>
 
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <span
-              className={`text-sm font-semibold ${
-                approved ? "text-green-300" : notif.type === "general" ? "text-[#66FCF1]" : "text-red-300"
-              }`}
-            >
-              {approved ? "✔" : notif.type === "general" ? "●" : "✕"}
-            </span>
+            <span className={`text-sm font-semibold ${tone.text}`}>{tone.mark}</span>
             <span className={`text-sm font-medium ${notif.isRead ? "text-gray-300" : "text-white"}`}>
               {notif.title}
             </span>
             {!notif.isRead && (
               <span className="w-2 h-2 rounded-full bg-[#66FCF1] flex-shrink-0" />
+            )}
+            {actionable && (
+              <span className="bg-amber-500/15 border border-amber-400/30 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                Needs review
+              </span>
             )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -163,13 +97,32 @@ const NotifRow = ({
             <button
               onClick={(e) => { e.stopPropagation(); handleDelete(); }}
               className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-red-400"
+              aria-label="Delete notification"
             >
               <IoTrashSharp size={14} />
             </button>
           </div>
         </div>
+
         {notif.message && (
           <p className="text-xs text-gray-400 mt-0.5 leading-relaxed line-clamp-2">{notif.message}</p>
+        )}
+
+        {(notif.actorName || notif.actorEmail) && (
+          <p className="text-[11px] text-gray-500 mt-1">
+            {notif.actorName}
+            {notif.actorName && notif.actorEmail ? " · " : ""}
+            {notif.actorEmail}
+          </p>
+        )}
+
+        {actionable && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onReview(notif); }}
+            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold bg-amber-500/10 hover:bg-amber-500/20 border border-amber-400/30 text-amber-300 px-3 py-1.5 rounded-lg transition-all"
+          >
+            Review now →
+          </button>
         )}
       </div>
     </div>
@@ -180,29 +133,36 @@ const NotifRow = ({
 const NotificationsPage = () => {
   const { userData } = useData();
   const token = (userData as any)?.token as string;
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const adminId = params?.adminId as string;
 
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState<"all" | "unread">("all");
+  const [view, setView] = useState<View>(
+    searchParams.get("view") === "pending" ? "pending" : "all"
+  );
 
   const fetchNotifications = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page: String(page), limit: "20" });
-      if (filter === "unread") params.set("unreadOnly", "true");
+      const qs = new URLSearchParams({ page: String(page), limit: "20", view });
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/notifications?${params}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/notifications?${qs}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount ?? 0);
+      setPendingCount(data.pendingCount ?? 0);
       setTotal(data.total ?? 0);
       setTotalPages(data.totalPages ?? 1);
     } catch (err: any) {
@@ -212,7 +172,7 @@ const NotificationsPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [token, page, filter]);
+  }, [token, page, view]);
 
   useEffect(() => { fetchNotifications(); }, [fetchNotifications]);
 
@@ -222,10 +182,30 @@ const NotificationsPage = () => {
   };
 
   const handleDelete = (id: string) => {
-    const wasUnread = !notifications.find((n) => n._id === id)?.isRead;
+    const removed = notifications.find((n) => n._id === id);
     setNotifications((prev) => prev.filter((n) => n._id !== id));
-    setTotal((t) => t - 1);
-    if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
+    setTotal((t) => Math.max(0, t - 1));
+    if (removed && !removed.isRead) setUnreadCount((c) => Math.max(0, c - 1));
+    if (removed && needsReview(removed)) setPendingCount((c) => Math.max(0, c - 1));
+  };
+
+  /* jump to the approvals page with the item's review modal already open */
+  const handleReview = (notif: AdminNotification) => {
+    const href = reviewLink(notif, adminId);
+    if (!href) {
+      toast.error("This notification has no item to review", {
+        style: { background: "red", color: "white", border: "none" },
+      });
+      return;
+    }
+    if (!notif.isRead) {
+      handleRead(notif._id);
+      fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/notifications/${notif._id}/read`,
+        { method: "PATCH", headers: { Authorization: `Bearer ${token}` } }
+      ).catch(() => { /* silent — navigation still proceeds */ });
+    }
+    router.push(href);
   };
 
   const markAllRead = async () => {
@@ -251,10 +231,18 @@ const NotificationsPage = () => {
       setNotifications([]);
       setTotal(0);
       setUnreadCount(0);
+      setPendingCount(0);
       toast.success("All notifications cleared", { style: { background: "green", color: "white", border: "none" } });
     } catch {
       toast.error("Failed to clear", { style: { background: "red", color: "white", border: "none" } });
     }
+  };
+
+  // `total` reflects the active view, so only the current tab can show it
+  const tabLabel: Record<View, string> = {
+    all: view === "all" ? `All (${total})` : "All",
+    unread: `Unread (${unreadCount})`,
+    pending: `Needs review (${pendingCount})`,
   };
 
   return (
@@ -273,7 +261,7 @@ const NotificationsPage = () => {
               )}
             </div>
             <p className="text-sm text-gray-400 mt-0.5">
-              Activity log for all admin actions — approvals, rejections, and more.
+              New submissions from users, plus a log of every approval and rejection.
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
@@ -298,19 +286,32 @@ const NotificationsPage = () => {
           </div>
         </div>
 
+        {/* Awaiting-review banner */}
+        {pendingCount > 0 && view !== "pending" && (
+          <button
+            onClick={() => { setView("pending"); setPage(1); }}
+            className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-400/25 text-amber-300 text-sm font-medium hover:bg-amber-500/15 transition-all"
+          >
+            <span>
+              {pendingCount} submission{pendingCount === 1 ? "" : "s"} awaiting your review
+            </span>
+            <span>→</span>
+          </button>
+        )}
+
         {/* Filter tabs */}
-        <div className="flex gap-2">
-          {(["all", "unread"] as const).map((f) => (
+        <div className="flex gap-2 flex-wrap">
+          {(["all", "unread", "pending"] as const).map((v) => (
             <button
-              key={f}
-              onClick={() => { setFilter(f); setPage(1); }}
-              className={`capitalize px-4 py-1.5 rounded-lg text-sm font-medium border transition-all ${
-                filter === f
+              key={v}
+              onClick={() => { setView(v); setPage(1); }}
+              className={`px-4 py-1.5 rounded-lg text-sm font-medium border transition-all ${
+                view === v
                   ? "bg-[#66FCF1]/15 border-[#66FCF1]/40 text-[#66FCF1]"
                   : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
               }`}
             >
-              {f === "all" ? `All (${total})` : `Unread (${unreadCount})`}
+              {tabLabel[v]}
             </button>
           ))}
         </div>
@@ -325,7 +326,11 @@ const NotificationsPage = () => {
           ) : notifications.length === 0 ? (
             <div className="py-16 flex flex-col items-center gap-3 text-gray-400">
               <IoNotificationsSharp size={42} className="text-white/10" />
-              <p>No notifications yet.</p>
+              <p>
+                {view === "pending"
+                  ? "Nothing is waiting on your review."
+                  : "No notifications yet."}
+              </p>
             </div>
           ) : (
             notifications.map((n) => (
@@ -335,6 +340,7 @@ const NotificationsPage = () => {
                 token={token}
                 onRead={handleRead}
                 onDelete={handleDelete}
+                onReview={handleReview}
               />
             ))
           )}
@@ -365,4 +371,11 @@ const NotificationsPage = () => {
   );
 };
 
-export default NotificationsPage;
+/* useSearchParams (for ?view=pending) needs a Suspense boundary */
+const NotificationsPageWrapper = () => (
+  <Suspense fallback={<PageLoading />}>
+    <NotificationsPage />
+  </Suspense>
+);
+
+export default NotificationsPageWrapper;

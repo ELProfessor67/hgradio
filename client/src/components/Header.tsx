@@ -62,7 +62,13 @@ const Header = () => {
           : "-translate-y-full bg-transparent" // Scroll down: hide
       }`}
     >
-      <div className=" px-3 max-w-[1500px] mx-auto w-full flex items-center justify-between gap-2 ">
+      {/* Full-bleed header row. It used to be capped at max-w-[1500px] and
+          centred, which parked the logo ~220px in from the edge on a desktop
+          screen — the client's "the logo need to go more to the left... look at
+          any other website and see". Headers on other sites run edge to edge
+          with a gutter, so this does the same. Mobile is unaffected: the cap
+          never applied at that width. */}
+      <div className=" w-full px-4 lg:px-8 flex items-center justify-between gap-2 ">
         <Link href={`/`} className=" flex items-center gap-1 font-poppins ">
           <Image src={Logo} alt="Logo" className=" w-[10rem] object-contain " />
         </Link>

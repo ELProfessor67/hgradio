@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
 import { PageLoading } from "@/utils/Loading";
@@ -368,6 +369,11 @@ const Page = () => {
   const [selected, setSelected] = useState<any | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const focusedRef = useRef<string | null>(null);
+
   useEffect(() => { setHasMounted(true); }, []);
 
   const canFetch = useMemo(() => {
@@ -403,6 +409,34 @@ const Page = () => {
     if (canFetch) fetchRequests();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canFetch, status]);
+
+  /* Deep link from an admin notification: ?focus=<userId> opens that seller's
+     contract modal directly, whatever status tab is currently selected. */
+  useEffect(() => {
+    const focusId = searchParams.get("focus");
+    if (!canFetch || !focusId || focusedRef.current === focusId) return;
+    focusedRef.current = focusId;
+
+    (async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/seller-requests/${focusId}`,
+          { headers: { Authorization: `Bearer ${userData.token}` } }
+        );
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.message || "Seller not found");
+        setSelected(data.user);
+      } catch (err: any) {
+        toast.error(err?.message || "Could not open that request", {
+          style: { background: "red", border: "none", color: "white" },
+        });
+      } finally {
+        // drop the param so closing the modal does not reopen it
+        router.replace(pathname);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [canFetch, searchParams, router, pathname]);
 
   const approve = async (userId: string) => {
     setActionLoading(true);
@@ -596,4 +630,11 @@ const Page = () => {
   );
 };
 
-export default Page;
+/* useSearchParams (for the ?focus deep link) needs a Suspense boundary */
+const PageWrapper = () => (
+  <Suspense fallback={<PageLoading />}>
+    <Page />
+  </Suspense>
+);
+
+export default PageWrapper;

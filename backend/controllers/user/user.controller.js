@@ -1,6 +1,7 @@
 import User from "../../models/user.model.js";
 import Album from "../../models/album.model.js";
 import { generateToken } from "./auth.controller.js";
+import { notifyAdmin } from "../../utils/notify.js";
 import crypto from "crypto";
 import pkg from "authorizenet";
 
@@ -668,6 +669,17 @@ export const createAlbum = async (req, res) => {
 
     await album.save();
 
+    await notifyAdmin({
+      type: "album_submitted",
+      title: "New album awaiting approval",
+      message: `${user.name} uploaded "${album.title}" for review.`,
+      refId: album._id,
+      refModel: "Album",
+      actorName: user.name,
+      actorEmail: user.email,
+      requiresAction: true,
+    });
+
     res.status(201).send({
       success: true,
       message: "Album created successfully!!",
@@ -1197,6 +1209,17 @@ export const resubmitSellerForm = async (req, res) => {
     user.sellerReviewedBy = undefined;
 
     await user.save();
+
+    await notifyAdmin({
+      type: "seller_resubmitted",
+      title: "Seller form resubmitted",
+      message: `${user.name} resubmitted their seller contract after rejection.`,
+      refId: user._id,
+      refModel: "User",
+      actorName: user.name,
+      actorEmail: user.email,
+      requiresAction: true,
+    });
 
     // Return fresh user (without password)
     const updatedUser = await User.findById(userId).select("-password");
