@@ -18,7 +18,7 @@ export const getAllAlbums = async (req, res) => {
     const skip = (page - 1) * limit;
 
     // // search by title, artist name, artist email
-    
+
 
     const artistFilter = search ? {
       $or: [
@@ -45,10 +45,10 @@ export const getAllAlbums = async (req, res) => {
       .limit(limit)
       .select("-songs");;
 
-      // console.log(albums);
+    // console.log(albums);
 
-    
-      
+
+
 
     res.status(200).json({
       success: true,
@@ -93,11 +93,65 @@ export const getTopSoldAlbums = async (req, res) => {
     const parsed = Number.parseInt(String(limitRaw ?? "10"), 10);
     const limit = Number.isFinite(parsed) && parsed > 0 ? Math.min(parsed, 50) : 10;
 
-    const albums = await Album.find({})
-      .populate("artist", "_id name profileImg")
-      .sort({ salesCount: -1, totalRevenue: -1, lastSaleAt: -1, createdAt: -1 })
-      .limit(limit)
-      .select("-songs");
+
+    const albums = await Album.aggregate([
+      {
+        $addFields: {
+
+          totalPlays: {
+            $sum: {
+              $map: {
+                input: { $ifNull: ["$songs", []] },
+                as: "song",
+                in: { $ifNull: ["$$song.views", 0] },
+              },
+            },
+          },
+          salesCount: { $ifNull: ["$salesCount", 0] },
+          totalRevenue: { $ifNull: ["$totalRevenue", 0] },
+        },
+      },
+      // Drop the songs array as soon as totalPlays is computed: the sort below
+      // is blocking and unindexable (it orders on a computed field), so there
+      // is no reason to carry every track's name/url/duration through it.
+      { $unset: "songs" },
+      {
+        $sort: {
+          salesCount: -1,
+          totalPlays: -1,
+          totalRevenue: -1,
+          lastSaleAt: -1,
+          createdAt: -1,
+        },
+      },
+
+      { $limit: limit },
+      {
+        $lookup: {
+          from: "users",
+          localField: "artist",
+          foreignField: "_id",
+          as: "artistInfo",
+        },
+      },
+      { $unwind: { path: "$artistInfo", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          artist: {
+            $cond: [
+              { $ifNull: ["$artistInfo._id", false] },
+              {
+                _id: "$artistInfo._id",
+                name: "$artistInfo.name",
+                profileImg: "$artistInfo.profileImg",
+              },
+              null,
+            ],
+          },
+        },
+      },
+      { $project: { artistInfo: 0 } },
+    ]);
 
     return res.status(200).json({
       success: true,
@@ -156,14 +210,14 @@ export const getTopSongs = async (req, res) => {
     const topSongs = await Album.aggregate([
       // Unwind the songs array to get individual songs
       { $unwind: "$songs" },
-      
+
       // Filter out songs with 0 or null views
       {
         $match: {
           "songs.views": { $gt: 0 }
         }
       },
-      
+
       // Lookup artist information
       {
         $lookup: {
@@ -173,10 +227,10 @@ export const getTopSongs = async (req, res) => {
           as: "artistInfo",
         },
       },
-      
+
       // Unwind artist info
       { $unwind: { path: "$artistInfo", preserveNullAndEmptyArrays: true } },
-      
+
       // Project the fields we need
       {
         $project: {
@@ -192,10 +246,10 @@ export const getTopSongs = async (req, res) => {
           artistId: "$artistInfo._id",
         },
       },
-      
+
       // Sort by views descending
       { $sort: { views: -1 } },
-      
+
       // Limit results
       { $limit: limit },
     ]);
