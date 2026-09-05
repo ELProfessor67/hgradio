@@ -19,8 +19,12 @@ interface LoveGift {
   amount: number;
   comment: string;
   recipientType: "artist" | "station";
+  source?: "donate" | "partner";
   artist?: { _id: string; name: string; email: string } | null;
   artistName?: string;
+  partnerType?: string;
+  partnerTarget?: string;
+  organization?: string;
   paymentStatus: PayStatus;
   transactionId?: string;
   failureReason?: string;
@@ -295,6 +299,13 @@ const LoveGiftsPage = () => {
                             <FaBroadcastTower size={10} />
                             HGC Radio
                           </span>
+                        )}
+                        {/* What the partner said they were backing — context only */}
+                        {g.source === "partner" && (
+                          <div className="text-[10px] text-gray-500 mt-0.5">
+                            via Partner form
+                            {g.partnerTarget ? ` — ${g.partnerType || "partner"}: ${g.partnerTarget}` : ""}
+                          </div>
                         )}
                       </td>
                       <td className="py-3 px-4 text-right font-bold tabular-nums">{money(g.amount)}</td>

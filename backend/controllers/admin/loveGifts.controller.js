@@ -19,6 +19,7 @@ export const adminListLoveGifts = async (req, res) => {
 
     const status = String(req.query.status || "");
     const recipientType = String(req.query.recipientType || "");
+    const source = String(req.query.source || "");
     const artistId = String(req.query.artistId || "");
     const q = req.query.q ? String(req.query.q).trim() : "";
     const from = parseDate(req.query.from);
@@ -28,6 +29,7 @@ export const adminListLoveGifts = async (req, res) => {
 
     if (["pending", "paid", "failed"].includes(status)) filter.paymentStatus = status;
     if (["artist", "station"].includes(recipientType)) filter.recipientType = recipientType;
+    if (["donate", "partner"].includes(source)) filter.source = source;
     if (artistId && mongoose.isValidObjectId(artistId)) filter.artist = artistId;
 
     if (q) {
@@ -36,6 +38,8 @@ export const adminListLoveGifts = async (req, res) => {
         { lastName: { $regex: q, $options: "i" } },
         { email: { $regex: q, $options: "i" } },
         { artistName: { $regex: q, $options: "i" } },
+        { partnerTarget: { $regex: q, $options: "i" } },
+        { organization: { $regex: q, $options: "i" } },
         { transactionId: { $regex: q, $options: "i" } },
       ];
     }

@@ -12,11 +12,24 @@ const loveGiftSchema = new mongoose.Schema(
   {
     // Donor
     firstName: { type: String, required: true, trim: true },
-    lastName: { type: String, required: true, trim: true },
+    // The partner form collects a single "Full Name", so a surname is not always
+    // available. Optional rather than required, or those gifts cannot be saved.
+    lastName: { type: String, default: "", trim: true },
     email: { type: String, required: true, trim: true, lowercase: true },
+    phone: { type: String, default: "", trim: true },
+    organization: { type: String, default: "", trim: true },
 
     amount: { type: Number, required: true, min: 0 },
     comment: { type: String, default: "" },
+
+    // Which form the gift came from. Both write here so all designated giving
+    // shares one admin view and one payout aggregation.
+    source: {
+      type: String,
+      enum: ["donate", "partner"],
+      default: "donate",
+      index: true,
+    },
 
     // Who the donor designated the gift for
     recipientType: {
@@ -25,6 +38,14 @@ const loveGiftSchema = new mongoose.Schema(
       default: "station",
       required: true,
     },
+
+    /*
+      Partner-form context, kept for the admin's reference only. These record
+      what the partner said they were partnering with; they never decide where
+      the money is designated — recipientType above does that.
+    */
+    partnerType: { type: String, default: "" },
+    partnerTarget: { type: String, default: "" },
     artist: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

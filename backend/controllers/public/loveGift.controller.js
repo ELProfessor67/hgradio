@@ -32,7 +32,7 @@ export const listGiftableArtists = async (req, res) => {
   }
 };
 
-const chargeCard = ({ cardNumber, expiryMonth, expiryYear, cvv, amount }) => {
+export const chargeCard = ({ cardNumber, expiryMonth, expiryYear, cvv, amount }) => {
   const merchantAuthenticationType = new APIContracts.MerchantAuthenticationType();
   merchantAuthenticationType.setName(process.env.AUTHORIZENET_API_LOGIN_ID);
   merchantAuthenticationType.setTransactionKey(process.env.AUTHORIZENET_TRANSACTION_KEY);
@@ -84,6 +84,21 @@ const chargeCard = ({ cardNumber, expiryMonth, expiryYear, cvv, amount }) => {
 
         if (response.getMessages().getResultCode() === APIContracts.MessageTypeEnum.OK) {
           if (txn && txn.getMessages()) {
+            // A gateway-level "Ok" only means the request was well formed. The
+            // response code says what happened to the money: 1 approved,
+            // 4 held for review by a fraud filter (nothing captured yet).
+            const code = String(txn.getResponseCode() || "");
+            if (code === "4") {
+              return resolve({
+                success: false,
+                held: true,
+                transactionId: txn.getTransId(),
+                error: "Payment is being held for review and has not been captured.",
+              });
+            }
+            if (code !== "1") {
+              return resolve({ success: false, error: "Transaction was declined." });
+            }
             return resolve({ success: true, transactionId: txn.getTransId() });
           }
           if (txn && txn.getErrors()) {
@@ -172,9 +187,12 @@ export const processLoveGift = async (req, res) => {
     const result = await chargeCard({ cardNumber, expiryMonth, expiryYear, cvv, amount: amountNum });
 
     if (!result.success) {
+      // A held transaction is not a decline — leave it pending so the admin
+      // follows it up in Authorize.Net rather than seeing it written off.
       await LoveGift.findByIdAndUpdate(gift._id, {
-        paymentStatus: "failed",
+        paymentStatus: result.held ? "pending" : "failed",
         failureReason: result.error || "Payment failed",
+        transactionId: result.transactionId || undefined,
       });
       return res.status(502).json({ success: false, message: result.error || "Payment failed" });
     }

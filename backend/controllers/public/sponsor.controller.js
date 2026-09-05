@@ -1,8 +1,9 @@
 import Sponsor from "../../models/sponsor.model.js";
-import pkg from "authorizenet";
+import LoveGift from "../../models/loveGift.model.js";
+import User from "../../models/user.model.js";
+import { chargeCard } from "./loveGift.controller.js";
 import { sendEmail } from "../../utils/util.js";
-
-const { APIContracts, APIControllers, Constants: SDKConstants } = pkg;
+import { notifyAdmin, notifyUser } from "../../utils/notify.js";
 
 export const createSponsor = async (req, res) => {
   try {
@@ -88,7 +89,7 @@ export const deleteSponsor = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const deletedSponsor= await Sponsor.findByIdAndDelete(id);
+    const deletedSponsor = await Sponsor.findByIdAndDelete(id);
 
     if (!deletedSponsor) {
       return res
@@ -104,185 +105,154 @@ export const deleteSponsor = async (req, res) => {
 };
 
 
-const sendSponsorPaymentEmailViaMailer = async ({ email, name, amount, transactionId }) => {
-  const resp = await fetch("https://mail.hgdjlive.com/send-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, subject: "Sponsorship Payment Successful", message: `Sponsorship payment successful! 🎉
-
-Hello ${String(name || "")},
-
-Thank you for your Love Gift sponsorship to HG Radio Station.
-
-Amount: ${amount}
-Transaction ID: ${String(transactionId || "")}
-Date: ${new Date().toLocaleDateString()}
-
-Best regards,
-The HG Radio Station Team
-` }),
-  });
-
-  if (!resp.ok) {
-    let details = "";
-    try {
-      details = await resp.text();
-    } catch {
-      // ignore
-    }
-    throw new Error(`Failed to send OTP email. ${details}`);
-  }
-};
 
 export const processSponsorPayment = async (req, res) => {
   try {
-    const {
-      sponsorData,
-      payment,
-    } = req.body || {};
-
-    const {
-      cardNumber,
-      expiryMonth,
-      expiryYear,
-      cvv,
-      amount,
-    } = payment || {};
+    const { sponsorData, payment } = req.body || {};
+    const { cardNumber, expiryMonth, expiryYear, cvv, amount } = payment || {};
 
     if (!sponsorData) {
-      return res.status(400).json({ success: false, message: "Missing sponsorData" });
+      return res.status(400).json({ success: false, message: "Missing sponsorData", error: "Missing sponsorData" });
+    }
+    if (!sponsorData.name || !sponsorData.email) {
+      return res.status(400).json({ success: false, message: "Name and email are required.", error: "Name and email are required." });
     }
     if (!cardNumber || !expiryMonth || !expiryYear || !cvv) {
-      return res.status(400).json({ success: false, message: "Missing card details" });
+      return res.status(400).json({ success: false, message: "Missing card details", error: "Missing card details" });
     }
+
     const amountNum = Number(amount);
-    if (!amountNum || amountNum <= 0) {
-      return res.status(400).json({ success: false, message: "Invalid amount" });
+    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+      return res.status(400).json({ success: false, message: "Invalid amount", error: "Invalid amount" });
     }
 
-    // Create sponsor first as pending (so admin can see attempts even if payment fails).
-    const pendingSponsorPayload = {
-      ...sponsorData,
-      method: "gift",
+    // The partner form has one "Full Name" field; LoveGift stores the parts.
+    const fullName = String(sponsorData.name).trim();
+    const spaceAt = fullName.indexOf(" ");
+    const firstName = spaceAt === -1 ? fullName : fullName.slice(0, spaceAt);
+    const lastName = spaceAt === -1 ? "" : fullName.slice(spaceAt + 1).trim();
+
+    /*
+      Designation works exactly as it does on the donate page: the station's
+      general fund, or one named artist. The partner's Program/Individual choice
+      is kept alongside as a label and has no say in where the money goes.
+
+      The artist is resolved server-side; never trust a name posted by the
+      browser. A request that names no artist — the mobile app sends none — falls
+      back to the general fund rather than inventing a payable balance.
+    */
+    const recipientType = sponsorData.recipientType === "artist" ? "artist" : "station";
+
+    let artist = null;
+    if (recipientType === "artist") {
+      if (!sponsorData.artistId) {
+        return res.status(400).json({ success: false, message: "Please choose an artist.", error: "Please choose an artist." });
+      }
+      artist = await User.findOne({
+        _id: sponsorData.artistId,
+        role: "User",
+        accountType: "seller",
+        sellerApprovalStatus: "approved",
+      }).select("_id name email");
+
+      if (!artist) {
+        return res.status(400).json({ success: false, message: "That artist is not available.", error: "That artist is not available." });
+      }
+    }
+
+    const gift = await LoveGift.create({
+      firstName,
+      lastName,
+      email: String(sponsorData.email).trim().toLowerCase(),
+      phone: sponsorData.phone || "",
+      organization: sponsorData.organization || "",
       amount: amountNum,
+      comment: sponsorData.comment || "",
+      source: "partner",
+      recipientType,
+      partnerType: sponsorData.sponsorType || "",
+      partnerTarget: String(sponsorData.sponsorTarget || "").trim(),
+      artist: artist?._id || null,
+      artistName: artist?.name || "",
+      artistEmail: artist?.email || "",
       paymentStatus: "pending",
-      transactionId: undefined,
-      paidAt: undefined,
-    };
-
-    const sponsorDoc = await Sponsor.create(pendingSponsorPayload);
-
-    const constants = {
-      apiLoginKey: process.env.AUTHORIZENET_API_LOGIN_ID,
-      transactionKey: process.env.AUTHORIZENET_TRANSACTION_KEY,
-    };
-
-    const merchantAuthenticationType = new APIContracts.MerchantAuthenticationType();
-    merchantAuthenticationType.setName(constants.apiLoginKey);
-    merchantAuthenticationType.setTransactionKey(constants.transactionKey);
-
-    const creditCard = new APIContracts.CreditCardType();
-    creditCard.setCardNumber(String(cardNumber));
-    creditCard.setExpirationDate(`${expiryMonth}-${expiryYear}`);
-    creditCard.setCardCode(String(cvv));
-
-    const paymentType = new APIContracts.PaymentType();
-    paymentType.setCreditCard(creditCard);
-
-    const transactionSetting = new APIContracts.SettingType();
-    transactionSetting.setSettingName("recurringBilling");
-    transactionSetting.setSettingValue("false");
-
-    const transactionSettings = new APIContracts.ArrayOfSetting();
-    transactionSettings.setSetting([transactionSetting]);
-
-    const transactionRequestType = new APIContracts.TransactionRequestType();
-    transactionRequestType.setTransactionType(APIContracts.TransactionTypeEnum.AUTHCAPTURETRANSACTION);
-    transactionRequestType.setPayment(paymentType);
-    transactionRequestType.setAmount(amountNum);
-    transactionRequestType.setTransactionSettings(transactionSettings);
-
-    const createRequest = new APIContracts.CreateTransactionRequest();
-    createRequest.setMerchantAuthentication(merchantAuthenticationType);
-    createRequest.setTransactionRequest(transactionRequestType);
-
-    const ctrl = new APIControllers.CreateTransactionController(createRequest.getJSON());
-    ctrl.setEnvironment(SDKConstants.endpoint.production);
-
-    const result = await new Promise((resolve, reject) => {
-      ctrl.execute(() => {
-        const apiResponse = ctrl.getResponse();
-        const response = new APIContracts.CreateTransactionResponse(apiResponse);
-
-        if (response !== null) {
-          if (response.getMessages().getResultCode() === APIContracts.MessageTypeEnum.OK) {
-            if (response.getTransactionResponse() && response.getTransactionResponse().getMessages()) {
-              resolve({ success: true, transactionId: response.getTransactionResponse().getTransId() });
-            } else {
-              if (response.getTransactionResponse().getErrors() != null) {
-                reject({ success: false, error: response.getTransactionResponse().getErrors().getError()[0].getErrorText() });
-              } else {
-                reject({ success: false, error: "Failed transaction" });
-              }
-            }
-          } else {
-            if (response.getTransactionResponse() && response.getTransactionResponse().getErrors()) {
-              reject({ success: false, error: response.getTransactionResponse().getErrors().getError()[0].getErrorText() });
-            } else {
-              reject({ success: false, error: response.getMessages().getMessage()[0].getText() });
-            }
-          }
-        } else {
-          reject({ success: false, error: "No response." });
-        }
-      });
     });
 
-    if (!result?.success) {
-      await Sponsor.findByIdAndUpdate(sponsorDoc._id, { paymentStatus: "failed" });
-      return res.status(502).json({ success: false, message: "Payment failed", data: sponsorDoc });
+    const result = await chargeCard({ cardNumber, expiryMonth, expiryYear, cvv, amount: amountNum });
+
+    if (!result.success) {
+      // A held transaction is not a decline — leave it pending so the admin
+      // follows it up in Authorize.Net rather than seeing it written off.
+      await LoveGift.findByIdAndUpdate(gift._id, {
+        paymentStatus: result.held ? "pending" : "failed",
+        failureReason: result.error || "Payment failed",
+        transactionId: result.transactionId || undefined,
+      });
+      const message = result.error || "Payment failed";
+      return res.status(502).json({ success: false, message, error: message });
     }
 
-    const sponsor = await Sponsor.findByIdAndUpdate(
-      sponsorDoc._id,
-      {
-        paymentStatus: "paid",
-        transactionId: result.transactionId,
-        paidAt: new Date(),
-      },
+    const paid = await LoveGift.findByIdAndUpdate(
+      gift._id,
+      { paymentStatus: "paid", transactionId: result.transactionId, paidAt: new Date() },
       { new: true }
     );
 
-    try {
-      const message = `Sponsorship payment successful! 🎉
+    const donorName = `${paid.firstName} ${paid.lastName}`.trim();
+    const designation = artist ? `for ${artist.name}` : "for the station";
 
-Hello ${String(sponsor?.name || sponsorDoc?.name || "")},
+    await notifyAdmin({
+      type: "love_gift_received",
+      title: `Partner Love Gift received ${designation}`,
+      message: `${donorName} gave $${amountNum.toFixed(2)} ${designation}.`,
+      refId: paid._id,
+      refModel: "LoveGift",
+      actorName: donorName,
+      actorEmail: paid.email,
+    });
 
-Thank you for your Love Gift sponsorship to HG Radio Station.
-
-Amount: ${amountNum}
-Transaction ID: ${String(result.transactionId || "")}
-Date: ${new Date().toLocaleDateString()}
-
-Best regards,
-HG Radio Station Team
-`;
-      if (sponsor?.email) {
-        await sendSponsorPaymentEmailViaMailer({
-          email: sponsor.email,
-          name: sponsor.name,
-          amount: amountNum,
-          transactionId: result.transactionId,
-        });
-      }
-    } catch (e) {
-      // don't fail the request if email fails
-      console.log("Sponsor email send error:", e?.message || e);
+    /*
+      Tell the artist a gift came in — without the amount, matching the donate
+      page. The station collects the money and decides each payout separately.
+    */
+    if (artist) {
+      await notifyUser({
+        userId: artist._id,
+        type: "gift_received_artist",
+        title: "Someone sent you a Love Gift",
+        message: `${donorName} gave a Love Gift in your name${paid.comment ? ` — "${paid.comment}"` : ""}.`,
+        refId: paid._id,
+        refModel: "LoveGift",
+        actorName: donorName,
+      });
     }
 
-    return res.status(200).json({ success: true, transactionId: result.transactionId, data: sponsor });
+    try {
+      await sendEmail({
+        to: paid.email,
+        subject: "Thank you for your Love Gift",
+        html: `Hello ${donorName},<br><br>
+Thank you for partnering with HG Radio Station.<br><br>
+Amount: $${amountNum.toFixed(2)}<br>
+${designation ? `Designated: ${designation}<br>` : ""}
+Transaction ID: ${result.transactionId}<br>
+Date: ${new Date().toLocaleDateString()}<br><br>
+With gratitude,<br>
+The HG Radio Station Team`,
+      });
+    } catch (e) {
+      console.error("Partner Love Gift receipt email failed:", e?.message || e);
+    }
+
+    return res.status(200).json({
+      success: true,
+      transactionId: result.transactionId,
+      data: paid,
+      gift: paid,
+    });
   } catch (error) {
-    console.log(error);
-    return res.status(500).json({ success: false, message: error?.error || error?.message || "Server error" });
+    console.error("processSponsorPayment error:", error?.message || error);
+    const message = error?.message || "Server error";
+    return res.status(500).json({ success: false, message, error: message });
   }
 };

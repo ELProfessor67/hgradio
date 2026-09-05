@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Breadcrum from "@/components/Breadcrum";
 import Sponsor1 from "@/assets/Sponsor1.jpg";
 // import { toast } from "sonner";
@@ -75,6 +75,36 @@ const Form = () => {
   const [checkPolicyAccepted, setCheckPolicyAccepted] = useState(false);
   const [policyModelOpen, setPolicyModelOpen] = useState(false);
 
+  /*
+    A Love Gift is designated exactly as it is on the donate page: the station's
+    general fund, or a named artist. Program/Individual above is just a label on
+    the partnership and does not decide where the money is designated.
+  */
+  const [artists, setArtists] = useState<{ _id: string; name: string }[]>([]);
+  const [artistsLoading, setArtistsLoading] = useState(false);
+  const [giftRecipientType, setGiftRecipientType] = useState<"station" | "artist">("station");
+  const [artistId, setArtistId] = useState("");
+
+  const showArtistPicker = formData.method === "gift";
+
+  // Only approved artists are offered; the server re-checks the choice on submit
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setArtistsLoading(true);
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/love-gift/artists`);
+        const data = await res.json();
+        if (!cancelled && res.ok) setArtists(data.artists || []);
+      } catch {
+        if (!cancelled) setArtists([]);
+      } finally {
+        if (!cancelled) setArtistsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   const years = useMemo(() => {
     const current = new Date().getFullYear();
     return Array.from({ length: 12 }, (_, i) => String(current + i));
@@ -131,6 +161,10 @@ const Form = () => {
       return;
     }
     if (formData.method === "gift") {
+      if (giftRecipientType === "artist" && !artistId) {
+        toast.error("Choose the artist this gift is for", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
       const amt = Number(amount);
       if (!amt || amt <= 0) {
         toast.error("Please enter a valid amount", { style: { background: "red", border: "none", color: "white" } });
@@ -165,6 +199,12 @@ const Form = () => {
       };
 
       if (formData.method === "other" && otherText) basePayload.otherText = otherText;
+
+      // Designation travels with the gift, exactly as it does from the donate page
+      if (formData.method === "gift") {
+        basePayload.recipientType = giftRecipientType;
+        if (giftRecipientType === "artist") basePayload.artistId = artistId;
+      }
 
       let res: Response;
 
@@ -217,8 +257,14 @@ const Form = () => {
       setExpiryMonth("");
       setExpiryYear("");
       setCvv("");
+      setArtistId("");
+      setGiftRecipientType("station");
     } catch (err) {
-      toast.error("Submission failed", {
+      // A card error carries the gateway's own wording ("declined",
+      // "insufficient funds"), which a donor needs; other methods keep the
+      // original generic message.
+      const cardError = formData.method === "gift" && err instanceof Error && err.message;
+      toast.error(cardError || "Submission failed", {
         style: {
           background: "red",
           border: "none",
@@ -343,6 +389,54 @@ const Form = () => {
                   }
                   className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none"
                 />
+              )}
+
+              {/*
+                Same designation as the donate page: the general fund, or a named
+                artist. Choosing an artist is what carries the gift into that
+                artist's payout total.
+              */}
+              {showArtistPicker && (
+                <div className="space-y-3">
+                  <p className="font-semibold">Who is this gift for?</p>
+                  <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
+                    <select
+                      value={giftRecipientType}
+                      onChange={(e) => {
+                        setGiftRecipientType(e.target.value as "station" | "artist");
+                        setArtistId("");
+                      }}
+                      className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none"
+                    >
+                      <option value="station" className="text-black">HGC Radio (general fund)</option>
+                      <option value="artist" className="text-black">A specific artist</option>
+                    </select>
+
+                    {giftRecipientType === "artist" && (
+                      <select
+                        value={artistId}
+                        onChange={(e) => setArtistId(e.target.value)}
+                        disabled={artistsLoading}
+                        className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none disabled:opacity-60"
+                      >
+                        <option value="" className="text-black">
+                          {artistsLoading ? "Loading artists…" : "Select an artist"}
+                        </option>
+                        {artists.map((a) => (
+                          <option key={a._id} value={a._id} className="text-black">
+                            {a.name}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {giftRecipientType === "artist" && !artistsLoading && artists.length === 0 && (
+                    <p className="text-sm text-red-300">
+                      No artists are available to receive gifts right now. Please choose HGC Radio instead.
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
