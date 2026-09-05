@@ -2,6 +2,7 @@
 
 import Breadcrum from "@/components/Breadcrum";
 import ArtistGifts from "@/components/ArtistGifts";
+import NotificationBell from "@/components/NotificationBell";
 import Link from "next/link";
 import React, { useEffect, useState, useRef } from "react";
 import bg2 from "@/assets/previous-show.jpg";
@@ -924,6 +925,9 @@ const Page = () => {
                 </div>
               ) : null}
               <div className=" flex items-center gap-2 ">
+                {/* Notifications live here rather than only inside the Love
+                    Gifts section, so they are visible without scrolling. */}
+                <NotificationBell />
 
                 <div
                   onClick={() => {

@@ -1,13 +1,11 @@
 import express from "express";
 import { Testimonial } from "../../models/testimonial.model.js";
+import { createPendingTestimony } from "../../utils/testimony.js";
 
 const router = express.Router();
 
-// Entries created before the approved field existed have no value, so test
-// against "not false" rather than "is true" — otherwise they'd vanish from the site.
 const PUBLIC_FILTER = { approved: { $ne: false } };
 
-// Get paginated testimonials for the public site
 router.get("/", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -28,6 +26,46 @@ router.get("/", async (req, res) => {
     });
   } catch (error) {
     console.error("Error fetching testimonials:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+router.post("/", async (req, res) => {
+  try {
+    const {
+      firstName = "",
+      lastName = "",
+      name = "",
+      email = "",
+      location = "",
+      message = "",
+    } = req.body || {};
+
+    // Accept either a single `name` or the first/last pair the app's forms use.
+    const fullName = (name || `${firstName} ${lastName}`).trim();
+
+    if (!fullName) {
+      return res.status(400).json({ success: false, message: "Name is required" });
+    }
+    if (!String(message).trim()) {
+      return res.status(400).json({ success: false, message: "Message is required" });
+    }
+
+    const testimonial = await createPendingTestimony({
+      name: fullName,
+      email,
+      location,
+      message: String(message).trim(),
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Thank you — your testimony has been sent for review.",
+      testimonial,
+    });
+  } catch (error) {
+    console.error("Error submitting testimony:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

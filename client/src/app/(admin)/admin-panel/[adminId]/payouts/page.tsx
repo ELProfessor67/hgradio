@@ -21,7 +21,11 @@ interface Payout {
   _id: string;
   artist?: { _id: string; name: string; email: string } | null;
   artistName: string;
+
   amount: number;
+  grossAmount?: number;
+  serviceFeePercent?: number | null;
+  serviceFeeAmount?: number;
   note: string;
   status: "pending" | "paid";
   proofUrl: string;
@@ -37,23 +41,32 @@ const PayoutsPage = () => {
   const token = (userData as any)?.token as string;
 
   const [artists, setArtists] = useState<ArtistRow[]>([]);
-  /*
-    Every approved artist, not just those who have received a gift. The summary
-    below is built from gift and payout activity, so on its own it would leave
-    the dropdown empty until someone donates — and you would never be able to pay
-    an artist who has not been gifted.
-  */
+
   const [allArtists, setAllArtists] = useState<{ _id: string; name: string }[]>([]);
   const [totals, setTotals] = useState({ received: 0, paid: 0, pending: 0, outstanding: 0 });
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<"" | "pending" | "paid">("");
 
-  // New payout form
+
   const [formArtist, setFormArtist] = useState("");
   const [formAmount, setFormAmount] = useState("");
   const [formNote, setFormNote] = useState("");
   const [creating, setCreating] = useState(false);
+
+
+  const [defaultFee, setDefaultFee] = useState<number | null>(null);
+  const [formFee, setFormFee] = useState("");
+  // Editable copy of the station default, saved from the card above the form.
+  const [feeInput, setFeeInput] = useState("");
+  const [feeSaving, setFeeSaving] = useState(false);
+
+  const effectiveFee =
+    formFee !== "" && Number.isFinite(Number(formFee)) ? Number(formFee) : defaultFee ?? 0;
+
+  const grossPreview = Number(formAmount) || 0;
+  const feePreview = Math.round(((grossPreview * effectiveFee) / 100) * 100) / 100;
+  const netPreview = Math.round((grossPreview - feePreview) * 100) / 100;
 
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
 
@@ -109,6 +122,59 @@ const PayoutsPage = () => {
     } catch { /* dropdown falls back to artists with activity */ }
   }, []);
 
+  useEffect(() => {
+    if (!token) return;
+    (async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/settings`, {
+          headers: authHeaders,
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const pct = Number(data.settings?.serviceFeePercent ?? 0);
+          setDefaultFee(pct);
+          setFeeInput(String(pct));
+        }
+      } catch {
+      }
+    })();
+  }, [token]);
+
+  // Save the station-wide default. Separate from the per-payout override in the
+  // form below, which never changes this value.
+  const saveDefaultFee = async () => {
+    const pct = Number(feeInput);
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      return toast.error("Enter a percentage between 0 and 100", {
+        style: { background: "red", color: "white", border: "none" },
+      });
+    }
+
+    setFeeSaving(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/settings`, {
+        method: "PATCH",
+        headers: { ...authHeaders, "Content-Type": "application/json" },
+        body: JSON.stringify({ serviceFeePercent: pct }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      const saved = Number(data.settings?.serviceFeePercent ?? pct);
+      setDefaultFee(saved);
+      setFeeInput(String(saved));
+      toast.success("Service fee saved", {
+        style: { background: "green", color: "white", border: "none" },
+      });
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save service fee", {
+        style: { background: "red", color: "white", border: "none" },
+      });
+    } finally {
+      setFeeSaving(false);
+    }
+  };
+
   useEffect(() => { fetchAllArtists(); }, [fetchAllArtists]);
   useEffect(() => { fetchSummary(); }, [fetchSummary]);
   useEffect(() => { fetchPayouts(); }, [fetchPayouts]);
@@ -124,13 +190,18 @@ const PayoutsPage = () => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/payouts`, {
         method: "POST",
         headers: { ...authHeaders, "Content-Type": "application/json" },
-        body: JSON.stringify({ artistId: formArtist, amount: amt, note: formNote }),
+        body: JSON.stringify({
+          artistId: formArtist,
+          grossAmount: amt,
+          ...(formFee !== "" ? { serviceFeePercent: Number(formFee) } : {}),
+          note: formNote,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
 
       toast.success("Payout created", { style: { background: "green", color: "white", border: "none" } });
-      setFormArtist(""); setFormAmount(""); setFormNote("");
+      setFormArtist(""); setFormAmount(""); setFormNote(""); setFormFee("");
       fetchSummary(); fetchPayouts();
     } catch (err: any) {
       toast.error(err.message || "Failed to create payout", {
@@ -221,9 +292,64 @@ const PayoutsPage = () => {
       </div>
 
       {/* Create payout */}
+      {/* Station-wide service fee. Sits here rather than in Settings because
+          this is the only screen where it is actually used. */}
+      <div className="bg-[#071126] border border-white/10 rounded-xl p-5">
+        <div className="flex flex-wrap items-end gap-4">
+          <div className="flex-1 min-w-[240px]">
+            <h3 className="font-semibold text-second">Service Fee</h3>
+            <p className="text-sm text-gray-400 mt-1">
+              What the station keeps from each love gift. Applied automatically to new
+              payouts — you can still override it on any single payout below.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={feeInput}
+                onChange={(e) => setFeeInput(e.target.value)}
+                disabled={defaultFee === null}
+                placeholder={defaultFee === null ? "…" : "20"}
+                aria-label="Station service fee percentage"
+                className="w-28 bg-white/5 border border-white/10 rounded-lg pl-3 pr-7 py-2 text-sm outline-none focus:border-[#66FCF1]/40 disabled:opacity-50"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">%</span>
+            </div>
+
+            <button
+              type="button"
+              onClick={saveDefaultFee}
+              disabled={feeSaving || defaultFee === null || feeInput === String(defaultFee)}
+              className="bg-[#66FCF1] text-black font-semibold rounded-lg px-4 py-2 text-sm disabled:opacity-40 hover:bg-[#66FCF1]/85 transition"
+            >
+              {feeSaving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+
+        {/* The artist's share is the number people actually argue about. */}
+        {feeInput !== "" && Number(feeInput) >= 0 && Number(feeInput) <= 100 && (
+          <p className="text-sm text-gray-400 mt-3">
+            Artist receives{" "}
+            <span className="text-[#66FCF1] font-semibold">
+              {(100 - Number(feeInput)).toFixed(Number(feeInput) % 1 ? 1 : 0)}%
+            </span>{" "}
+            of each gift.
+            {feeInput !== String(defaultFee) && (
+              <span className="text-amber-300"> — unsaved</span>
+            )}
+          </p>
+        )}
+      </div>
+
       <form onSubmit={createPayout} className="bg-[#071126] border border-white/10 rounded-xl p-5 space-y-4">
         <h3 className="font-semibold text-second">Send a payment</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
           <select
             value={formArtist}
             onChange={(e) => setFormArtist(e.target.value)}
@@ -248,7 +374,18 @@ const PayoutsPage = () => {
             min="0"
             value={formAmount}
             onChange={(e) => setFormAmount(e.target.value)}
-            placeholder="Amount to send"
+            placeholder="Gross amount"
+            className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#66FCF1]/40"
+          />
+          <input
+            type="number"
+            step="0.1"
+            min="0"
+            max="100"
+            value={formFee}
+            onChange={(e) => setFormFee(e.target.value)}
+            placeholder={defaultFee === null ? "Fee %" : `Fee % (${defaultFee})`}
+            title="Service fee for this payout. Leave blank to use the station default."
             className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#66FCF1]/40"
           />
           <button
@@ -259,6 +396,23 @@ const PayoutsPage = () => {
             {creating ? "Creating…" : "Create payout"}
           </button>
         </div>
+        {grossPreview > 0 && (
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+            <span className="text-gray-400">
+              Gross <span className="text-white tabular-nums">{money(grossPreview)}</span>
+            </span>
+            <span className="text-gray-400">
+              Fee {effectiveFee}%{" "}
+              <span className="text-amber-300 tabular-nums">−{money(feePreview)}</span>
+              {formFee !== "" && <span className="text-amber-300/70"> (override)</span>}
+            </span>
+            <span className="text-gray-400">
+              Artist receives{" "}
+              <span className="text-[#66FCF1] font-semibold tabular-nums">{money(netPreview)}</span>
+            </span>
+          </div>
+        )}
+
         <input
           value={formNote}
           onChange={(e) => setFormNote(e.target.value)}
@@ -304,11 +458,10 @@ const PayoutsPage = () => {
           <button
             key={label}
             onClick={() => setStatusFilter(v as any)}
-            className={`px-3.5 py-1.5 rounded-lg text-sm font-medium border transition-all ${
-              statusFilter === v
+            className={`px-3.5 py-1.5 rounded-lg text-sm font-medium border transition-all ${statusFilter === v
                 ? "bg-[#66FCF1]/15 border-[#66FCF1]/40 text-[#66FCF1]"
                 : "bg-white/5 border-white/10 text-gray-400 hover:text-white hover:bg-white/10"
-            }`}
+              }`}
           >
             {label}
           </button>
@@ -322,7 +475,7 @@ const PayoutsPage = () => {
               <tr className="text-left text-gray-400 border-b border-white/10">
                 <th className="py-3 px-4 font-medium">Date</th>
                 <th className="py-3 px-4 font-medium">Artist</th>
-                <th className="py-3 px-4 font-medium text-right">Amount</th>
+                <th className="py-3 px-4 font-medium text-right">To artist</th>
                 <th className="py-3 px-4 font-medium">Note</th>
                 <th className="py-3 px-4 font-medium">Proof</th>
                 <th className="py-3 px-4 font-medium">Status</th>
@@ -343,7 +496,15 @@ const PayoutsPage = () => {
                       <div className="font-medium">{p.artist?.name || p.artistName}</div>
                       <div className="text-xs text-gray-500">{p.artist?.email}</div>
                     </td>
-                    <td className="py-3 px-4 text-right font-bold tabular-nums">{money(p.amount)}</td>
+                    <td className="py-3 px-4 text-right tabular-nums">
+                      <div className="font-bold">{money(p.amount)}</div>
+                      {!!p.grossAmount && (
+                        <div className="text-[11px] text-gray-400 mt-0.5">
+                          {money(p.grossAmount)} − {p.serviceFeePercent ?? 0}% fee (
+                          {money(p.serviceFeeAmount || 0)})
+                        </div>
+                      )}
+                    </td>
                     <td className="py-3 px-4 text-gray-400 max-w-[200px]">
                       <div className="truncate">{p.note || "—"}</div>
                     </td>

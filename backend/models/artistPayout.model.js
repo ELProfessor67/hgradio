@@ -1,14 +1,6 @@
 import mongoose from "mongoose";
 
-/*
-  A payment the admin sends an artist for love gifts received on their behalf.
 
-  The amount is decided by the admin, not computed. Gift money is collected into
-  the station's account and never auto-credited to an artist's balance, so this
-  record is the single source of truth for what an artist has actually been paid.
-  Kept separate from WithdrawRequest, which covers album-sale earnings and is
-  artist-initiated.
-*/
 const artistPayoutSchema = new mongoose.Schema(
   {
     artist: {
@@ -17,9 +9,13 @@ const artistPayoutSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    // Snapshot, so the history stays readable if the artist is renamed or removed
     artistName: { type: String, default: "" },
     artistEmail: { type: String, default: "" },
+
+
+    grossAmount: { type: Number, default: 0, min: 0 },
+    serviceFeePercent: { type: Number, default: null, min: 0, max: 100 },
+    serviceFeeAmount: { type: Number, default: 0, min: 0 },
 
     amount: { type: Number, required: true, min: 0 },
 
@@ -37,7 +33,6 @@ const artistPayoutSchema = new mongoose.Schema(
       index: true,
     },
 
-    // Screenshot or receipt of the transfer, uploaded by the admin
     proofUrl: { type: String, default: "" },
 
     paidAt: { type: Date },

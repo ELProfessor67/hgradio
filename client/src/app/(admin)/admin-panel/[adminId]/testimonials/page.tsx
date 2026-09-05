@@ -15,12 +15,13 @@ interface Testimonial {
   message: string;
   img: string;
   approved?: boolean;
-  source?: "admin" | "guestbook";
+
+  source?: "admin" | "app";
   email?: string;
   createdAt?: string;
 }
 
-/** A [TESTIMONY] entry sitting in the Contact collection. */
+
 interface SubmittedTestimony {
   _id: string;
   firstName: string;
@@ -40,7 +41,7 @@ const Page = () => {
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [view, setView] = useState<"all" | "pending">("all");
   const [loading, setLoading] = useState(false);
-  
+
   // Form States
   const [name, setName] = useState("");
   const [designation, setDesignation] = useState("");
@@ -71,12 +72,7 @@ const Page = () => {
 
   /* The admin list must come from the admin endpoint — the public one hides
      entries awaiting approval, which are exactly the ones needing attention. */
-  /*
-    Testimonies submitted from the mobile app land in Contact, tagged with a
-    "[TESTIMONY]" prefix on the first line — there is no separate collection for
-    them. Pulled in here so they are reviewable alongside real testimonials, and
-    can be published to the site with one click.
-  */
+
   const fetchSubmitted = useCallback(async () => {
     try {
       const res = await fetch(
@@ -99,13 +95,7 @@ const Page = () => {
     return { location, body };
   };
 
-  /*
-    Approving a submitted testimony copies it into the Testimonial collection and
-    removes the original contact row — otherwise it would sit in this queue for
-    ever, since a Contact record has no "handled" flag to set. Nothing is lost:
-    the name, location, message and sender email all carry across.
-    Both calls reuse endpoints that already existed.
-  */
+
   const publishSubmitted = async (c: SubmittedTestimony) => {
     const { location, body } = parseSubmitted(c.comment);
     setPublishingId(c._id);
@@ -319,21 +309,19 @@ const Page = () => {
         <div className="flex gap-2">
           <button
             onClick={() => setView("all")}
-            className={`px-3.5 py-1.5 text-sm font-medium border transition-all ${
-              view === "all"
+            className={`px-3.5 py-1.5 text-sm font-medium border transition-all ${view === "all"
                 ? "bg-second/15 border-second/40 text-second"
                 : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-            }`}
+              }`}
           >
             All
           </button>
           <button
             onClick={() => setView("pending")}
-            className={`px-3.5 py-1.5 text-sm font-medium border transition-all ${
-              view === "pending"
+            className={`px-3.5 py-1.5 text-sm font-medium border transition-all ${view === "pending"
                 ? "bg-amber-500/15 border-amber-400/40 text-amber-300"
                 : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
-            }`}
+              }`}
           >
             Awaiting approval{awaitingCount > 0 ? ` (${awaitingCount})` : ""}
           </button>
@@ -421,7 +409,8 @@ const Page = () => {
                 </div>
               )}
 
-              {t.source === "guestbook" && t.email && (
+
+              {t.source === "app" && t.email && (
                 <div className="mt-2 text-[11px] text-gray-500">{t.email}</div>
               )}
 

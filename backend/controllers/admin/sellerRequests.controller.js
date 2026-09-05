@@ -2,7 +2,7 @@ import User from "../../models/user.model.js";
 import Notification from "../../models/notification.model.js";
 import { sendEmail } from "../../utils/util.js";
 import { syncPlaylist } from "../../utils/hgdjSync.js";
-import { resolveAdminNotifications } from "../../utils/notify.js";
+import { notifyUser, resolveAdminNotifications } from "../../utils/notify.js";
 
 const parseStatus = (value) => {
   const s = String(value || "").toLowerCase();
@@ -148,6 +148,17 @@ hgcradio.org · support@hgcradio.org`,
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
 
+    // The artist's own copy — this is the moment they have been waiting for,
+    // and until now nothing told them it had happened.
+    await notifyUser({
+      userId: user._id,
+      type: "seller_approved",
+      title: "Your artist account was approved",
+      message: "You can now upload albums and receive Love Gifts.",
+      refId: user._id,
+      refModel: "User",
+    });
+
     await resolveAdminNotifications(user._id, "User");
 
     return res.status(200).json({
@@ -225,6 +236,15 @@ hgcradio.org · support@hgcradio.org`,
         refModel: "User",
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
+
+    await notifyUser({
+      userId: user._id,
+      type: "seller_rejected",
+      title: "Your artist application was not approved",
+      message: `Reason: ${cleanReason}`,
+      refId: user._id,
+      refModel: "User",
+    });
 
     await resolveAdminNotifications(user._id, "User");
 

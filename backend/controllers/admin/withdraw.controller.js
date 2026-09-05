@@ -1,5 +1,8 @@
 import User from "../../models/user.model.js";
 import WithdrawRequest from "../../models/withdrawRequest.model.js";
+import { notifyUser } from "../../utils/notify.js";
+
+const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
 const parseDate = (value) => {
   if (!value) return null;
@@ -120,6 +123,33 @@ export const adminUpdateWithdrawStatus = async (req, res) => {
       "user",
       "_id name email"
     );
+
+    /*
+      Withdrawals used to change status silently — the artist had to keep
+      opening the page to find out. Only real transitions notify, so re-saving
+      the same status does not send a duplicate.
+    */
+    if (status !== prevStatus) {
+      if (status === "processing") {
+        await notifyUser({
+          userId: request.user,
+          type: "withdraw_processing",
+          title: "Your withdrawal is being processed",
+          message: `Your withdrawal of ${money(request.amount)} is on its way. This usually takes 1 to 2 days.`,
+          refId: request._id,
+          refModel: "WithdrawRequest",
+        });
+      } else if (status === "completed") {
+        await notifyUser({
+          userId: request.user,
+          type: "withdraw_completed",
+          title: `Withdrawal sent: ${money(request.amount)}`,
+          message: `Your withdrawal of ${money(request.amount)} has been completed.`,
+          refId: request._id,
+          refModel: "WithdrawRequest",
+        });
+      }
+    }
 
     return res.status(200).send({
       success: true,

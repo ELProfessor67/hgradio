@@ -2,7 +2,7 @@ import Album from "../../models/album.model.js";
 import Notification from "../../models/notification.model.js";
 import { sendEmail } from "../../utils/util.js";
 import { syncAlbumToHGDJ } from "../../utils/hgdjSync.js";
-import { resolveAdminNotifications } from "../../utils/notify.js";
+import { notifyUser, resolveAdminNotifications } from "../../utils/notify.js";
 
 const parseStatus = (value) => {
   const s = String(value || "").toLowerCase();
@@ -117,6 +117,17 @@ export const adminApproveAlbum = async (req, res) => {
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
 
+    // The artist's own copy — the block above has no recipient, so it only
+    // reaches the admin feed.
+    await notifyUser({
+      userId: album.artist?._id || album.artist,
+      type: "album_approved",
+      title: "Your album was approved",
+      message: `"${album.title}" is now live on the site.`,
+      refId: album._id,
+      refModel: "Album",
+    });
+
     await resolveAdminNotifications(album._id, "Album");
 
     return res.status(200).json({ success: true, message: "Album approved", album });
@@ -171,6 +182,15 @@ export const adminRejectAlbum = async (req, res) => {
         refModel: "Album",
       });
     } catch (e) { console.error("Notification create failed:", e?.message || e); }
+
+    await notifyUser({
+      userId: album.artist?._id || album.artist,
+      type: "album_rejected",
+      title: "Your album was not approved",
+      message: `"${album.title}" was rejected. Reason: ${cleanReason}`,
+      refId: album._id,
+      refModel: "Album",
+    });
 
     await resolveAdminNotifications(album._id, "Album");
 

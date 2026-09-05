@@ -3,7 +3,7 @@
 
 import React, { useCallback, useEffect, useState } from "react";
 import { useData } from "@/context/Context";
-import { FaGift, FaBell, FaExternalLinkAlt } from "react-icons/fa";
+import { FaGift, FaExternalLinkAlt } from "react-icons/fa";
 
 /* No amount — the API deliberately does not send gift values to the artist. */
 interface Gift {
@@ -22,15 +22,6 @@ interface Payout {
   status: "pending" | "paid";
   proofUrl: string;
   paidAt?: string;
-  createdAt: string;
-}
-
-interface Notif {
-  _id: string;
-  type: string;
-  title: string;
-  message: string;
-  isRead: boolean;
   createdAt: string;
 }
 
@@ -59,29 +50,22 @@ const ArtistGifts = () => {
     paidOut: 0,
     payoutPending: 0,
   });
-  const [notifs, setNotifs] = useState<Notif[]>([]);
-  const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
     try {
-      const [giftRes, notifRes] = await Promise.all([
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/my-gifts`, { headers }),
-        fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/notifications?limit=8`, { headers }),
-      ]);
+      const giftRes = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/my-gifts`,
+        { headers }
+      );
 
       if (giftRes.ok) {
         const d = await giftRes.json();
         setGifts(d.gifts || []);
         setPayouts(d.payouts || []);
         setTotals(d.totals || totals);
-      }
-      if (notifRes.ok) {
-        const d = await notifRes.json();
-        setNotifs(d.notifications || []);
-        setUnread(d.unreadCount ?? 0);
       }
     } catch {
       /* leave the section empty rather than breaking the dashboard */
@@ -93,59 +77,13 @@ const ArtistGifts = () => {
 
   useEffect(() => { load(); }, [load]);
 
-  const markAllRead = async () => {
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/notifications/read-all`, {
-        method: "PATCH",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setNotifs((prev) => prev.map((n) => ({ ...n, isRead: true })));
-      setUnread(0);
-    } catch { /* silent */ }
-  };
-
   if (loading) return null;
 
   // Nothing to show yet for an artist who has never received a gift
-  if (!gifts.length && !payouts.length && !notifs.length) return null;
+  if (!gifts.length && !payouts.length) return null;
 
   return (
     <div className="mt-[3rem] space-y-5 text-white">
-      {/* Updates */}
-      {notifs.length > 0 && (
-        <div className="border border-white/10 bg-[#0b1834]">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-            <div className="flex items-center gap-2">
-              <FaBell className="text-second" size={14} />
-              <span className="font-semibold">Updates</span>
-              {unread > 0 && (
-                <span className="bg-second/15 border border-second/30 text-second text-[10px] font-bold px-1.5 py-0.5 rounded-full">
-                  {unread} new
-                </span>
-              )}
-            </div>
-            {unread > 0 && (
-              <button onClick={markAllRead} className="text-xs text-gray-400 hover:text-second transition-colors">
-                Mark all read
-              </button>
-            )}
-          </div>
-          <div className="divide-y divide-white/5 max-h-[220px] overflow-y-auto">
-            {notifs.map((n) => (
-              <div key={n._id} className={`px-4 py-3 ${!n.isRead ? "bg-white/[0.035]" : ""}`}>
-                <div className="flex items-center gap-2">
-                  <span className={`text-sm font-medium ${n.isRead ? "text-gray-300" : "text-white"}`}>
-                    {n.title}
-                  </span>
-                  {!n.isRead && <span className="w-1.5 h-1.5 rounded-full bg-second flex-shrink-0" />}
-                </div>
-                {n.message && <p className="text-xs text-gray-400 mt-0.5">{n.message}</p>}
-                <p className="text-[10px] text-gray-600 mt-0.5">{when(n.createdAt)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
 
       {/* Totals */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

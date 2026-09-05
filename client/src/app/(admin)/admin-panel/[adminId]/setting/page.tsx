@@ -47,18 +47,19 @@ const Page: React.FC<PageProps> = ({ params }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+
   useEffect(() => {
     const getUser = async () => {
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/auth/me/${adminId}`,
           {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${userData.token}`,
-    },
-  }
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${userData.token}`,
+            },
+          }
         );
         if (!res.ok) {
           throw new Error("Failed to fetch user");
@@ -229,9 +230,9 @@ const Page: React.FC<PageProps> = ({ params }) => {
 
 
   const deleteAccount = async () => {
-    
 
-    if(!userData.token){
+
+    if (!userData.token) {
       setToastMessage({
         type: "ERROR",
         msgFor: "DeleteAccount",
@@ -256,7 +257,7 @@ const Page: React.FC<PageProps> = ({ params }) => {
         const errorData = await response.json();
         setToastMessage({
           type: "ERROR",
-        msgFor: "DeleteAccount",
+          msgFor: "DeleteAccount",
           message: errorData.message || "Failed to delete user",
         });
         return;
@@ -340,9 +341,8 @@ const Page: React.FC<PageProps> = ({ params }) => {
         toastMessage.message &&
         toastMessage.type && (
           <p
-            className={` text-sm mt-2 ${
-              toastMessage.type === "ERROR" ? "text-red-500" : "text-green-500"
-            } `}
+            className={` text-sm mt-2 ${toastMessage.type === "ERROR" ? "text-red-500" : "text-green-500"
+              } `}
           >
             {toastMessage.message}
           </p>
@@ -414,13 +414,14 @@ const Page: React.FC<PageProps> = ({ params }) => {
         toastMessage.message &&
         toastMessage.type && (
           <p
-            className={` text-sm mt-2 ${
-              toastMessage.type === "ERROR" ? "text-red-500" : "text-green-500"
-            } `}
+            className={` text-sm mt-2 ${toastMessage.type === "ERROR" ? "text-red-500" : "text-green-500"
+              } `}
           >
             {toastMessage.message}
           </p>
         )}
+
+
 
       <div className=" mt-[3rem] ">
         <div onClick={deleteAccount} className=" bg-[#fc1f44] cursor-pointer border-2 border-[#fc1f44] text-[#fff] hover:bg-[#fff] hover:border-[#fff] transition-colors duration-300 ease-in-out w-full py-2  text-center mt-[1rem] ">

@@ -2,16 +2,13 @@ import mongoose from "mongoose";
 import ArtistPayout from "../../models/artistPayout.model.js";
 import LoveGift from "../../models/loveGift.model.js";
 import User from "../../models/user.model.js";
+import Setting from "../../models/setting.model.js";
 import { notifyUser } from "../../utils/notify.js";
 import { sendEmail } from "../../utils/util.js";
 
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
-/*
-  GET /api/admin/payouts/summary
-  One row per artist: what donors gave for them, what has already been sent, and
-  what is still outstanding. This is the screen the admin works from.
-*/
+
 export const adminPayoutSummary = async (req, res) => {
   try {
     const [gifts, payouts] = await Promise.all([
@@ -29,11 +26,21 @@ export const adminPayoutSummary = async (req, res) => {
       ]),
       ArtistPayout.aggregate([
         {
+
+          $addFields: {
+            _gross: {
+              $cond: [{ $gt: [{ $ifNull: ["$grossAmount", 0] }, 0] }, "$grossAmount", "$amount"],
+            },
+          },
+        },
+        {
           $group: {
             _id: "$artist",
             artistName: { $last: "$artistName" },
             paid: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, "$amount", 0] } },
             pending: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, "$amount", 0] } },
+            paidGross: { $sum: { $cond: [{ $eq: ["$status", "paid"] }, "$_gross", 0] } },
+            pendingGross: { $sum: { $cond: [{ $eq: ["$status", "pending"] }, "$_gross", 0] } },
             payoutCount: { $sum: 1 },
           },
         },
@@ -52,6 +59,8 @@ export const adminPayoutSummary = async (req, res) => {
         lastGiftAt: g.lastGiftAt,
         paid: 0,
         pending: 0,
+        paidGross: 0,
+        pendingGross: 0,
         payoutCount: 0,
       });
     }
@@ -66,10 +75,14 @@ export const adminPayoutSummary = async (req, res) => {
         lastGiftAt: null,
         paid: 0,
         pending: 0,
+        paidGross: 0,
+        pendingGross: 0,
         payoutCount: 0,
       };
       existing.paid = Number(p.paid || 0);
       existing.pending = Number(p.pending || 0);
+      existing.paidGross = Number(p.paidGross || 0);
+      existing.pendingGross = Number(p.pendingGross || 0);
       existing.payoutCount = p.payoutCount;
       if (!existing.artistName) existing.artistName = p.artistName || "";
       rows.set(key, existing);
@@ -86,7 +99,10 @@ export const adminPayoutSummary = async (req, res) => {
     }
 
     const artists = [...rows.values()]
-      .map((r) => ({ ...r, outstanding: Number((r.received - r.paid - r.pending).toFixed(2)) }))
+      .map((r) => ({
+        ...r,
+        outstanding: Number((r.received - r.paidGross - r.pendingGross).toFixed(2)),
+      }))
       .sort((a, b) => b.outstanding - a.outstanding || b.received - a.received);
 
     return res.status(200).json({
@@ -108,7 +124,6 @@ export const adminPayoutSummary = async (req, res) => {
   }
 };
 
-// GET /api/admin/payouts?artistId=&status=&page=&limit=
 export const adminListPayouts = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
@@ -148,22 +163,46 @@ export const adminListPayouts = async (req, res) => {
   }
 };
 
-// POST /api/admin/payouts  { artistId, amount, note }
+
 export const adminCreatePayout = async (req, res) => {
   try {
-    const { artistId, amount, note } = req.body || {};
-    const amountNum = Number(amount);
+    const { artistId, grossAmount, amount, serviceFeePercent, note } = req.body || {};
+    const grossNum = Number(grossAmount ?? amount);
 
     if (!artistId || !mongoose.isValidObjectId(artistId)) {
       return res.status(400).json({ success: false, message: "Choose an artist." });
     }
-    if (!Number.isFinite(amountNum) || amountNum <= 0) {
+    if (!Number.isFinite(grossNum) || grossNum <= 0) {
       return res.status(400).json({ success: false, message: "Enter a valid amount." });
     }
 
     const artist = await User.findById(artistId).select("_id name email");
     if (!artist) {
       return res.status(404).json({ success: false, message: "Artist not found." });
+    }
+
+    let pct;
+    if (serviceFeePercent !== undefined && serviceFeePercent !== null && serviceFeePercent !== "") {
+      pct = Number(serviceFeePercent);
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Service fee must be a number between 0 and 100.",
+        });
+      }
+    } else {
+      const settings = await Setting.getGlobal();
+      pct = Number(settings.serviceFeePercent || 0);
+    }
+
+    const feeAmount = Math.round(((grossNum * pct) / 100) * 100) / 100;
+    const netAmount = Math.round((grossNum - feeAmount) * 100) / 100;
+
+    if (netAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "That fee leaves the artist nothing to be paid. Lower the percentage.",
+      });
     }
 
     const received = await LoveGift.aggregate([
@@ -175,11 +214,27 @@ export const adminCreatePayout = async (req, res) => {
       artist: artist._id,
       artistName: artist.name,
       artistEmail: artist.email,
-      amount: amountNum,
+      grossAmount: grossNum,
+      serviceFeePercent: pct,
+      serviceFeeAmount: feeAmount,
+      amount: netAmount,
       giftsReceivedAtCreation: Number(received?.[0]?.amount || 0),
       note: note || "",
       status: "pending",
       createdBy: req.user?.id,
+    });
+
+    // Raised, not yet sent. Told now so the artist sees money coming rather
+    // than only hearing about it once it has already gone out.
+    await notifyUser({
+      userId: artist._id,
+      type: "payout_created",
+      title: `Payment on the way: ${money(netAmount)}`,
+      message: `HGC Radio is preparing a payment of ${money(netAmount)} for you${
+        note ? ` — ${note}` : ""
+      }.`,
+      refId: payout._id,
+      refModel: "ArtistPayout",
     });
 
     return res.status(201).json({ success: true, message: "Payout created", payout });
@@ -192,14 +247,11 @@ export const adminCreatePayout = async (req, res) => {
   }
 };
 
-/*
-  PATCH /api/admin/payouts/:payoutId  { status, proofUrl, note }
-  Marking a payout paid is what tells the artist the money went out.
-*/
+
 export const adminUpdatePayout = async (req, res) => {
   try {
     const { payoutId } = req.params;
-    const { status, proofUrl, note } = req.body || {};
+    const { status, proofUrl, note, grossAmount, serviceFeePercent } = req.body || {};
 
     const payout = await ArtistPayout.findById(payoutId);
     if (!payout) {
@@ -216,6 +268,55 @@ export const adminUpdatePayout = async (req, res) => {
     if (typeof proofUrl === "string") payout.proofUrl = proofUrl;
     if (typeof note === "string") payout.note = note;
 
+
+    const feeSupplied =
+      serviceFeePercent !== undefined && serviceFeePercent !== null && serviceFeePercent !== "";
+    const wantsMoneyChange = grossAmount !== undefined || feeSupplied;
+
+    if (wantsMoneyChange) {
+      if (payout.status === "paid") {
+        return res.status(400).json({
+          success: false,
+          message: "A payout already marked paid cannot have its amount or fee changed.",
+        });
+      }
+
+
+      const gross =
+        grossAmount !== undefined
+          ? Number(grossAmount)
+          : Number(payout.grossAmount) || Number(payout.amount);
+      if (!Number.isFinite(gross) || gross <= 0) {
+        return res.status(400).json({ success: false, message: "Enter a valid amount." });
+      }
+
+      const pct =
+        serviceFeePercent !== undefined && serviceFeePercent !== null && serviceFeePercent !== ""
+          ? Number(serviceFeePercent)
+          : Number(payout.serviceFeePercent || 0);
+      if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+        return res.status(400).json({
+          success: false,
+          message: "Service fee must be a number between 0 and 100.",
+        });
+      }
+
+      const feeAmount = Math.round(((gross * pct) / 100) * 100) / 100;
+      const netAmount = Math.round((gross - feeAmount) * 100) / 100;
+
+      if (netAmount <= 0) {
+        return res.status(400).json({
+          success: false,
+          message: "That fee leaves the artist nothing to be paid. Lower the percentage.",
+        });
+      }
+
+      payout.grossAmount = gross;
+      payout.serviceFeePercent = pct;
+      payout.serviceFeeAmount = feeAmount;
+      payout.amount = netAmount;
+    }
+
     const becomingPaid = status === "paid" && payout.status !== "paid";
     if (becomingPaid) {
       payout.status = "paid";
@@ -229,9 +330,8 @@ export const adminUpdatePayout = async (req, res) => {
         userId: payout.artist,
         type: "payout_paid",
         title: `Payment sent: ${money(payout.amount)}`,
-        message: `HGC Radio has sent you ${money(payout.amount)}${
-          payout.note ? ` — ${payout.note}` : ""
-        }.`,
+        message: `HGC Radio has sent you ${money(payout.amount)}${payout.note ? ` — ${payout.note}` : ""
+          }.`,
         refId: payout._id,
         refModel: "ArtistPayout",
       });
@@ -265,7 +365,6 @@ The HG Radio Station Team`,
   }
 };
 
-// DELETE /api/admin/payouts/:payoutId — only while still pending
 export const adminDeletePayout = async (req, res) => {
   try {
     const { payoutId } = req.params;
