@@ -24,6 +24,10 @@ interface UserData {
   zipCode?: string;
   description?: string;
   profileImg?: string;
+  // Artist identity: the handle a donor checks before sending a Love Gift, and
+  // the genre shown beside it to separate artists sharing a display name
+  username?: string;
+  genre?: string;
   [key: string]: unknown;
 }
 

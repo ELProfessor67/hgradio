@@ -23,6 +23,8 @@ interface FormDataType {
   zipCode: string;
   description: string;
   profileImg: string;
+  genre: string;
+  username: string;
 }
 
 const Page = () => {
@@ -76,11 +78,79 @@ const Form = () => {
     zipCode: userData.zipCode || "",
     description: userData.description || "",
     profileImg: userData.profileImg || "",
+    genre: userData.genre || "",
+    username: userData.username || "",
   });
   const [loading, setLoading] = useState(false);
 
+  /*
+    Genre and handle only mean anything for artists — they are what separate two
+    artists sharing a display name when a donor picks one. A buyer never appears
+    in that list, so they are not shown either field.
+  */
+  const isArtist = userData.accountType === "seller";
+
+  // A handle is claimed once and then fixed: donors identify an artist by it, so
+  // letting it move would point an old reference at a different person.
+  const usernameLocked = Boolean(userData.username);
+
+  const [usernameStatus, setUsernameStatus] = useState<{
+    state: "idle" | "checking" | "available" | "taken";
+    message: string;
+  }>({ state: "idle", message: "" });
+
+  useEffect(() => {
+    const value = formData.username.trim().toLowerCase();
+    if (usernameLocked || !value) {
+      setUsernameStatus({ state: "idle", message: "" });
+      return;
+    }
+
+    let cancelled = false;
+    setUsernameStatus({ state: "checking", message: "Checking availability..." });
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/username-available?username=${encodeURIComponent(value)}`
+        );
+        const data = await res.json();
+        if (cancelled) return;
+        setUsernameStatus({
+          state: data?.available ? "available" : "taken",
+          message: data?.message || "",
+        });
+      } catch {
+        if (!cancelled) setUsernameStatus({ state: "idle", message: "" });
+      }
+    }, 400);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [formData.username, usernameLocked]);
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    const handle = formData.username.trim().toLowerCase();
+    if (isArtist && !usernameLocked && handle) {
+      if (!/^[a-z0-9_]{3,20}$/.test(handle)) {
+        toast.error("Username must be 3-20 characters: lowercase letters, numbers or underscore.", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
+      if (usernameStatus.state === "taken") {
+        toast.error("That username is already taken.", { style: { background: "red", border: "none", color: "white" } });
+        return;
+      }
+    }
+
+    // Send the handle only when it is actually being claimed; the server ignores
+    // it otherwise, but there is no reason to send it at all.
+    const payload = {
+      ...formData,
+      username: isArtist && !usernameLocked && handle ? handle : undefined,
+      genre: isArtist ? formData.genre : undefined,
+    };
+
     setLoading(true);
 
     try {
@@ -92,7 +162,7 @@ const Form = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${userData.token}`,
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -227,6 +297,53 @@ const Form = () => {
           className="text-[1.1rem] py-3 px-4 outline-none bg-[#28344cdb] w-full"
         />
       </div>
+
+      {isArtist && (
+        <div className=" flex items-center gap-5 flex-wrap md:flex-nowrap ">
+          <div className=" w-full space-y-1 ">
+            <input
+              type="text"
+              placeholder="Genre (e.g. Gospel, Pop)"
+              value={formData.genre}
+              onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+              className=" text-[1.1rem] py-3 px-4 outline-none bg-[#28344cdb] w-full "
+            />
+            <p className=" text-xs text-gray-400 ">
+              Shown beside your name when someone chooses who to send a Love Gift to.
+            </p>
+          </div>
+
+          <div className=" w-full space-y-1 ">
+            <div className=" flex items-center bg-[#28344cdb] ">
+              <span className=" pl-4 text-gray-400 ">@</span>
+              <input
+                type="text"
+                placeholder="username"
+                value={formData.username}
+                disabled={usernameLocked}
+                onChange={(e) =>
+                  setFormData({ ...formData, username: e.target.value.toLowerCase() })
+                }
+                className=" text-[1.1rem] py-3 px-2 outline-none bg-transparent w-full disabled:opacity-60 "
+              />
+            </div>
+            <p
+              className={` text-xs ${
+                usernameStatus.state === "taken"
+                  ? "text-red-400"
+                  : usernameStatus.state === "available"
+                    ? "text-green-400"
+                    : "text-gray-400"
+              } `}
+            >
+              {usernameLocked
+                ? "Your handle is permanent — supporters use it to be sure they are sending to you."
+                : usernameStatus.message ||
+                  "Claim your handle. It cannot be changed later, so choose carefully."}
+            </p>
+          </div>
+        </div>
+      )}
 
       <textarea
         name=""

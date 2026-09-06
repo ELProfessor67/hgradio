@@ -111,8 +111,49 @@ const Page = () => {
     confirmRights: false,
     fullName: "",
     stageName: "",
+    username: "",
     signatureTyped: "",
   });
+
+  /*
+    Live availability for the artist handle. Debounced so a burst of keystrokes
+    makes one request, and the result is keyed to nothing but the current value —
+    a late reply for an older value is ignored by the cleanup below.
+  */
+  const [usernameStatus, setUsernameStatus] = useState<{
+    state: "idle" | "checking" | "available" | "taken";
+    message: string;
+  }>({ state: "idle", message: "" });
+
+  useEffect(() => {
+    const value = agreementForm.username.trim().toLowerCase();
+    if (!value) {
+      setUsernameStatus({ state: "idle", message: "" });
+      return;
+    }
+
+    let cancelled = false;
+    setUsernameStatus({ state: "checking", message: "Checking availability…" });
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/auth/username-available?username=${encodeURIComponent(value)}`
+        );
+        const data = await res.json();
+        if (cancelled) return;
+        setUsernameStatus({
+          state: data?.available ? "available" : "taken",
+          message: data?.message || "",
+        });
+      } catch {
+        if (!cancelled) setUsernameStatus({ state: "idle", message: "" });
+      }
+    }, 400);
+
+    return () => { cancelled = true; clearTimeout(timer); };
+  }, [agreementForm.username]);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasSignature, setHasSignature] = useState(false);
@@ -479,12 +520,24 @@ const Page = () => {
       digitalDistributionStageName: agreementForm.stageName,
       digitalDistributionArtistSignature: agreementForm.signatureTyped,
       artistSignatureUrl: finalSignatureUrl,
+      username: agreementForm.username.trim().toLowerCase(),
     };
   };
 
   const handleUpgradeSubmit = async () => {
     if (!upgradeOtpVerified) {
       toast.error("Please verify OTP first.", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+
+    // The server re-checks this; catching it here saves a round trip with a
+    // signature upload attached to it.
+    if (!/^[a-z0-9_]{3,20}$/.test(agreementForm.username.trim().toLowerCase())) {
+      toast.error("Choose a username: 3-20 characters, lowercase letters, numbers or underscore.", { style: { background: "red", border: "none", color: "white" } });
+      return;
+    }
+    if (usernameStatus.state === "taken") {
+      toast.error("That username is already taken.", { style: { background: "red", border: "none", color: "white" } });
       return;
     }
 
@@ -513,7 +566,7 @@ const Page = () => {
         setUpgradeOtpToken("");
         setUpgradeOtpSent(false);
         setUpgradeOtpVerified(false);
-        setAgreementForm({ agreeTerms: false, confirmAccurate: false, confirmRights: false, fullName: "", stageName: "", signatureTyped: "" });
+        setAgreementForm({ agreeTerms: false, confirmAccurate: false, confirmRights: false, fullName: "", stageName: "", username: "", signatureTyped: "" });
         setHasSignature(false);
       }
     } catch (err: any) {
@@ -822,6 +875,38 @@ const Page = () => {
             className="w-full py-2 px-4 bg-[#222F46] border-b-2 border-[#445d88] text-white outline-none"
           />
         </div>
+        {/*
+          The handle supporters use to find this artist. Checked while typing so
+          a clash surfaces here rather than after the whole contract is filled in.
+        */}
+        <div className="space-y-1 md:col-span-2">
+          <label className="text-gray-400 text-sm">Username *</label>
+          <div className="flex items-center bg-[#222F46] border-b-2 border-[#445d88]">
+            <span className="pl-4 text-gray-400">@</span>
+            <input
+              type="text"
+              value={agreementForm.username}
+              onChange={(e) =>
+                setAgreementForm((p) => ({ ...p, username: e.target.value.toLowerCase() }))
+              }
+              placeholder="yourhandle"
+              className="w-full py-2 px-2 bg-transparent text-white outline-none"
+              required
+            />
+          </div>
+          <p
+            className={`text-xs ${
+              usernameStatus.state === "taken"
+                ? "text-red-400"
+                : usernameStatus.state === "available"
+                  ? "text-green-400"
+                  : "text-gray-500"
+            }`}
+          >
+            {usernameStatus.message ||
+              "3-20 characters: lowercase letters, numbers or underscore. Donors use this to be sure they are supporting you and not someone with the same name."}
+          </p>
+        </div>
         <div className="space-y-1 md:col-span-2">
           <label className="text-gray-400 text-sm">Signature (Type Name) *</label>
           <input
@@ -998,6 +1083,7 @@ const Page = () => {
                           confirmRights: true,
                           fullName: (userData as any)?.digitalDistributionArtistName || "",
                           stageName: (userData as any)?.digitalDistributionStageName || "",
+                          username: (userData as any)?.username || "",
                           signatureTyped: (userData as any)?.digitalDistributionArtistSignature || "",
                         });
                         setResubmitModalOpen(true);

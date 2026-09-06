@@ -21,6 +21,25 @@ const userSchema = new mongoose.Schema(
     state: { type: String },
     zipCode: { type: String },
     profileImg: { type: String, default: "" },
+
+    /*
+      An artist's public handle, and the thing that tells two artists with the
+      same display name apart before money is sent to one of them. Unique, but
+      sparse and with no default: every account that predates this field has no
+      username at all, and a sparse index skips missing values while an empty
+      string would collide on the second such account.
+    */
+    username: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      lowercase: true,
+      match: [/^[a-z0-9_]{3,20}$/, "Username must be 3-20 characters: letters, numbers or underscore"],
+    },
+    // Shown beside an artist's name wherever they are chosen, so two artists
+    // with the same display name can be told apart before money is sent
+    genre: { type: String, default: "" },
     description: { type: String, default: "" },
     role: { type: String, enum: ["Admin", "User"], default: "User" },
     // Account type inside "User" role

@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import LoveGift from "../../models/loveGift.model.js";
+import User from "../../models/user.model.js";
 
 const parseDate = (value) => {
   if (!value) return null;
@@ -38,6 +39,7 @@ export const adminListLoveGifts = async (req, res) => {
         { lastName: { $regex: q, $options: "i" } },
         { email: { $regex: q, $options: "i" } },
         { artistName: { $regex: q, $options: "i" } },
+        { artistUsername: { $regex: q, $options: "i" } },
         { partnerTarget: { $regex: q, $options: "i" } },
         { organization: { $regex: q, $options: "i" } },
         { transactionId: { $regex: q, $options: "i" } },
@@ -57,16 +59,34 @@ export const adminListLoveGifts = async (req, res) => {
     const [total, gifts, totals] = await Promise.all([
       LoveGift.countDocuments(filter),
       LoveGift.find(filter)
-        .populate("artist", "_id name email")
         .sort({ createdAt: -1 })
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
       // Money actually collected, across the whole filtered set rather than this page
       LoveGift.aggregate([
         { $match: { ...filter, paymentStatus: "paid" } },
         { $group: { _id: null, amount: { $sum: "$amount" }, count: { $sum: 1 } } },
       ]),
     ]);
+
+    /*
+      Attach the artist by hand rather than with populate. Populate replaces the
+      reference with the account and leaves null when that account is gone, which
+      loses the one identifier that always survives — the gift permanently stores
+      the artist id, and the admin needs it to trace a deleted artist's gifts.
+    */
+    const artistIds = [...new Set(gifts.map((g) => g.artist).filter(Boolean).map(String))];
+    const accounts = artistIds.length
+      ? await User.find({ _id: { $in: artistIds } }).select("_id name email username").lean()
+      : [];
+    const accountById = new Map(accounts.map((u) => [String(u._id), u]));
+
+    const giftsWithArtist = gifts.map((g) => ({
+      ...g,
+      artistId: g.artist ? String(g.artist) : null,
+      artist: g.artist ? accountById.get(String(g.artist)) || null : null,
+    }));
 
     return res.status(200).json({
       success: true,
@@ -76,7 +96,7 @@ export const adminListLoveGifts = async (req, res) => {
       totalPages: Math.ceil(total / limit),
       collected: Number(totals?.[0]?.amount || 0),
       collectedCount: Number(totals?.[0]?.count || 0),
-      gifts,
+      gifts: giftsWithArtist,
     });
   } catch (error) {
     return res.status(500).json({
@@ -101,6 +121,7 @@ export const adminLoveGiftsByArtist = async (req, res) => {
         $group: {
           _id: "$artist",
           artistName: { $last: "$artistName" },
+          artistUsername: { $last: "$artistUsername" },
           totalReceived: { $sum: "$amount" },
           giftCount: { $sum: 1 },
           lastGiftAt: { $max: "$paidAt" },
@@ -119,6 +140,7 @@ export const adminLoveGiftsByArtist = async (req, res) => {
       artists: rows.map((r) => ({
         artistId: r._id,
         artistName: r.artistName,
+        artistUsername: r.artistUsername || "",
         totalReceived: Number(r.totalReceived || 0),
         giftCount: r.giftCount,
         lastGiftAt: r.lastGiftAt,

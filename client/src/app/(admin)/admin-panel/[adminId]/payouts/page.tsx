@@ -10,6 +10,7 @@ import { FaMoneyCheckAlt, FaCheck, FaTimes, FaUpload, FaExternalLinkAlt } from "
 interface ArtistRow {
   artistId: string;
   artistName: string;
+  artistUsername?: string;
   received: number;
   giftCount: number;
   paid: number;
@@ -19,8 +20,9 @@ interface ArtistRow {
 
 interface Payout {
   _id: string;
-  artist?: { _id: string; name: string; email: string } | null;
+  artist?: { _id: string; name: string; email: string; username?: string } | null;
   artistName: string;
+  artistUsername?: string;
 
   amount: number;
   grossAmount?: number;
@@ -42,7 +44,9 @@ const PayoutsPage = () => {
 
   const [artists, setArtists] = useState<ArtistRow[]>([]);
 
-  const [allArtists, setAllArtists] = useState<{ _id: string; name: string }[]>([]);
+  const [allArtists, setAllArtists] = useState<
+    { _id: string; name: string; username?: string }[]
+  >([]);
   const [totals, setTotals] = useState({ received: 0, paid: 0, pending: 0, outstanding: 0 });
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(false);
@@ -363,6 +367,7 @@ const PayoutsPage = () => {
               return (
                 <option key={a._id} value={a._id} className="text-black">
                   {a.name}
+                  {a.username ? ` (@${a.username})` : ` (ID ${String(a._id).slice(-6)})`}
                   {row && row.outstanding > 0 ? ` — ${money(row.outstanding)} unallocated` : ""}
                 </option>
               );
@@ -439,7 +444,12 @@ const PayoutsPage = () => {
               <tbody>
                 {artists.map((a) => (
                   <tr key={a.artistId} className="border-b border-white/5 hover:bg-white/[0.03]">
-                    <td className="py-2.5 px-4 font-medium">{a.artistName || "Unnamed"}</td>
+                    <td className="py-2.5 px-4 font-medium">
+                      <div>{a.artistName || "Unnamed"}</div>
+                      <div className="text-xs text-gray-400 font-normal">
+                        {a.artistUsername ? `@${a.artistUsername}` : `ID ${String(a.artistId).slice(-6)}`}
+                      </div>
+                    </td>
                     <td className="py-2.5 px-4 text-right tabular-nums text-[#66FCF1]">{money(a.received)}</td>
                     <td className="py-2.5 px-4 text-right tabular-nums text-green-300">{money(a.paid)}</td>
                     <td className="py-2.5 px-4 text-right tabular-nums text-amber-300">{money(a.pending)}</td>
@@ -494,6 +504,11 @@ const PayoutsPage = () => {
                     </td>
                     <td className="py-3 px-4">
                       <div className="font-medium">{p.artist?.name || p.artistName}</div>
+                      <div className="text-xs text-gray-400">
+                        {p.artist?.username || p.artistUsername
+                          ? `@${p.artist?.username || p.artistUsername}`
+                          : `ID ${String(p.artist?._id || "").slice(-6) || "unknown"}`}
+                      </div>
                       <div className="text-xs text-gray-500">{p.artist?.email}</div>
                     </td>
                     <td className="py-3 px-4 text-right tabular-nums">

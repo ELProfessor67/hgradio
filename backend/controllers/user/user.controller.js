@@ -2,6 +2,7 @@ import User from "../../models/user.model.js";
 import Album from "../../models/album.model.js";
 import { generateToken } from "./auth.controller.js";
 import { notifyAdmin } from "../../utils/notify.js";
+import { checkUsernameAvailable } from "../../utils/username.js";
 import crypto from "crypto";
 import pkg from "authorizenet";
 
@@ -143,7 +144,7 @@ const chargeCardWithAuthorizeNet = async ({
 
 export const updateUser = async (req, res) => {
   const userId = req.user.id;
-  const { name, country, city, state, zipCode, profileImg, description } =
+  const { name, country, city, state, zipCode, profileImg, description, genre, username } =
     req.body;
 
   // const defaultProfileImg =
@@ -167,6 +168,23 @@ export const updateUser = async (req, res) => {
 
     if (profileImg && profileImg.trim() !== "") {
       user.profileImg = profileImg;
+    }
+
+    // Allowed through empty, so an artist can clear a genre they set by mistake
+    if (genre !== undefined && genre !== null) user.genre = String(genre).trim();
+
+    /*
+      A handle can be claimed once and never changed. Artists who registered
+      before handles existed need a way to set one, but a handle a donor has
+      already used to identify someone must not later point at a different
+      person — so an account that has one keeps it, silently ignoring the field.
+    */
+    if (username !== undefined && username !== null && !user.username) {
+      const check = await checkUsernameAvailable(username, { excludeUserId: user._id });
+      if (!check.ok) {
+        return res.status(400).json({ success: false, message: check.error });
+      }
+      user.username = check.username;
     }
 
     if (name !== undefined && name !== null && name !== "") user.name = name;

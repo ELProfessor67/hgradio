@@ -20,8 +20,11 @@ interface LoveGift {
   comment: string;
   recipientType: "artist" | "station";
   source?: "donate" | "partner";
-  artist?: { _id: string; name: string; email: string } | null;
+  artist?: { _id: string; name: string; email: string; username?: string } | null;
   artistName?: string;
+  artistUsername?: string;
+  // The raw reference, still present when the artist account itself is deleted
+  artistId?: string;
   partnerType?: string;
   partnerTarget?: string;
   organization?: string;
@@ -34,6 +37,7 @@ interface LoveGift {
 interface ArtistTotal {
   artistId: string;
   artistName: string;
+  artistUsername?: string;
   totalReceived: number;
   giftCount: number;
   lastGiftAt: string;
@@ -177,11 +181,19 @@ const LoveGiftsPage = () => {
             {byArtist.map((a) => (
               <button
                 key={a.artistId}
-                onClick={() => { setRecipientType("artist"); setSearchInput(a.artistName); setSearch(a.artistName); setPage(1); }}
+                onClick={() => {
+                  const term = a.artistUsername || a.artistName;
+                  setRecipientType("artist"); setSearchInput(term); setSearch(term); setPage(1);
+                }}
                 className="w-full flex items-center justify-between px-4 py-2.5 text-left hover:bg-white/5 transition-colors"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-medium truncate">{a.artistName || "Unnamed artist"}</div>
+                  <div className="text-sm font-medium truncate">
+                    {a.artistName || "Unnamed artist"}
+                    <span className="text-gray-400 font-normal">
+                      {a.artistUsername ? ` @${a.artistUsername}` : ` · ID ${String(a.artistId).slice(-6)}`}
+                    </span>
+                  </div>
                   <div className="text-xs text-gray-500">
                     {a.giftCount} gift{a.giftCount === 1 ? "" : "s"}
                     {a.lastGiftAt ? ` · last ${new Date(a.lastGiftAt).toLocaleDateString()}` : ""}
@@ -290,10 +302,18 @@ const LoveGiftsPage = () => {
                       </td>
                       <td className="py-3 px-4">
                         {g.recipientType === "artist" ? (
-                          <span className="inline-flex items-center gap-1.5 text-green-300">
-                            <FaUser size={10} />
-                            {g.artist?.name || g.artistName || "Artist removed"}
-                          </span>
+                          <div>
+                            <span className="inline-flex items-center gap-1.5 text-green-300">
+                              <FaUser size={10} />
+                              {g.artist?.name || g.artistName || "Artist removed"}
+                            </span>
+                            {/* The handle is what tells two same-named artists apart */}
+                            <div className="text-[10px] text-gray-400">
+                              {g.artist?.username || g.artistUsername
+                                ? `@${g.artist?.username || g.artistUsername}`
+                                : `ID ${String(g.artist?._id || g.artistId || "").slice(-6) || "unknown"}`}
+                            </div>
+                          </div>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 text-gray-300">
                             <FaBroadcastTower size={10} />

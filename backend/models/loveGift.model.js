@@ -56,6 +56,9 @@ const loveGiftSchema = new mongoose.Schema(
     // the donor's receipt stay truthful if the artist later renames or is removed
     artistName: { type: String, default: "" },
     artistEmail: { type: String, default: "" },
+    // The handle matters most here: it is how the admin tells two artists with
+    // the same display name apart when deciding who a payout actually goes to
+    artistUsername: { type: String, default: "" },
 
     paymentStatus: {
       type: String,

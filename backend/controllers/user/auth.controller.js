@@ -6,6 +6,7 @@ import { UAParser } from "ua-parser-js";
 import RegistrationOtp from "../../models/registrationOtp.model.js";
 import UpgradeOtp from "../../models/upgradeOtp.model.js";
 import { notifyAdmin } from "../../utils/notify.js";
+import { checkUsernameAvailable, USERNAME_RULE } from "../../utils/username.js";
 
 const REGISTER_OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const REGISTER_OTP_MIN_RESEND_SECONDS = 60;
@@ -82,6 +83,7 @@ export const registerUser = async (req, res) => {
       state,
       zipCode,
       accountType,
+      username,
       otpToken,
       // Consent / release form fields
       initialGrantAuthorization,
@@ -154,10 +156,25 @@ export const registerUser = async (req, res) => {
       return res.status(400).send({ error: "User already exists" });
     }
 
+    /*
+      Only artists need a handle — it is what tells two artists with the same
+      display name apart when a donor picks one. Buyers do not appear in that
+      list, so they are not asked for one; the upgrade path asks if they later
+      become an artist.
+    */
+    let sellerUsername;
+    if (effectiveAccountType === "seller") {
+      const check = await checkUsernameAvailable(username);
+      if (!check.ok) return res.status(400).send({ error: check.error });
+      sellerUsername = check.username;
+    }
+
     const user = await User.create({
       name: String(name).trim(),
       email: normalizedEmail,
       password,
+      // Left absent for buyers so the sparse unique index skips them
+      ...(sellerUsername ? { username: sellerUsername } : {}),
       country,
       city,
       state,
@@ -655,6 +672,7 @@ export const upgradeToSeller = async (req, res) => {
     const {
       userId,
       otpToken,
+      username,
       // Contract form fields
       initialGrantAuthorization,
       initialOwnershipRepresentation,
@@ -726,6 +744,17 @@ export const upgradeToSeller = async (req, res) => {
       return res.status(400).send({ error: "Email mismatch" });
     }
 
+    /*
+      Becoming an artist means appearing in the gift recipient list, so a handle
+      is required here too. An account that somehow already has one keeps it
+      rather than being forced to pick again.
+    */
+    if (!user.username) {
+      const check = await checkUsernameAvailable(username, { excludeUserId: user._id });
+      if (!check.ok) return res.status(400).send({ error: check.error });
+      user.username = check.username;
+    }
+
     // Update user to seller with contract data
     user.accountType = "seller";
     user.sellerApprovalStatus = "pending";
@@ -788,3 +817,23 @@ export const upgradeToSeller = async (req, res) => {
   }
 };
 
+
+/*
+  GET /api/auth/username-available?username=abdulmanan
+  Lets the signup form tell someone their handle is taken while they type,
+  rather than after they have filled in an entire artist contract. Public, and
+  answers only yes/no plus the rule — it never reveals whose account holds it.
+*/
+export const checkUsername = async (req, res) => {
+  try {
+    const result = await checkUsernameAvailable(req.query.username);
+    return res.status(200).json({
+      success: true,
+      available: result.ok,
+      message: result.ok ? "Username is available" : result.error,
+      rule: USERNAME_RULE,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Failed to check username" });
+  }
+};

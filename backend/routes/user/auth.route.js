@@ -12,6 +12,7 @@ import {
   requestUpgradeOtp,
   verifyUpgradeOtp,
   upgradeToSeller,
+  checkUsername,
 } from "../../controllers/user/auth.controller.js";
 
 
@@ -19,6 +20,7 @@ const router = express.Router();
 
 
 router.post("/register", registerUser);
+router.get("/username-available", checkUsername);
 router.post("/register-otp/request", requestRegisterOtp);
 router.post("/register-otp/verify", verifyRegisterOtp);
 router.post("/register-otp/resend", resendRegisterOtp);

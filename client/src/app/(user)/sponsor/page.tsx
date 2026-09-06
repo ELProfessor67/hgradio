@@ -8,7 +8,7 @@ import Sponsor1 from "@/assets/Sponsor1.jpg";
 // import { toast } from "sonner";
 import { toast } from "sonner";
 import { ButtonLoading } from "@/utils/Loading";
-import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaMoneyCheck, FaCopy, FaCheckCircle } from "react-icons/fa";
+import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaMoneyCheck, FaCopy, FaCheckCircle, FaUser, FaSearch } from "react-icons/fa";
 
 const Page = () => {
   return (
@@ -80,10 +80,37 @@ const Form = () => {
     general fund, or a named artist. Program/Individual above is just a label on
     the partnership and does not decide where the money is designated.
   */
-  const [artists, setArtists] = useState<{ _id: string; name: string }[]>([]);
+  type Artist = { _id: string; name: string; username?: string; profileImg?: string; genre?: string };
+
+  /*
+    What separates two artists sharing a display name. The handle is the part a
+    donor can check against what the artist told them; artists registered before
+    handles existed fall back to a fragment of their account id, which is at
+    least unique, until they set one.
+  */
+  const artistTag = (a: Artist) => {
+    const handle = a.username ? `@${a.username}` : `ID ${a._id.slice(-6)}`;
+    return a.genre ? `${handle} · ${a.genre}` : handle;
+  };
+  const [artists, setArtists] = useState<Artist[]>([]);
   const [artistsLoading, setArtistsLoading] = useState(false);
   const [giftRecipientType, setGiftRecipientType] = useState<"station" | "artist">("station");
   const [artistId, setArtistId] = useState("");
+  const [artistSearch, setArtistSearch] = useState("");
+
+  /*
+    Two artists may share a display name, so the donor picks from rows carrying a
+    photo and genre, and the gift is stored against the account id — never the
+    name. The chosen artist is restated before payment so a mistake is visible
+    while it can still be corrected.
+  */
+  const selectedArtist = artists.find((a) => a._id === artistId) || null;
+
+  const matchingArtists = useMemo(() => {
+    const q = artistSearch.trim().toLowerCase();
+    if (!q) return artists;
+    return artists.filter((a) => a.name?.toLowerCase().includes(q));
+  }, [artists, artistSearch]);
 
   const showArtistPicker = formData.method === "gift";
 
@@ -258,6 +285,7 @@ const Form = () => {
       setExpiryYear("");
       setCvv("");
       setArtistId("");
+      setArtistSearch("");
       setGiftRecipientType("station");
     } catch (err) {
       // A card error carries the gateway's own wording ("declined",
@@ -399,42 +427,101 @@ const Form = () => {
               {showArtistPicker && (
                 <div className="space-y-3">
                   <p className="font-semibold">Who is this gift for?</p>
-                  <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
-                    <select
-                      value={giftRecipientType}
-                      onChange={(e) => {
-                        setGiftRecipientType(e.target.value as "station" | "artist");
-                        setArtistId("");
-                      }}
-                      className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none"
-                    >
-                      <option value="station" className="text-black">HGC Radio (general fund)</option>
-                      <option value="artist" className="text-black">A specific artist</option>
-                    </select>
+                  <select
+                    value={giftRecipientType}
+                    onChange={(e) => {
+                      setGiftRecipientType(e.target.value as "station" | "artist");
+                      setArtistId("");
+                      setArtistSearch("");
+                    }}
+                    className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none md:w-1/2"
+                  >
+                    <option value="station" className="text-black">HGC Radio (general fund)</option>
+                    <option value="artist" className="text-black">A specific artist</option>
+                  </select>
 
-                    {giftRecipientType === "artist" && (
-                      <select
-                        value={artistId}
-                        onChange={(e) => setArtistId(e.target.value)}
-                        disabled={artistsLoading}
-                        className="text-[1.1rem] py-3 px-4 bg-[#28344cdb] w-full outline-none disabled:opacity-60"
+                  {giftRecipientType === "artist" && selectedArtist && (
+                    <div className="bg-[#28344cdb] p-4 flex items-center gap-4">
+                      {selectedArtist.profileImg ? (
+                        <img
+                          src={selectedArtist.profileImg}
+                          alt=""
+                          className="w-14 h-14 rounded-full object-cover shrink-0"
+                        />
+                      ) : (
+                        <div className="w-14 h-14 rounded-full bg-black/30 flex items-center justify-center shrink-0">
+                          <FaUser className="text-second" />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-gray-300">You&apos;re sending a Love Gift to:</p>
+                        <p className="font-semibold truncate">{selectedArtist.name}</p>
+                        <p className="text-sm text-second truncate">{artistTag(selectedArtist)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setArtistId(""); setArtistSearch(""); }}
+                        className="text-sm underline shrink-0 hover:text-second transition-colors"
                       >
-                        <option value="" className="text-black">
-                          {artistsLoading ? "Loading artists…" : "Select an artist"}
-                        </option>
-                        {artists.map((a) => (
-                          <option key={a._id} value={a._id} className="text-black">
-                            {a.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+                        Change artist
+                      </button>
+                    </div>
+                  )}
 
-                  {giftRecipientType === "artist" && !artistsLoading && artists.length === 0 && (
-                    <p className="text-sm text-red-300">
-                      No artists are available to receive gifts right now. Please choose HGC Radio instead.
-                    </p>
+                  {giftRecipientType === "artist" && !selectedArtist && (
+                    <div className="space-y-3">
+                      <p className="text-sm text-gray-300">Select the artist you want to support</p>
+
+                      <div className="relative">
+                        <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+                        <input
+                          value={artistSearch}
+                          onChange={(e) => setArtistSearch(e.target.value)}
+                          type="text"
+                          placeholder="Search artist by name"
+                          className="text-[1.1rem] py-3 pl-11 pr-4 bg-[#28344cdb] w-full outline-none"
+                        />
+                      </div>
+
+                      {artistsLoading ? (
+                        <p className="text-sm text-gray-400">Loading artists…</p>
+                      ) : artists.length === 0 ? (
+                        <p className="text-sm text-red-300">
+                          No artists are available to receive gifts right now. Please choose HGC Radio instead.
+                        </p>
+                      ) : matchingArtists.length === 0 ? (
+                        <p className="text-sm text-gray-400">
+                          No artist matches “{artistSearch}”.
+                        </p>
+                      ) : (
+                        <div className="max-h-[260px] overflow-y-auto divide-y divide-white/10 bg-[#28344cdb]">
+                          {matchingArtists.map((a) => (
+                            <button
+                              key={a._id}
+                              type="button"
+                              onClick={() => setArtistId(a._id)}
+                              className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors"
+                            >
+                              {a.profileImg ? (
+                                <img
+                                  src={a.profileImg}
+                                  alt=""
+                                  className="w-10 h-10 rounded-full object-cover shrink-0"
+                                />
+                              ) : (
+                                <div className="w-10 h-10 rounded-full bg-black/30 flex items-center justify-center shrink-0">
+                                  <FaUser className="text-second" size={12} />
+                                </div>
+                              )}
+                              <div className="min-w-0">
+                                <div className="font-medium truncate">{a.name}</div>
+                                <div className="text-xs text-gray-400 truncate">{artistTag(a)}</div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               )}
@@ -704,6 +791,33 @@ const Form = () => {
               </span>
             </p>
 
+
+            {/*
+              Last restatement of who is being paid and how much, directly above
+              the button that charges the card — the point where a wrong
+              recipient is still free to fix.
+            */}
+            {formData.method === "gift" && Number(amount) > 0 && (
+              <div className="bg-[#28344cdb] border-l-4 border-second p-4">
+                <p className="text-sm text-gray-300">Please confirm your recipient</p>
+                <p className="mt-1">
+                  You&apos;re sending{" "}
+                  <span className="font-semibold text-second">
+                    ${Number(amount).toFixed(2)}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-semibold">
+                    {giftRecipientType === "artist"
+                      ? selectedArtist?.name ?? "an artist you have not chosen yet"
+                      : "HGC Radio (general fund)"}
+                  </span>
+                  {giftRecipientType === "artist" && selectedArtist
+                    ? ` (${artistTag(selectedArtist)})`
+                    : ""}
+                  .
+                </p>
+              </div>
+            )}
 
             {/* Submit */}
             <div className="flex justify-center pt-4">

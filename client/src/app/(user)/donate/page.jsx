@@ -3,7 +3,7 @@ import Breadcrum from '@/components/Breadcrum'
 import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ButtonLoading } from '@/utils/Loading'
-import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle, FaMoneyCheck, FaEnvelope, FaShieldAlt, FaHandHoldingHeart } from 'react-icons/fa'
+import { FaCreditCard, FaDollarSign, FaMoneyBillWave, FaCopy, FaCheckCircle, FaMoneyCheck, FaEnvelope, FaShieldAlt, FaHandHoldingHeart, FaUser, FaSearch } from 'react-icons/fa'
 
 
 const methodsContent = {
@@ -55,6 +55,32 @@ const page = () => {
 
     const [artists, setArtists] = useState([])
     const [artistsLoading, setArtistsLoading] = useState(false)
+    const [artistSearch, setArtistSearch] = useState("")
+
+    /*
+      Two artists may share a display name, so the donor picks from rows carrying
+      a photo and genre, and the gift is stored against the account id — never
+      the name. The choice is restated before payment so a mistake is visible
+      while it can still be corrected.
+    */
+    const selectedArtist = artists.find(a => a._id === form.artistId) || null
+
+    /*
+      What separates two artists sharing a display name. The handle is the part a
+      donor can check against what the artist told them; artists registered
+      before handles existed fall back to a fragment of their account id, which
+      is at least unique, until they set one.
+    */
+    const artistTag = (a) => {
+        const handle = a.username ? `@${a.username}` : `ID ${a._id.slice(-6)}`
+        return a.genre ? `${handle} · ${a.genre}` : handle
+    }
+
+    const matchingArtists = useMemo(() => {
+        const q = artistSearch.trim().toLowerCase()
+        if (!q) return artists
+        return artists.filter(a => a.name?.toLowerCase().includes(q))
+    }, [artists, artistSearch])
 
     // Only approved artists are offered; the server re-checks the choice on submit
     useEffect(() => {
@@ -139,6 +165,7 @@ const page = () => {
 
             toast.success('Donation successful! Thank you!', { style: { background: 'green', border: 'none', color: 'white' } })
             setForm({ firstName: "", lastName: "", email: "", amount: "", cardNumber: "", expiryMonth: "", expiryYear: "", cvv: "", comment: "", recipientType: "station", artistId: "" })
+            setArtistSearch("")
         } catch (error) {
             toast.error(error.message || 'Something went wrong', { style: { background: 'red', border: 'none', color: 'white' } })
         } finally {
@@ -165,39 +192,88 @@ const page = () => {
                             </div>
                             <div className=" space-y-3 ">
                                 <p className=" font-semibold flex items-center gap-2 "><FaHandHoldingHeart className=" text-second " /> Who is this gift for?</p>
-                                <div className=" grid md:grid-cols-2 grid-cols-1 gap-4 ">
-                                    <select
-                                        name="recipientType"
-                                        value={form.recipientType}
-                                        onChange={handleChange}
-                                        className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full "
-                                    >
-                                        <option value="station" className=" text-black ">HGC Radio (general fund)</option>
-                                        <option value="artist" className=" text-black ">A specific artist</option>
-                                    </select>
+                                <select
+                                    name="recipientType"
+                                    value={form.recipientType}
+                                    onChange={handleChange}
+                                    className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full md:w-1/2 "
+                                >
+                                    <option value="station" className=" text-black ">HGC Radio (general fund)</option>
+                                    <option value="artist" className=" text-black ">A specific artist</option>
+                                </select>
 
-                                    {form.recipientType === 'artist' && (
-                                        <select
-                                            name="artistId"
-                                            value={form.artistId}
-                                            onChange={handleChange}
-                                            disabled={artistsLoading}
-                                            className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full disabled:opacity-60 "
+                                {form.recipientType === 'artist' && selectedArtist && (
+                                    <div className=" bg-[#d9d9d9]/10 p-4 flex items-center gap-4 ">
+                                        {selectedArtist.profileImg ? (
+                                            <img src={selectedArtist.profileImg} alt="" className=" w-14 h-14 rounded-full object-cover shrink-0 " />
+                                        ) : (
+                                            <div className=" w-14 h-14 rounded-full bg-black/30 flex items-center justify-center shrink-0 ">
+                                                <FaUser className=" text-second " />
+                                            </div>
+                                        )}
+                                        <div className=" min-w-0 flex-1 ">
+                                            <p className=" text-sm text-gray-300 ">You&apos;re sending a Love Gift to:</p>
+                                            <p className=" font-semibold truncate ">{selectedArtist.name}</p>
+                                            <p className=" text-sm text-second truncate ">{artistTag(selectedArtist)}</p>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => { setForm(prev => ({ ...prev, artistId: "" })); setArtistSearch("") }}
+                                            className=" text-sm underline shrink-0 hover:text-second transition-colors "
                                         >
-                                            <option value="" className=" text-black ">
-                                                {artistsLoading ? 'Loading artists…' : 'Select an artist'}
-                                            </option>
-                                            {artists.map(a => (
-                                                <option key={a._id} value={a._id} className=" text-black ">{a.name}</option>
-                                            ))}
-                                        </select>
-                                    )}
-                                </div>
+                                            Change artist
+                                        </button>
+                                    </div>
+                                )}
 
-                                {form.recipientType === 'artist' && !artistsLoading && artists.length === 0 && (
-                                    <p className=" text-sm text-red-300 ">
-                                        No artists are available to receive gifts right now. Please choose HGC Radio instead.
-                                    </p>
+                                {form.recipientType === 'artist' && !selectedArtist && (
+                                    <div className=" space-y-3 ">
+                                        <p className=" text-sm text-gray-300 ">Select the artist you want to support</p>
+
+                                        <div className=" relative ">
+                                            <FaSearch className=" absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 " size={14} />
+                                            <input
+                                                value={artistSearch}
+                                                onChange={(e) => setArtistSearch(e.target.value)}
+                                                type="text"
+                                                placeholder="Search artist by name"
+                                                className=" text-[1.1rem] py-3 pl-11 pr-4 outline-none bg-[#d9d9d9]/10 w-full "
+                                            />
+                                        </div>
+
+                                        {artistsLoading ? (
+                                            <p className=" text-sm text-gray-400 ">Loading artists…</p>
+                                        ) : artists.length === 0 ? (
+                                            <p className=" text-sm text-red-300 ">
+                                                No artists are available to receive gifts right now. Please choose HGC Radio instead.
+                                            </p>
+                                        ) : matchingArtists.length === 0 ? (
+                                            <p className=" text-sm text-gray-400 ">No artist matches “{artistSearch}”.</p>
+                                        ) : (
+                                            <div className=" max-h-[260px] overflow-y-auto divide-y divide-white/10 bg-[#d9d9d9]/10 ">
+                                                {matchingArtists.map(a => (
+                                                    <button
+                                                        key={a._id}
+                                                        type="button"
+                                                        onClick={() => setForm(prev => ({ ...prev, artistId: a._id }))}
+                                                        className=" w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-white/10 transition-colors "
+                                                    >
+                                                        {a.profileImg ? (
+                                                            <img src={a.profileImg} alt="" className=" w-10 h-10 rounded-full object-cover shrink-0 " />
+                                                        ) : (
+                                                            <div className=" w-10 h-10 rounded-full bg-black/30 flex items-center justify-center shrink-0 ">
+                                                                <FaUser className=" text-second " size={12} />
+                                                            </div>
+                                                        )}
+                                                        <div className=" min-w-0 ">
+                                                            <div className=" font-medium truncate ">{a.name}</div>
+                                                            <div className=" text-xs text-gray-400 truncate ">{artistTag(a)}</div>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 )}
 
                                 <textarea
@@ -382,6 +458,26 @@ const page = () => {
                                     Legal-Clean & Professional Secure Payment Processing This website uses Authorize.Net for secure credit card processing. Transactions are protected by advanced encryption and comply with PCI-DSS security standards.
                                 </span>
                             </p>
+
+                            {/*
+                              Last restatement of who is being paid and how much,
+                              directly above the button that charges the card — the
+                              point where a wrong recipient is still free to fix.
+                            */}
+                            {Number(form.amount) > 0 && (
+                                <div className=" bg-[#d9d9d9]/10 border-l-4 border-second p-4 ">
+                                    <p className=" text-sm text-gray-300 ">Please confirm your recipient</p>
+                                    <p className=" mt-1 ">
+                                        You&apos;re sending <span className=" font-semibold text-second ">${Number(form.amount).toFixed(2)}</span> to{' '}
+                                        <span className=" font-semibold ">
+                                            {form.recipientType === 'artist'
+                                                ? (selectedArtist?.name ?? 'an artist you have not chosen yet')
+                                                : 'HGC Radio (general fund)'}
+                                        </span>
+                                        {form.recipientType === 'artist' && selectedArtist ? ` (${artistTag(selectedArtist)})` : ''}.
+                                    </p>
+                                </div>
+                            )}
 
                             <div className=" flex justify-center pt-[0.5rem] ">
                                 <button type="submit" disabled={loading || !checkPolicyAccepted} className=" bg-second relative w-[12rem] h-[2.8rem] text-[#000] font-semibold disabled:opacity-50 disabled:cursor-not-allowed">

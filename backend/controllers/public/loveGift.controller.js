@@ -19,7 +19,7 @@ export const listGiftableArtists = async (req, res) => {
       accountType: "seller",
       sellerApprovalStatus: "approved",
     })
-      .select("_id name")
+      .select("_id name username profileImg genre")
       .sort({ name: 1 });
 
     return res.status(200).json({ success: true, artists });
@@ -164,7 +164,7 @@ export const processLoveGift = async (req, res) => {
         role: "User",
         accountType: "seller",
         sellerApprovalStatus: "approved",
-      }).select("_id name email");
+      }).select("_id name email username");
 
       if (!artist) {
         return res.status(400).json({ success: false, message: "That artist is not available." });
@@ -181,6 +181,7 @@ export const processLoveGift = async (req, res) => {
       artist: artist?._id || null,
       artistName: artist?.name || "",
       artistEmail: artist?.email || "",
+      artistUsername: artist?.username || "",
       paymentStatus: "pending",
     });
 
@@ -204,12 +205,20 @@ export const processLoveGift = async (req, res) => {
     );
 
     const donorName = `${paid.firstName} ${paid.lastName}`.trim();
-    const designation = artist ? `for ${artist.name}` : "for the station";
+    /*
+      Name the handle wherever the admin reads who a gift was for — it is the
+      only thing that separates two artists sharing a display name, and this
+      notification is the first place the admin sees the gift.
+    */
+    const artistLabel = artist
+      ? `${artist.name}${artist.username ? ` (@${artist.username})` : ` (ID ${String(artist._id).slice(-6)})`}`
+      : "";
+    const designation = artist ? `for ${artistLabel}` : "for the station";
 
     await notifyAdmin({
       type: "love_gift_received",
       title: artist
-        ? `Love Gift received for ${artist.name}`
+        ? `Love Gift received for ${artistLabel}`
         : "Love Gift received for the station",
       message: `${donorName} gave $${amountNum.toFixed(2)} ${designation}.`,
       refId: paid._id,

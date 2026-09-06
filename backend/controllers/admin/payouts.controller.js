@@ -18,6 +18,7 @@ export const adminPayoutSummary = async (req, res) => {
           $group: {
             _id: "$artist",
             artistName: { $last: "$artistName" },
+            artistUsername: { $last: "$artistUsername" },
             received: { $sum: "$amount" },
             giftCount: { $sum: 1 },
             lastGiftAt: { $max: "$paidAt" },
@@ -54,6 +55,7 @@ export const adminPayoutSummary = async (req, res) => {
       rows.set(String(g._id), {
         artistId: g._id,
         artistName: g.artistName || "",
+        artistUsername: g.artistUsername || "",
         received: Number(g.received || 0),
         giftCount: g.giftCount,
         lastGiftAt: g.lastGiftAt,
@@ -70,6 +72,7 @@ export const adminPayoutSummary = async (req, res) => {
       const existing = rows.get(key) || {
         artistId: p._id,
         artistName: p.artistName || "",
+        artistUsername: "",
         received: 0,
         giftCount: 0,
         lastGiftAt: null,
@@ -88,13 +91,21 @@ export const adminPayoutSummary = async (req, res) => {
       rows.set(key, existing);
     }
 
-    // Fill in any names the snapshots missed
-    const missing = [...rows.values()].filter((r) => !r.artistName).map((r) => r.artistId);
+    /*
+      Fill in anything the snapshots missed. A handle claimed after an artist's
+      last gift was never snapshotted, so the live account is the only source —
+      and this is the screen where the admin decides who actually gets paid.
+    */
+    const missing = [...rows.values()]
+      .filter((r) => !r.artistName || !r.artistUsername)
+      .map((r) => r.artistId);
     if (missing.length) {
-      const users = await User.find({ _id: { $in: missing } }).select("_id name");
+      const users = await User.find({ _id: { $in: missing } }).select("_id name username");
       for (const u of users) {
         const row = rows.get(String(u._id));
-        if (row) row.artistName = u.name;
+        if (!row) continue;
+        if (!row.artistName) row.artistName = u.name;
+        if (!row.artistUsername) row.artistUsername = u.username || "";
       }
     }
 
@@ -140,7 +151,7 @@ export const adminListPayouts = async (req, res) => {
     const [total, payouts] = await Promise.all([
       ArtistPayout.countDocuments(filter),
       ArtistPayout.find(filter)
-        .populate("artist", "_id name email")
+        .populate("artist", "_id name email username")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit),
@@ -354,7 +365,7 @@ The HG Radio Station Team`,
       }
     }
 
-    const populated = await ArtistPayout.findById(payout._id).populate("artist", "_id name email");
+    const populated = await ArtistPayout.findById(payout._id).populate("artist", "_id name email username");
     return res.status(200).json({ success: true, message: "Payout updated", payout: populated });
   } catch (error) {
     return res.status(500).json({
