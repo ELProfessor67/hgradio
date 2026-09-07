@@ -7,6 +7,22 @@ const DevNotice = () => {
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
+        /*
+          The app links here with "?from=app".
+
+          This notice is dismissed per browser session, and the app's in-app
+          browser starts a fresh session on every link tap -- so a listener who
+          taps "Read the full policy" gets a full-screen dark scrim over the
+          policy every single time, which is exactly the "it goes to a blank
+          page" the client reported. A visitor arriving from the app has
+          already been told the site is being built, by the app.
+        */
+        try {
+            if (new URLSearchParams(window.location.search).get('from') === 'app') return;
+        } catch {
+            // No URL to read: fall through and show the notice as usual.
+        }
+
         try {
             if (sessionStorage.getItem(STORAGE_KEY) === '1') return;
         } catch {

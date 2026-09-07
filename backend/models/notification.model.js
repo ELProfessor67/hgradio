@@ -9,6 +9,7 @@ const notificationSchema = new mongoose.Schema(
         "seller_submitted",
         "seller_resubmitted",
         "testimonial_submitted",
+        "prayer_request_submitted",
         "love_gift_received",
         "album_approved",
         "album_rejected",

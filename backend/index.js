@@ -49,6 +49,8 @@ app.get("/", (req, res) => {
 
 import adminTestimonialRoutes from "./routes/admin/testimonial.route.js";
 import publicTestimonialRoutes from "./routes/public/testimonial.route.js";
+import adminPrayerRoutes from "./routes/admin/prayer.route.js";
+import publicPrayerRoutes from "./routes/public/prayer.route.js";
 
 app.use("/api/admin/auth", adminAuthRoutes);
 app.use("/api/admin/withdraw", adminWithdrawRoutes);
@@ -60,6 +62,7 @@ app.use("/api/admin/love-gifts", adminLoveGiftRoutes);
 app.use("/api/admin/payouts", adminPayoutRoutes);
 app.use("/api/admin/settings", adminSettingsRoutes);
 app.use("/api/admin/testimonials", adminTestimonialRoutes);
+app.use("/api/admin/prayer-requests", adminPrayerRoutes);
 app.use("/api/user/auth", userAuthRoutes);
 app.use("/api/user/", userRoutes);
 app.use("/api/user/withdraw-requests", userWithdrawRoutes);
@@ -72,6 +75,7 @@ app.use("/api/love-gift", loveGiftRoutes);
 
 app.use("/api/public/album", publicAlbumRoutes)
 app.use("/api/public/testimonials", publicTestimonialRoutes)
+app.use("/api/public/prayer-requests", publicPrayerRoutes)
 app.use("/api/comment", commentRoutes)
 
 const PORT = process.env.PORT || 7501;

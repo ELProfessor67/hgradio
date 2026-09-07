@@ -6,6 +6,11 @@ import {
   createPendingTestimony,
   parseTestimonyComment,
 } from "../../utils/testimony.js";
+import {
+  PRAYER_PREFIX,
+  createPrayerRequest,
+  parsePrayerComment,
+} from "../../utils/prayer.js";
 
 const { APIContracts, APIControllers, Constants: SDKConstants } = pkg;
 
@@ -14,6 +19,25 @@ export const createContact = async (req, res) => {
   try {
     const { firstName = "", lastName = "", email = "", comment = "" } = req.body || {};
 
+
+    /*
+      Prayer requests from app builds already installed still arrive here as a
+      tagged comment. Route them into the PrayerRequest collection so the
+      sharing choice the sender made is stored as a field rather than as a
+      sentence nobody can act on. New app builds post straight to
+      /api/public/prayer-requests and never reach this branch.
+    */
+    if (PRAYER_PREFIX.test(comment)) {
+      const { visibility, phone, message } = parsePrayerComment(comment);
+      const prayer = await createPrayerRequest({
+        name: `${firstName} ${lastName}`.trim() || email || "Anonymous",
+        email,
+        phone,
+        message: message || String(comment).trim(),
+        visibility,
+      });
+      return res.status(201).json(prayer);
+    }
 
     if (TESTIMONY_PREFIX.test(comment)) {
       const { location, body } = parseTestimonyComment(comment);

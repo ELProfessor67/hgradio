@@ -27,7 +27,11 @@ type ContactType = "" | "testimony" | "prayer" | "greeting" | "guestbook" | "oth
 const TABS: { value: ContactType; label: string; key: string }[] = [
   { value: "", label: "All", key: "all" },
   { value: "testimony", label: "Testimonies", key: "testimony" },
-  { value: "prayer", label: "Prayer Requests", key: "prayer" },
+  /* Prayer requests now have their own collection and their own screen
+     (Prayer Requests in the sidebar), where the sender's sharing choice is a
+     real field. This tab is the archive of the ones received before that, which
+     are still Contact rows — it will not grow, and nothing new arrives here. */
+  { value: "prayer", label: "Prayer Requests (archive)", key: "prayer" },
   { value: "greeting", label: "Greetings", key: "greeting" },
   { value: "guestbook", label: "Guestbook", key: "guestbook" },
   { value: "other", label: "Other", key: "other" },

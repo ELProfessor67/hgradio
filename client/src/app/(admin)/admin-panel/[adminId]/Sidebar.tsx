@@ -13,7 +13,7 @@ import { HiUsers } from "react-icons/hi2";
 import { FiSettings } from "react-icons/fi";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
-import { FaMoneyBillWave, FaCommentDots, FaGift, FaMoneyCheckAlt } from "react-icons/fa";
+import { FaMoneyBillWave, FaCommentDots, FaGift, FaMoneyCheckAlt, FaPrayingHands } from "react-icons/fa";
 import { MdOutlineLibraryMusic } from "react-icons/md";
 import { IoNotificationsSharp } from "react-icons/io5";
 
@@ -89,6 +89,11 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
       name: "Testimonials",
       icon: <FaCommentDots />,
       path: `/admin-panel/${id}/testimonials`,
+    },
+    {
+      name: "Prayer Requests",
+      icon: <FaPrayingHands />,
+      path: `/admin-panel/${id}/prayer-requests`,
     }
   ];
 

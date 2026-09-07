@@ -74,6 +74,13 @@ export const Footer = () => {
               <span>About Us</span>
             </Link>
             <Link
+              href={`/prayer-wall`}
+              className=" flex items-center gap-1 hover:text-second font-semibold hover:gap-2 transition-all duration-300 ease-in-out "
+            >
+              <MdArrowForwardIos />
+              <span>Prayer Wall</span>
+            </Link>
+            <Link
               href={`/privacy-policy`}
               className=" flex items-center gap-1 hover:text-second font-semibold hover:gap-2 transition-all duration-300 ease-in-out "
             >

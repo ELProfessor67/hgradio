@@ -186,6 +186,12 @@ const Header = () => {
                   >
                     Guest Book
                   </Link>
+                  <Link
+                    href="/prayer-wall"
+                    className="block px-4  py-3 text-[1.1rem] hover:bg-[#090e1b] hover:text-second transition-all duration-300 ease-in-out "
+                  >
+                    Prayer Wall
+                  </Link>
                 </div>
               </div>
             </div>
@@ -307,6 +313,12 @@ const Header = () => {
                   onClick={() => setIsOpenSidebar(false)}
                 >
                   Guest Book
+                </Link>
+                <Link
+                  href="/prayer-wall"  className=" py-2 "
+                  onClick={() => setIsOpenSidebar(false)}
+                >
+                  Prayer Wall
                 </Link>
               </div>
             </div>
