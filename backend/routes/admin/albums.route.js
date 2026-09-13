@@ -5,13 +5,17 @@ import {
   adminGetAlbumById,
   adminApproveAlbum,
   adminRejectAlbum,
+  adminSyncAlbumsToHGDJ,
 } from "../../controllers/admin/albums.controller.js";
 
 const router = express.Router();
 
 router.get("/", protect, adminCheck, adminListAlbums);
+// Must precede "/:albumId" so "sync-hgdj" is not read as an album id.
+router.post("/sync-hgdj", protect, adminCheck, adminSyncAlbumsToHGDJ);
 router.get("/:albumId", protect, adminCheck, adminGetAlbumById);
 router.patch("/:albumId/approve", protect, adminCheck, adminApproveAlbum);
 router.patch("/:albumId/reject", protect, adminCheck, adminRejectAlbum);
+router.post("/:albumId/sync-hgdj", protect, adminCheck, adminSyncAlbumsToHGDJ);
 
 export default router;

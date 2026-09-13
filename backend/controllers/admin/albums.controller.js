@@ -9,6 +9,74 @@ const parseStatus = (value) => {
   return ["pending", "approved", "rejected"].includes(s) ? s : "pending";
 };
 
+// POST /api/admin/albums/sync-hgdj        → every approved album
+// POST /api/admin/albums/:albumId/sync-hgdj → one album
+//
+// The DJ panel copy is only pushed at approve time, so albums approved while the
+// sync was broken (or before it existed) never reached it and cannot be
+// re-approved. This re-runs the sync on demand.
+export const adminSyncAlbumsToHGDJ = async (req, res) => {
+  try {
+    const { albumId } = req.params;
+
+    const filter = albumId
+      ? { _id: albumId }
+      : { approvalStatus: "approved" };
+
+    const albums = await Album.find(filter).populate("artist", "name");
+
+    if (albums.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: albumId ? "Album not found" : "No approved albums to sync",
+      });
+    }
+
+    const results = [];
+    for (const album of albums) {
+      if (album.approvalStatus !== "approved") {
+        results.push({
+          albumId: String(album._id),
+          title: album.title,
+          skipped: `not approved (${album.approvalStatus})`,
+        });
+        continue;
+      }
+
+      const outcome = await syncAlbumToHGDJ(album, album.artist?.name || "");
+      results.push({
+        albumId: String(album._id),
+        title: album.title,
+        ...outcome,
+      });
+    }
+
+    const okCount = results.filter((r) => r.playlist && !r.failed).length;
+    const failedCount = results.filter((r) => r.playlist === false || r.failed > 0).length;
+
+    console.log(
+      `[adminSyncAlbumsToHGDJ] ${okCount} album(s) synced, ${failedCount} with problems`
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: `${okCount} album(s) synced to the DJ panel${
+        failedCount ? `, ${failedCount} had problems` : ""
+      }.`,
+      total: results.length,
+      okCount,
+      failedCount,
+      results,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to sync albums",
+      error: error.message,
+    });
+  }
+};
+
 // GET /api/admin/albums?status=pending&page=1&limit=20&q=
 export const adminListAlbums = async (req, res) => {
   try {

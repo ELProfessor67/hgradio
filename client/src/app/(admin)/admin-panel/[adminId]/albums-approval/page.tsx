@@ -99,7 +99,7 @@ const AlbumModal = ({
   onClose: () => void;
   onStatusChange: (id: string, status: ApprovalStatus) => void;
 }) => {
-  const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
+  const [loading, setLoading] = useState<"approve" | "reject" | "sync" | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectInput, setShowRejectInput] = useState(false);
   const playingRef = useRef<HTMLAudioElement | null>(null);
@@ -147,6 +147,33 @@ const AlbumModal = ({
 
       onStatusChange(album._id, "approved");
       onClose();
+    } catch (err: any) {
+      toast.error(err.message, { style: { background: "red", color: "white", border: "none" } });
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleSyncToDJ = async () => {
+    setLoading("sync");
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/albums/${album._id}/sync-hgdj`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to sync");
+
+      const result = data.results?.[0];
+      if (!result?.playlist) {
+        toast.error("DJ panel ne album accept nahi kiya. Server logs dekhein.", { duration: 8000 });
+      } else if (result.failed > 0) {
+        toast.warning(`Album gaya, par ${result.failed} track fail hue.`, { duration: 8000 });
+      } else {
+        toast.success(`DJ panel me bheja — ${result.synced} track.`, {
+          style: { background: "green", color: "white", border: "none" },
+        });
+      }
     } catch (err: any) {
       toast.error(err.message, { style: { background: "red", color: "white", border: "none" } });
     } finally {
@@ -422,6 +449,18 @@ const AlbumModal = ({
               {loading === "reject" ? "Rejecting..." : showRejectInput ? "Confirm Reject" : "Reject"}
             </button>
           </div>
+
+          {/* Approve is disabled once approved, so this is the only way to retry
+              the DJ panel push for an album that was approved earlier. */}
+          {album.approvalStatus === "approved" && (
+            <button
+              onClick={handleSyncToDJ}
+              disabled={loading !== null}
+              className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/15 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium py-2.5 px-6 rounded-lg transition-all"
+            >
+              {loading === "sync" ? "Sending to DJ panel..." : "Re-send to DJ panel"}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -440,6 +479,7 @@ const AlbumsApprovalPage = () => {
   const [filterStatus, setFilterStatus] = useState<"all" | ApprovalStatus>("pending");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
+  const [syncingAll, setSyncingAll] = useState(false);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
 
   const searchParams = useSearchParams();
@@ -511,6 +551,33 @@ const AlbumsApprovalPage = () => {
     );
   };
 
+  // Backfill for albums approved before the DJ panel sync worked — those never
+  // got a playlist and cannot be approved a second time.
+  const handleSyncAllToDJ = async () => {
+    if (!token) return;
+    setSyncingAll(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/albums/sync-hgdj`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to sync albums");
+
+      if (data.failedCount > 0) {
+        toast.warning(data.message, { duration: 10000 });
+      } else {
+        toast.success(data.message, {
+          style: { background: "green", color: "white", border: "none" },
+        });
+      }
+    } catch (err: any) {
+      toast.error(err.message, { style: { background: "red", color: "white", border: "none" } });
+    } finally {
+      setSyncingAll(false);
+    }
+  };
+
   const tabs: { label: string; value: "all" | ApprovalStatus; icon: React.ReactNode }[] = [
     { label: "All", value: "all", icon: <MdOutlineLibraryMusic /> },
     { label: "Pending", value: "pending", icon: <FaClock /> },
@@ -529,8 +596,18 @@ const AlbumsApprovalPage = () => {
               Review and approve or reject album submissions from artists.
             </p>
           </div>
-          <div className="text-sm text-gray-400 bg-white/5 border border-white/10 rounded-lg px-4 py-2">
-            Total:&nbsp;<span className="text-white font-semibold">{total}</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={handleSyncAllToDJ}
+              disabled={syncingAll}
+              title="Re-send every approved album to the HGC DJ panel"
+              className="text-sm bg-white/5 hover:bg-white/10 border border-white/10 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg px-4 py-2 text-gray-200 transition-all"
+            >
+              {syncingAll ? "Syncing..." : "Sync approved to DJ panel"}
+            </button>
+            <div className="text-sm text-gray-400 bg-white/5 border border-white/10 rounded-lg px-4 py-2">
+              Total:&nbsp;<span className="text-white font-semibold">{total}</span>
+            </div>
           </div>
         </div>
 
