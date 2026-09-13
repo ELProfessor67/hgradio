@@ -3,6 +3,7 @@ import Album from "../../models/album.model.js";
 import { generateToken } from "./auth.controller.js";
 import { notifyAdmin } from "../../utils/notify.js";
 import { checkUsernameAvailable } from "../../utils/username.js";
+import { syncAlbumToHGDJ } from "../../utils/hgdjSync.js";
 import crypto from "crypto";
 import pkg from "authorizenet";
 
@@ -1072,6 +1073,17 @@ export const addAlbumSong = async (req, res) => {
       url: String(url),
     });
     await album.save();
+
+    // Already-approved albums are live in the HGC DJ panel, so push the new
+    // track there too instead of waiting for another approval.
+    if (album.approvalStatus === "approved") {
+      try {
+        const artist = await User.findById(album.artist).select("name");
+        await syncAlbumToHGDJ(album, artist?.name || "");
+      } catch (e) {
+        console.error("[addAlbumSong] HGDJLive sync failed:", e?.message || e);
+      }
+    }
 
     return res.status(201).send({
       success: true,

@@ -85,10 +85,17 @@ export const adminApproveAlbum = async (req, res) => {
     album.approvedAt = new Date();
     await album.save();
 
-    // Sync album + songs to HGDJLive (fail-safe)
+    // Push the album into the HGC DJ panel / Go Live library (fail-safe)
+    let djSync = null;
     try {
       const artistName = album.artist?.name || "";
-      await syncAlbumToHGDJ(album, artistName);
+      djSync = await syncAlbumToHGDJ(album, artistName);
+      if (!djSync.playlist || djSync.failed > 0) {
+        console.warn(
+          `[adminApproveAlbum] HGDJLive sync incomplete for ${album._id}:`,
+          djSync
+        );
+      }
     } catch (e) {
       console.error("[adminApproveAlbum] HGDJLive sync failed:", e?.message || e);
     }
@@ -130,7 +137,7 @@ export const adminApproveAlbum = async (req, res) => {
 
     await resolveAdminNotifications(album._id, "Album");
 
-    return res.status(200).json({ success: true, message: "Album approved", album });
+    return res.status(200).json({ success: true, message: "Album approved", album, djSync });
   } catch (error) {
     return res.status(500).json({
       success: false,

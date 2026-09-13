@@ -133,6 +133,18 @@ const AlbumModal = ({
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to approve");
       toast.success("Album approved!", { style: { background: "green", color: "white", border: "none" } });
+
+      // Approval succeeds even when the DJ panel push does not, so surface it.
+      const djSync = data.djSync;
+      if (djSync && (!djSync.playlist || djSync.failed > 0)) {
+        toast.warning(
+          djSync.playlist
+            ? `Approved, but ${djSync.failed} track(s) did not reach the DJ panel.`
+            : "Approved, but the album could not be sent to the DJ panel.",
+          { duration: 8000 }
+        );
+      }
+
       onStatusChange(album._id, "approved");
       onClose();
     } catch (err: any) {
