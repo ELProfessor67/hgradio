@@ -151,17 +151,73 @@ export async function syncSong(data) {
   }
 }
 
+// ─── Remove a song from HGDJLive ─────────────────────────────
+/**
+ * Deletes a synced song so it disappears from the DJ panel, Go Live and Auto DJ.
+ *
+ * @param {string} songId - Song ObjectId string
+ * @returns {Promise<boolean>} true when the song is absent on HGDJLive afterwards
+ */
+export async function deleteSongFromHGDJ(songId) {
+  try {
+    const url = `${SONG_API}?_id=${encodeURIComponent(String(songId))}`;
+    const resp = await fetch(url, { method: "DELETE" });
+
+    // 404 means it is already gone — the desired end state.
+    if (!resp.ok && resp.status !== 404) {
+      let details = "";
+      try {
+        details = (await resp.json())?.message || "";
+      } catch {
+        /* non-JSON response */
+      }
+      throw new Error(`HGDJLive API error ${resp.status}: ${details}`);
+    }
+
+    console.log(`[hgdjSync] Song removed: ${songId}`);
+    return true;
+  } catch (err) {
+    console.error(
+      `[hgdjSync] deleteSongFromHGDJ failed for ${songId}:`,
+      err?.message || err
+    );
+    return false;
+  }
+}
+
+// ─── Read a synced playlist back from HGDJLive ───────────────
+/**
+ * @param {string} playlistId
+ * @returns {Promise<object|null>} the playlist with populated songs, or null
+ */
+async function fetchHGDJPlaylist(playlistId) {
+  const url = `${PLAYLIST_API}?id=${encodeURIComponent(String(playlistId))}`;
+  const resp = await fetch(url);
+
+  if (resp.status === 404) return null;
+  if (!resp.ok) {
+    throw new Error(`HGDJLive API error ${resp.status}`);
+  }
+
+  const payload = await resp.json();
+  return payload?.playlist || null;
+}
+
 // ─── Sync a full album (playlist + all songs) ────────────────
 /**
- * Called when admin approves an album (and whenever its songs change
- * after approval) so the album shows up in the HGC DJ panel and Go Live.
+ * Called when admin approves an album, and again whenever an approved album's
+ * songs or details change, so the HGC DJ panel and Go Live stay in step.
  *
- * 1. Creates/upserts a playlist for the album on HGDJLive.
- * 2. Adds every song in the album to that playlist.
+ * The album is the source of truth: its playlist on HGDJLive is reconciled to
+ * mirror it exactly.
+ *
+ * 1. Creates/updates the album's playlist on HGDJLive.
+ * 2. Creates/updates every song in the album on that playlist.
+ * 3. Removes songs from the playlist that are no longer in the album.
  *
  * @param {object} album      - Mongoose Album document (populated artist)
  * @param {string} artistName - Resolved artist name string
- * @returns {Promise<{playlist: boolean, synced: number, failed: number}>}
+ * @returns {Promise<{playlist: boolean, synced: number, failed: number, removed: number}>}
  */
 export async function syncAlbumToHGDJ(album, artistName) {
   const playlistId = String(album._id);
@@ -183,7 +239,7 @@ export async function syncAlbumToHGDJ(album, artistName) {
     console.error(
       `[hgdjSync] Album sync aborted for ${playlistId} — playlist could not be created`
     );
-    return { playlist: false, synced: 0, failed: songs.length };
+    return { playlist: false, synced: 0, failed: songs.length, removed: 0 };
   }
 
   let synced = 0;
@@ -206,9 +262,47 @@ export async function syncAlbumToHGDJ(album, artistName) {
     ok ? synced++ : failed++;
   }
 
-  console.log(
-    `[hgdjSync] Album sync complete for ${playlistId}: ${synced} synced, ${failed} failed of ${songs.length} song(s)`
+  const removed = await pruneRemovedSongs(
+    playlistId,
+    songs.map((s) => String(s._id))
   );
 
-  return { playlist: true, synced, failed };
+  console.log(
+    `[hgdjSync] Album sync complete for ${playlistId}: ${synced} synced, ${failed} failed, ${removed} removed of ${songs.length} song(s)`
+  );
+
+  return { playlist: true, synced, failed, removed };
+}
+
+// ─── Drop synced songs the album no longer contains ──────────
+/**
+ * Songs deleted from the album (or replaced wholesale via an album update) must
+ * also leave the HGDJLive playlist, otherwise DJs keep seeing dead tracks.
+ *
+ * @param {string} playlistId
+ * @param {string[]} keepIds - Song ids the album currently contains
+ * @returns {Promise<number>} count of songs removed
+ */
+async function pruneRemovedSongs(playlistId, keepIds) {
+  try {
+    const playlist = await fetchHGDJPlaylist(playlistId);
+    if (!playlist || !Array.isArray(playlist.songs)) return 0;
+
+    const keep = new Set(keepIds.map(String));
+    const stale = playlist.songs
+      .map((s) => String(s?._id))
+      .filter((id) => id && !keep.has(id));
+
+    let removed = 0;
+    for (const id of stale) {
+      if (await deleteSongFromHGDJ(id)) removed++;
+    }
+    return removed;
+  } catch (err) {
+    console.error(
+      `[hgdjSync] pruneRemovedSongs failed for ${playlistId}:`,
+      err?.message || err
+    );
+    return 0;
+  }
 }
