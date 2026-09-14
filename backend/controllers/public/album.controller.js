@@ -1,6 +1,22 @@
 import Album from "../../models/album.model.js";
 import UserModel from "../../models/user.model.js";
 
+/*
+  The one thing every public album query has to carry.
+
+  None of them filtered on approval before, so the Albums Approval screen was
+  decorative as far as the storefront went: an album went on sale the moment
+  it was uploaded, an admin pressing Reject did not take it down, and a
+  rejected record ("Born to Worship", $14) was on sale for a year after being
+  turned down. Approval has to mean the album is not public until a person
+  says so, and stops being public when they say otherwise.
+
+  Explicitly "approved" rather than `{ $ne: "rejected" }`: the model defaults
+  new albums to "pending", and pending must mean "nobody has looked at this
+  yet", never "show it".
+*/
+const PUBLIC_FILTER = { approvalStatus: "approved" };
+
 export const getAllAlbums = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -29,11 +45,12 @@ export const getAllAlbums = async (req, res) => {
     const artist = await UserModel.find(artistFilter);
 
     const filter = search ? {
+      ...PUBLIC_FILTER,
       $or: [
         { title: { $regex: search, $options: "i" } },
         ...artist.map(artist => ({ "artist": artist._id })),
       ]
-    } : {};
+    } : { ...PUBLIC_FILTER };
 
     const totalAlbums = await Album.countDocuments(filter).populate("artist", "_id name profileImg");
     const totalPages = Math.ceil(totalAlbums / limit);
@@ -72,8 +89,11 @@ export const getAlbumById = async (req, res) => {
   try {
     const albumId = req.params.albumId;
 
-    // Find the album by ID
-    const album = await Album.findById(albumId).populate('artist', '_id name profileImg');
+    // Scoped to approved: filtering only the listing would leave a rejected
+    // album reachable by anyone holding its link, which is exactly how the
+    // old $14 duplicate stayed buyable.
+    const album = await Album.findOne({ _id: albumId, ...PUBLIC_FILTER })
+      .populate('artist', '_id name profileImg');
 
 
     if (!album) {
@@ -95,6 +115,7 @@ export const getTopSoldAlbums = async (req, res) => {
 
 
     const albums = await Album.aggregate([
+      { $match: PUBLIC_FILTER },
       {
         $addFields: {
 
@@ -208,6 +229,10 @@ export const getTopSongs = async (req, res) => {
 
     // Aggregate to get all songs from all albums with their views
     const topSongs = await Album.aggregate([
+      // Before the unwind, so tracks belonging to an unapproved album never
+      // reach the chart.
+      { $match: PUBLIC_FILTER },
+
       // Unwind the songs array to get individual songs
       { $unwind: "$songs" },
 

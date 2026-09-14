@@ -1,6 +1,7 @@
 "use client";
 import Breadcrum from '@/components/Breadcrum'
 import PaymentSecurityBadge from '@/components/PaymentSecurityBadge'
+import AltGivingSecurityNote from '@/components/AltGivingSecurityNote'
 import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ButtonLoading } from '@/utils/Loading'
@@ -433,6 +434,11 @@ const page = () => {
                                                 ? 'Please include the artist name or purpose in the memo line of your check or on a separate note with your money order.'
                                                 : 'After making your payment, you can fill out the form above to let us know about your donation and include the artist name or purpose in the comment field.'}
                                         </p>
+
+                                        {/* Same rule as the card form: money is
+                                            changing hands here, so the padlock and
+                                            the safety wording have to be visible. */}
+                                        <AltGivingSecurityNote />
                                     </div>
                                 )}
                             </div>

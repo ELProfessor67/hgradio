@@ -150,6 +150,12 @@ const PaymentPage = () => {
               </h2>
 
               <div className="space-y-4">
+                {/* Above the inputs on purpose. The full badge further down
+                    was the only one on this page, which put the whole security
+                    story below the Pay button — a buyer had already typed their
+                    card and paid before anything told them it was safe. */}
+                <PaymentSecurityBadge compact />
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">

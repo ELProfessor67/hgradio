@@ -3,6 +3,7 @@
 "use client";
 
 import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
+import AltGivingSecurityNote from "@/components/AltGivingSecurityNote";
 import React, { useEffect, useMemo, useState } from "react";
 import Breadcrum from "@/components/Breadcrum";
 import Sponsor1 from "@/assets/Sponsor1.jpg";
@@ -729,6 +730,11 @@ const Form = () => {
                             ? 'Please include the program/person name in the memo line of your check or on a separate note with your money order.'
                             : 'After making your payment, you can fill out the form to let us know about your partnership.'}
                         </p>
+
+                        {/* Same rule as the card form: money is changing hands
+                            here, so the padlock and the safety wording have to
+                            be visible. */}
+                        <AltGivingSecurityNote />
                       </div>
                     )}
                   </div>
