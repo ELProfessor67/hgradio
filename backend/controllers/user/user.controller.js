@@ -3,6 +3,7 @@ import Album from "../../models/album.model.js";
 import { generateToken } from "./auth.controller.js";
 import { notifyAdmin } from "../../utils/notify.js";
 import { checkUsernameAvailable } from "../../utils/username.js";
+import { syncAlbumToHGDJ, deleteSongFromHGDJ } from "../../utils/hgdjSync.js";
 import crypto from "crypto";
 import pkg from "authorizenet";
 
@@ -1014,13 +1015,25 @@ export const updateOwnedAlbum = async (req, res) => {
     if (signatureTyped !== undefined) album.signatureTyped = signatureTyped;
     if (signatureDate !== undefined) album.signatureDate = signatureDate;
 
-    // IMPORTANT: If album was rejected or already approved, a user updating it triggers a re-review.
+    // Editing a rejected album sends it back for review. An approved album stays
+    // approved by design — edits sync straight through to the DJ panel below.
     if (album.approvalStatus === "rejected") {
       album.approvalStatus = "pending";
       album.approvalReason = "";
     }
 
     await album.save();
+
+    // Reconcile the DJ panel copy: title/cover edits, added tracks and removed
+    // tracks all have to land there while the album stays approved.
+    if (album.approvalStatus === "approved") {
+      try {
+        const artist = await User.findById(album.artist).select("name");
+        await syncAlbumToHGDJ(album, artist?.name || "");
+      } catch (e) {
+        console.error("[updateOwnedAlbum] HGDJLive sync failed:", e?.message || e);
+      }
+    }
 
     return res.status(200).send({
       success: true,
@@ -1073,6 +1086,17 @@ export const addAlbumSong = async (req, res) => {
     });
     await album.save();
 
+    // Already-approved albums are live in the HGC DJ panel, so push the new
+    // track there too instead of waiting for another approval.
+    if (album.approvalStatus === "approved") {
+      try {
+        const artist = await User.findById(album.artist).select("name");
+        await syncAlbumToHGDJ(album, artist?.name || "");
+      } catch (e) {
+        console.error("[addAlbumSong] HGDJLive sync failed:", e?.message || e);
+      }
+    }
+
     return res.status(201).send({
       success: true,
       message: "Song added successfully.",
@@ -1115,6 +1139,15 @@ export const deleteAlbumSong = async (req, res) => {
 
     song.deleteOne();
     await album.save();
+
+    // Approved albums are live in the HGC DJ panel, so drop the track there too.
+    if (album.approvalStatus === "approved") {
+      try {
+        await deleteSongFromHGDJ(songId);
+      } catch (e) {
+        console.error("[deleteAlbumSong] HGDJLive sync failed:", e?.message || e);
+      }
+    }
 
     return res.status(200).send({
       success: true,
