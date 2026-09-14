@@ -5,6 +5,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
 import { uploadFile } from "@/utils/imageUpload";
+import ConfirmRemoveDialog from "@/components/ConfirmRemoveDialog";
 import { FaMoneyCheckAlt, FaCheck, FaTimes, FaUpload, FaExternalLinkAlt } from "react-icons/fa";
 
 interface ArtistRow {
@@ -73,6 +74,11 @@ const PayoutsPage = () => {
   const netPreview = Math.round((grossPreview - feePreview) * 100) / 100;
 
   const [uploadingFor, setUploadingFor] = useState<string | null>(null);
+
+  // Two-step removal. This one moves money, so the dialog reads the artist
+  // and the amount back before anything happens.
+  const [pendingDelete, setPendingDelete] = useState<any | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const authHeaders = { Authorization: `Bearer ${token}` };
 
@@ -249,21 +255,25 @@ const PayoutsPage = () => {
     }
   };
 
-  const removePayout = async (id: string) => {
-    if (!confirm("Remove this pending payout?")) return;
+  const confirmRemovePayout = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/payouts/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/payouts/${pendingDelete._id}`, {
         method: "DELETE",
         headers: authHeaders,
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       toast.success("Payout removed", { style: { background: "green", color: "white", border: "none" } });
+      setPendingDelete(null);
       fetchSummary(); fetchPayouts();
     } catch (err: any) {
       toast.error(err.message || "Failed to remove", {
         style: { background: "red", color: "white", border: "none" },
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -565,7 +575,7 @@ const PayoutsPage = () => {
                             <FaCheck size={9} /> Mark paid
                           </button>
                           <button
-                            onClick={() => removePayout(p._id)}
+                            onClick={() => setPendingDelete(p)}
                             className="text-gray-500 hover:text-red-400 transition"
                             aria-label="Remove payout"
                           >
@@ -581,6 +591,24 @@ const PayoutsPage = () => {
           </table>
         </div>
       </div>
+
+      <ConfirmRemoveDialog
+        open={!!pendingDelete}
+        title="Remove this pending payout?"
+        itemName={
+          pendingDelete
+            ? `${pendingDelete.artistName || "Artist"} — $${Number(pendingDelete.amount || 0).toFixed(2)}`
+            : undefined
+        }
+        body="The payout record is removed. It does not reverse anything already sent to the artist."
+        confirmLabel="Yes, remove it"
+        busy={deleting}
+        onCancel={() => {
+          setDeleting(false);
+          setPendingDelete(null);
+        }}
+        onConfirm={confirmRemovePayout}
+      />
     </div>
   );
 };

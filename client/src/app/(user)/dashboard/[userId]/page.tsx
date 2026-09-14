@@ -3,6 +3,7 @@
 import Breadcrum from "@/components/Breadcrum";
 import ArtistGifts from "@/components/ArtistGifts";
 import NotificationBell from "@/components/NotificationBell";
+import ConfirmRemoveDialog from "@/components/ConfirmRemoveDialog";
 import Link from "next/link";
 import React, { useEffect, useState, useRef } from "react";
 import bg2 from "@/assets/previous-show.jpg";
@@ -88,6 +89,11 @@ const Page = () => {
   const router = useRouter();
   const [albums, setAlbums] = useState<AlbumType[]>([]);
   const [error, setError] = useState("");
+
+  // Album take-down. `pendingRemoval` holds the album the artist clicked
+  // Remove on; nothing is deleted until they confirm in the dialog.
+  const [pendingRemoval, setPendingRemoval] = useState<any | null>(null);
+  const [removing, setRemoving] = useState(false);
 
 
 
@@ -203,6 +209,41 @@ const Page = () => {
       setError("Failed to fetch albums.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  /*
+    Second click of the two-step remove. The first click only opened the
+    dialog — this is the one that actually calls the API.
+
+    A sold album is refused by the server (409): the buyer paid for it and it
+    sits in their library, so an artist can't pull it out from under them. The
+    message tells them to go to the admin, who can.
+  */
+  const confirmRemoveAlbum = async () => {
+    if (!pendingRemoval || !userData?.token) return;
+    setRemoving(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/user/albums/${pendingRemoval._id}`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${userData.token}` },
+        }
+      );
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.message || "Failed to remove album", { duration: 5000 });
+        return;
+      }
+      setAlbums((prev) => prev.filter((a: any) => a._id !== pendingRemoval._id));
+      toast.success(data?.message || "Album removed", { duration: 4000 });
+      setPendingRemoval(null);
+    } catch (err) {
+      console.error("Remove album error:", err);
+      toast.error("Failed to remove album", { duration: 4000 });
+    } finally {
+      setRemoving(false);
     }
   };
 
@@ -1449,7 +1490,18 @@ const Page = () => {
             {albums.length > 0 ? (
               <div className=" mt-[4rem] grid lg:grid-cols-3 sm:grid-cols-2 grid-cols-1 xl:grid-cols-4 gap-3 ">
                 {albums.map((album: any) => (
-                  <div key={album._id} className=" group block border border-white/10 relative pb-[3rem]">
+                  // Reserve room for whatever action strip this card ends up
+                  // with: Remove alone, or Fix & Resubmit stacked above it.
+                  <div
+                    key={album._id}
+                    className={`group block border border-white/10 relative ${
+                      album.approvalStatus === "rejected" && accountType === "seller"
+                        ? "pb-[5.5rem]"
+                        : accountType === "seller"
+                        ? "pb-[3rem]"
+                        : "pb-0"
+                    }`}
+                  >
                     <Link
                       href={
                         accountType === "buyer"
@@ -1517,11 +1569,29 @@ const Page = () => {
                         <div>{userData.name}</div>
                       </div>
                     </div>
-                    {album.approvalStatus === "rejected" && accountType === "seller" && (
+                    {accountType === "seller" && (
                       <div className="absolute bottom-0 left-0 w-full">
-                        <Link href={`/dashboard/${userData._id}/edit-album/${album._id}`} className="block w-full py-2 bg-red-600 hover:bg-red-500 text-white text-center text-sm font-semibold transition-colors">
-                          Fix & Resubmit Album
-                        </Link>
+                        {album.approvalStatus === "rejected" && (
+                          <Link href={`/dashboard/${userData._id}/edit-album/${album._id}`} className="block w-full py-2 bg-red-600 hover:bg-red-500 text-white text-center text-sm font-semibold transition-colors">
+                            Fix & Resubmit Album
+                          </Link>
+                        )}
+
+                        {/*
+                          Take an album back down. A test upload used to be
+                          permanent — nothing in the product could delete one,
+                          so anything put up to try the flow stayed on the live
+                          site. This never deletes on the first click: it opens
+                          the confirm dialog, which reads the album's title
+                          back before anything happens.
+                        */}
+                        <button
+                          type="button"
+                          onClick={() => setPendingRemoval(album)}
+                          className="block w-full py-2 bg-black/60 hover:bg-red-700 border-t border-white/10 text-white text-center text-sm font-semibold transition-colors"
+                        >
+                          Remove Album
+                        </button>
                       </div>
                     )}
                   </div>
@@ -1723,6 +1793,24 @@ const Page = () => {
         </div>
       )}
 
+      <ConfirmRemoveDialog
+        open={!!pendingRemoval}
+        title="Remove this album?"
+        itemName={pendingRemoval?.title}
+        body="It will be taken off the site and off your dashboard. This can't be undone."
+        warning={
+          Number(pendingRemoval?.salesCount || 0) > 0
+            ? "This album has sales on it, so it can't be removed here — ask the admin to take it down."
+            : undefined
+        }
+        confirmLabel="Yes, remove it"
+        busy={removing}
+        onCancel={() => {
+          setRemoving(false);
+          setPendingRemoval(null);
+        }}
+        onConfirm={confirmRemoveAlbum}
+      />
     </>
   );
 };

@@ -156,7 +156,7 @@ export const updateUser = async (req, res) => {
     const user = await User.findById(userId);
 
     // console.log(req.user.id, userId);
-    
+
 
     if (!user)
       return res
@@ -601,7 +601,7 @@ export const verifyAlbumOtp = async (req, res) => {
 
 export const createAlbum = async (req, res) => {
   try {
-    const { 
+    const {
       title, releaseYear, price, description, coverImg, songs,
       genre, primaryLanguage, ownershipConfirmation, rightsAuthorizationDescription,
       confirmRights, confirmNoInfringement, confirmContributorsApproved, grantLicense,
@@ -664,22 +664,22 @@ export const createAlbum = async (req, res) => {
       coverImg,
       songs,
       artist: req.user.id,
-      genre, 
-      primaryLanguage, 
-      ownershipConfirmation, 
+      genre,
+      primaryLanguage,
+      ownershipConfirmation,
       rightsAuthorizationDescription,
-      confirmRights, 
-      confirmNoInfringement, 
-      confirmContributorsApproved, 
+      confirmRights,
+      confirmNoInfringement,
+      confirmContributorsApproved,
       grantLicense,
-      acceptResponsibility, 
-      understandRemovalPolicy, 
-      indemnifyHGC, 
+      acceptResponsibility,
+      understandRemovalPolicy,
+      indemnifyHGC,
       agreeGoverningLaw,
-      agreeLegalCosts, 
-      confirmReadUnderstood, 
-      signatureFullName, 
-      signatureTyped, 
+      agreeLegalCosts,
+      confirmReadUnderstood,
+      signatureFullName,
+      signatureTyped,
       signatureDate,
       approvalStatus: "pending",
       approvalReason: "",
@@ -959,7 +959,7 @@ export const updateOwnedAlbum = async (req, res) => {
   try {
     const artistId = req.user?.id;
     const { albumId } = req.params;
-    const { 
+    const {
       title, releaseYear, price, description, coverImg, songs,
       genre, primaryLanguage, ownershipConfirmation, rightsAuthorizationDescription,
       confirmRights, confirmNoInfringement, confirmContributorsApproved, grantLicense,
@@ -1130,6 +1130,52 @@ export const deleteAlbumSong = async (req, res) => {
   }
 };
 
+
+export const deleteOwnedAlbum = async (req, res) => {
+  try {
+    const artistId = req.user?.id;
+    const { albumId } = req.params;
+
+    if (!artistId) {
+      return res.status(401).send({ success: false, message: "Unauthorized" });
+    }
+
+    const album = await Album.findById(albumId);
+    if (!album) {
+      return res.status(404).send({ success: false, message: "Album not found" });
+    }
+    if (album.artist?.toString() !== artistId.toString()) {
+      return res.status(403).send({ success: false, message: "Forbidden" });
+    }
+
+    const buyerCount = await User.countDocuments({ "purchasedAlbums.album": album._id });
+    if (buyerCount > 0 || Number(album.salesCount || 0) > 0) {
+      return res.status(409).send({
+        success: false,
+        message:
+          "This album has already been purchased, so it can't be removed here. " +
+          "Please contact the admin to have it taken down.",
+        buyerCount,
+      });
+    }
+
+    const title = album.title;
+    await album.deleteOne();
+
+    return res.status(200).send({
+      success: true,
+      message: `"${title}" was removed.`,
+      albumId: String(album._id),
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Failed to remove album",
+      error: error.message,
+    });
+  }
+};
+
 export const getAlbumsByArtist = async (req, res) => {
   try {
     const artistId = req.user.id;
@@ -1145,7 +1191,7 @@ export const getAlbumsByArtist = async (req, res) => {
     });
 
     // console.log(albums);
-    
+
 
     res.status(200).send({ success: true, albums });
   } catch (error) {

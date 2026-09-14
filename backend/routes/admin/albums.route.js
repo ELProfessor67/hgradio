@@ -5,6 +5,7 @@ import {
   adminGetAlbumById,
   adminApproveAlbum,
   adminRejectAlbum,
+  adminDeleteAlbum,
 } from "../../controllers/admin/albums.controller.js";
 
 const router = express.Router();
@@ -13,5 +14,6 @@ router.get("/", protect, adminCheck, adminListAlbums);
 router.get("/:albumId", protect, adminCheck, adminGetAlbumById);
 router.patch("/:albumId/approve", protect, adminCheck, adminApproveAlbum);
 router.patch("/:albumId/reject", protect, adminCheck, adminRejectAlbum);
+router.delete("/:albumId", protect, adminCheck, adminDeleteAlbum);
 
 export default router;

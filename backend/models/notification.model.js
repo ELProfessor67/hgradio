@@ -13,6 +13,7 @@ const notificationSchema = new mongoose.Schema(
         "love_gift_received",
         "album_approved",
         "album_rejected",
+        "album_removed",
         "seller_approved",
         "seller_rejected",
         "contract_approved",

@@ -1,5 +1,6 @@
 "use client";
 import Breadcrum from '@/components/Breadcrum'
+import PaymentSecurityBadge from '@/components/PaymentSecurityBadge'
 import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ButtonLoading } from '@/utils/Loading'
@@ -289,6 +290,9 @@ const page = () => {
                             <div className=" grid md:grid-cols-2 grid-cols-1 gap-4 ">
                                 <div className=" space-y-3 ">
                                     <p className=" font-semibold flex items-center gap-2 "><FaCreditCard className=" text-second " /> Card Details</p>
+                                    {/* Above the inputs on purpose: a donor should see who
+                                        processes the card before typing it, not after. */}
+                                    <PaymentSecurityBadge compact />
                                     <input name="cardNumber" value={form.cardNumber} onChange={handleChange} placeholder="Card Number" inputMode="numeric" className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full " />
                                     <div className=" flex items-center gap-4 ">
                                         <input name="expiryMonth" value={form.expiryMonth} onChange={handleChange} placeholder="MM" inputMode="numeric" maxLength={2} className=" text-[1.1rem] py-3 px-4 outline-none bg-[#d9d9d9]/10 w-full " />
@@ -452,12 +456,7 @@ const page = () => {
                                 </label>
                             </div>
 
-                            <p className="text-sm text-gray-500 flex items-start justify-start gap-2">
-                                
-                                <span className="text-gray-300">
-                                    Legal-Clean & Professional Secure Payment Processing This website uses Authorize.Net for secure credit card processing. Transactions are protected by advanced encryption and comply with PCI-DSS security standards.
-                                </span>
-                            </p>
+                            <PaymentSecurityBadge />
 
                             {/*
                               Last restatement of who is being paid and how much,

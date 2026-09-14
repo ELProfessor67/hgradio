@@ -6,18 +6,27 @@ import { resolveAdminNotifications } from "../../utils/notify.js";
 const router = express.Router();
 
 /*
-  GET /api/admin/prayer-requests?view=all|pending|private
+  GET /api/admin/prayer-requests?view=all|pending|private&page=1&limit=25
   The prayer team's inbox. Unlike the public wall this includes private
   requests and public ones awaiting review — the private ones are the whole
   point of the feature for the team, and the pending ones are what needs a
   decision.
 
+  Paged, like the public wall already was. This used to take a `limit` alone
+  and nothing else, so once the station passed a hundred requests the oldest
+  ones had no way of being reached at all — and the screen gave no sign they
+  existed. Somebody's prayer request going quietly out of reach is the one
+  thing this inbox must not do.
+
   `pendingCount` counts only what an admin can act on: public requests not yet
-  approved. A private request never enters that queue.
+  approved. A private request never enters that queue, and the count is of the
+  whole queue, not just the page being looked at.
 */
 router.get("/", protect, adminCheck, async (req, res) => {
   try {
-    const limit = Math.min(100, parseInt(req.query.limit) || 50);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 25));
+    const skip = (page - 1) * limit;
 
     const filter =
       req.query.view === "pending"
@@ -26,12 +35,22 @@ router.get("/", protect, adminCheck, async (req, res) => {
         ? { visibility: "private" }
         : {};
 
-    const [requests, pendingCount] = await Promise.all([
-      PrayerRequest.find(filter).sort({ createdAt: -1 }).limit(limit),
+    const [requests, total, pendingCount] = await Promise.all([
+      PrayerRequest.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      PrayerRequest.countDocuments(filter),
       PrayerRequest.countDocuments({ visibility: "public", approved: false }),
     ]);
 
-    res.status(200).json({ success: true, requests, pendingCount });
+    res.status(200).json({
+      success: true,
+      requests,
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+      hasMore: skip + requests.length < total,
+      pendingCount,
+    });
   } catch (error) {
     console.error("Error fetching prayer requests:", error);
     res.status(500).json({ success: false, message: "Server error" });

@@ -24,14 +24,22 @@ const LIMIT = 10;
    there is no type column, so the backend filters on that prefix. */
 type ContactType = "" | "testimony" | "prayer" | "greeting" | "guestbook" | "other";
 
+/*
+  Testimonies and prayer requests are deliberately absent.
+
+  Both outgrew this screen: each has its own collection and its own place in
+  the sidebar (Testimonials, Prayer Requests), where the fields that matter to
+  them — approval, and for prayer the sender's public/private choice — are
+  real columns rather than a prefix parsed off a comment. Leaving stale tabs
+  here pointed the prayer team at the wrong screen and showed counts that had
+  nothing to do with what is actually coming in.
+
+  `ContactType` keeps "testimony" and "prayer" as values: old submissions
+  still carry those prefixes and the backend still filters on them, so the
+  types have to stay even though nothing offers them as a tab.
+*/
 const TABS: { value: ContactType; label: string; key: string }[] = [
   { value: "", label: "All", key: "all" },
-  { value: "testimony", label: "Testimonies", key: "testimony" },
-  /* Prayer requests now have their own collection and their own screen
-     (Prayer Requests in the sidebar), where the sender's sharing choice is a
-     real field. This tab is the archive of the ones received before that, which
-     are still Contact rows — it will not grow, and nothing new arrives here. */
-  { value: "prayer", label: "Prayer Requests (archive)", key: "prayer" },
   { value: "greeting", label: "Greetings", key: "greeting" },
   { value: "guestbook", label: "Guestbook", key: "guestbook" },
   { value: "other", label: "Other", key: "other" },

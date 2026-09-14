@@ -6,6 +6,7 @@ import { FetchLoading } from "@/utils/Loading";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MdDeleteOutline } from "react-icons/md";
+import ConfirmRemoveDialog from "@/components/ConfirmRemoveDialog";
 import { uploadFile } from "@/utils/imageUpload";
 
 interface Testimonial {
@@ -48,6 +49,11 @@ const Page = () => {
   const [message, setMessage] = useState("");
   const [img, setImg] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Two-step removal, same as every other screen that deletes something. A
+  // bare browser confirm() does not name what is about to go.
+  const [pendingDelete, setPendingDelete] = useState<Testimonial | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
 
   /* Upload to Cloudinary so the homepage can render it — next/image only loads
@@ -216,10 +222,11 @@ const Page = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this testimonial?")) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/testimonials/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/testimonials/${pendingDelete._id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${userData?.token}`,
@@ -229,9 +236,12 @@ const Page = () => {
       if (!res.ok) throw new Error(data.message);
 
       toast.success("Deleted successfully", { style: { background: "green", color: "white" } });
+      setPendingDelete(null);
       fetchTestimonials();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete", { style: { background: "red", color: "white" } });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -414,13 +424,27 @@ const Page = () => {
                 <div className="mt-2 text-[11px] text-gray-500">{t.email}</div>
               )}
 
-              <button onClick={() => handleDelete(t._id)} className="absolute top-4 right-4 text-red-500 hover:text-red-400 text-xl">
+              <button onClick={() => setPendingDelete(t)} aria-label={`Delete the testimonial from ${t.name}`} className="absolute top-4 right-4 text-red-500 hover:text-red-400 text-xl">
                 <MdDeleteOutline />
               </button>
             </div>
           ))}
         </div>
       )}
+
+      <ConfirmRemoveDialog
+        open={!!pendingDelete}
+        title="Delete this testimonial?"
+        itemName={pendingDelete?.name}
+        body="It comes off this screen and off the public site. This can't be undone."
+        confirmLabel="Yes, delete it"
+        busy={deleting}
+        onCancel={() => {
+          setDeleting(false);
+          setPendingDelete(null);
+        }}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };

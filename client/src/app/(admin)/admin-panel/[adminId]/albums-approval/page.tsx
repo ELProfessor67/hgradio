@@ -1,12 +1,13 @@
 "use client";
 
 import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
+import ConfirmRemoveDialog from "@/components/ConfirmRemoveDialog";
 import { PageLoading } from "@/utils/Loading";
 import Image from "next/image";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useData } from "@/context/Context";
 import { toast } from "sonner";
-import { FaCheckCircle, FaTimesCircle, FaEye, FaMusic, FaSearch, FaClock } from "react-icons/fa";
+import { FaCheckCircle, FaTimesCircle, FaEye, FaMusic, FaSearch, FaClock, FaTrash } from "react-icons/fa";
 import { MdOutlineLibraryMusic } from "react-icons/md";
 import { IoClose } from "react-icons/io5";
 
@@ -93,15 +94,57 @@ const AlbumModal = ({
   token,
   onClose,
   onStatusChange,
+  onRemoved,
 }: {
   album: Album;
   token: string;
   onClose: () => void;
   onStatusChange: (id: string, status: ApprovalStatus) => void;
+  onRemoved: (id: string) => void;
 }) => {
-  const [loading, setLoading] = useState<"approve" | "reject" | null>(null);
+  const [loading, setLoading] = useState<"approve" | "reject" | "remove" | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [showRejectInput, setShowRejectInput] = useState(false);
+
+  /*
+    Take-down. Nothing here deletes on the first click — it opens the confirm
+    dialog. The server is the real gate: an album with buyers comes back 409
+    with the count, which becomes the red warning line, and only the second
+    attempt (force) goes through. A test album with no sales deletes straight
+    away on confirm.
+  */
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
+  const [removeWarning, setRemoveWarning] = useState<string | undefined>(undefined);
+  const [forceRemove, setForceRemove] = useState(false);
+
+  const handleRemove = async () => {
+    setLoading("remove");
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/albums/${album._id}${forceRemove ? "?force=true" : ""}`,
+        { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+
+      if (res.status === 409 && data?.requiresForce) {
+        // Buyers exist. Say so plainly and make them confirm a second time.
+        setRemoveWarning(data.message);
+        setForceRemove(true);
+        return;
+      }
+      if (!res.ok) throw new Error(data.message || "Failed to remove");
+
+      toast.success(data.message || "Album removed.", { style: { background: "green", color: "white", border: "none" } });
+      onRemoved(album._id);
+      setConfirmRemoveOpen(false);
+      onClose();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Failed to remove";
+      toast.error(msg, { style: { background: "red", color: "white", border: "none" } });
+    } finally {
+      setLoading(null);
+    }
+  };
   const playingRef = useRef<HTMLAudioElement | null>(null);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
 
@@ -409,7 +452,37 @@ const AlbumModal = ({
               <FaTimesCircle size={16} />
               {loading === "reject" ? "Rejecting..." : showRejectInput ? "Confirm Reject" : "Reject"}
             </button>
+            {/*
+              Removal, which approve/reject never covered: a rejected album
+              still sat on the artist's dashboard and in this list forever.
+              Deliberately styled quieter than the two review actions — it is
+              the destructive one, not the routine one.
+            */}
+            <button
+              onClick={() => {
+                setRemoveWarning(undefined);
+                setForceRemove(false);
+                setConfirmRemoveOpen(true);
+              }}
+              disabled={loading !== null}
+              className="flex-1 flex items-center justify-center gap-2 bg-white/5 border border-red-500/40 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2.5 px-6 rounded-lg transition-all"
+            >
+              <FaTrash size={14} />
+              {loading === "remove" ? "Removing..." : "Remove"}
+            </button>
           </div>
+
+          <ConfirmRemoveDialog
+            open={confirmRemoveOpen}
+            title={forceRemove ? "Remove it anyway?" : "Remove this album?"}
+            itemName={album.title}
+            body="It comes off the site, the artist's dashboard and this list. This can't be undone."
+            warning={removeWarning}
+            confirmLabel={forceRemove ? "Yes, remove it anyway" : "Yes, remove it"}
+            busy={loading === "remove"}
+            onCancel={() => setConfirmRemoveOpen(false)}
+            onConfirm={handleRemove}
+          />
         </div>
       </div>
     </div>
@@ -465,6 +538,7 @@ const AlbumsApprovalPage = () => {
   useEffect(() => {
     fetchAlbums();
   }, [fetchAlbums]);
+
 
   /* Deep link from an admin notification: ?focus=<albumId> opens that album's
      review modal directly, even when it is not on the current page of results. */
@@ -665,6 +739,10 @@ const AlbumsApprovalPage = () => {
           token={token}
           onClose={() => setSelectedAlbum(null)}
           onStatusChange={handleStatusChange}
+          onRemoved={(id) => {
+            setAlbums((prev) => prev.filter((a) => a._id !== id));
+            setTotal((t) => Math.max(0, t - 1));
+          }}
         />
       )}
     </div>

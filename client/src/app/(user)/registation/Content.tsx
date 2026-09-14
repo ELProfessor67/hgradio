@@ -216,10 +216,6 @@ const Page = () => {
           >
             <div className=" text-center space-y-2 ">
               <h3 className=" text-[2rem] ">Sign Up</h3>
-              {/* <p className=" text-[#cfcfcf] max-w-[22rem] mx-auto ">
-                Lorem ipsum, dolor sit amet consectetur adipisicing elit.
-                Inventore, rem.
-              </p> */}
             </div>
 
             <div className=" mt-[2rem] space-y-3 ">
@@ -227,7 +223,7 @@ const Page = () => {
                 <label htmlFor="">Name*</label>
                 <input
                   type="text"
-                  placeholder="Enter your email"
+                  placeholder="Enter your name"
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
@@ -270,7 +266,7 @@ const Page = () => {
                 <div className="relative">
                   <input
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Enter your confirm password"
+                    placeholder="Re-enter your password"
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}

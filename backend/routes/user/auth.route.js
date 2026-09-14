@@ -14,6 +14,7 @@ import {
   upgradeToSeller,
   checkUsername,
 } from "../../controllers/user/auth.controller.js";
+import protect from "../../middlewares/auth.middleware.js";
 
 
 const router = express.Router();
@@ -26,7 +27,7 @@ router.post("/register-otp/verify", verifyRegisterOtp);
 router.post("/register-otp/resend", resendRegisterOtp);
 router.post("/login", loginUser);
 router.get("/me/:userId", getCurrentUser);
-router.delete("/delete-user/:userId", deleteUser);
+router.delete("/delete-user/:userId", protect, deleteUser);
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password/:token", resetPassword);
 router.post("/upgrade-otp/request", requestUpgradeOtp);

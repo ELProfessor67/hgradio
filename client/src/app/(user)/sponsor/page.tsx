@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
+import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 import React, { useEffect, useMemo, useState } from "react";
 import Breadcrum from "@/components/Breadcrum";
 import Sponsor1 from "@/assets/Sponsor1.jpg";
@@ -578,6 +579,10 @@ const Form = () => {
                       <FaCreditCard className="text-second" /> Card Details
                     </p>
 
+                    {/* Above the inputs on purpose: a partner should see who
+                        processes the card before typing it, not after. */}
+                    <PaymentSecurityBadge compact />
+
                     <input
                       value={cardNumber}
                       onChange={(e) => setCardNumber(e.target.value)}
@@ -617,9 +622,6 @@ const Form = () => {
                       />
                     </div>
 
-                    <p className="text-sm text-gray-200">
-                      This form processes a real card payment via Authorize.Net if your backend keys are set.
-                    </p>
                   </div>
 
                   {/* Alternative Payment Methods */}
@@ -785,11 +787,7 @@ const Form = () => {
             </div>
 
 
-            <p className="text-sm text-gray-500 flex items-start justify-start gap-2">
-              <span className="text-gray-300">
-                Legal-Clean & Professional Secure Payment Processing This website uses Authorize.Net for secure credit card processing. Transactions are protected by advanced encryption and comply with PCI-DSS security standards.
-              </span>
-            </p>
+            <PaymentSecurityBadge />
 
 
             {/*
