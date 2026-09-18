@@ -3,6 +3,7 @@ import User from "../../models/user.model.js";
 import Album from "../../models/album.model.js";
 import Playlist from "../../models/playlist.model.js";
 import WithdrawRequest from "../../models/withdrawRequest.model.js";
+import { sendEmail } from "../../utils/util.js";
 
 /*
   Every account on the platform, in one list, with a take-down.
@@ -110,6 +111,7 @@ export const adminDeleteUser = async (req, res) => {
     const { userId } = req.params;
     const force = String(req.query.force || "") === "true";
     const adminId = req.user?.id;
+    const reason = String(req.body?.reason || "").trim();
 
     if (!mongoose.isValidObjectId(userId)) {
       return res.status(400).json({ success: false, message: "Invalid user id." });
@@ -174,7 +176,34 @@ export const adminDeleteUser = async (req, res) => {
     await Playlist.deleteMany({ owner: user._id });
 
     const name = user.name || user.email;
+
+    /*
+      The address is read off the document before it is deleted — afterwards
+      there is nothing left to write to. The mail itself goes out after the
+      delete has succeeded, so nobody is told their account is gone when it is
+      in fact still there, and a mail failure cannot undo a completed removal.
+    */
+    const removalEmail = user.email;
+    const removalName = user.name || "";
+
     await user.deleteOne();
+
+    try {
+      if (removalEmail) {
+        await sendEmail({
+          to: removalEmail,
+          subject: "Your HGCRadio account has been removed",
+          html: `Dear ${removalName || "User"},<br><br>
+Your account on HGCRadio has been removed by our admin team.<br><br>
+${reason ? `Reason:<br>${reason}<br><br>` : ""}
+This means you no longer have access to the site${ownedAlbumIds.length ? ", and any albums you had published are no longer available" : ""}.<br><br>
+If you believe this was a mistake, or you have questions about it, please contact our support team at: support@hgcradio.org<br><br>
+The HG Radio Station Team`,
+        });
+      }
+    } catch (e) {
+      console.error("[adminDeleteUser] removal email failed:", e?.message || e);
+    }
 
     /*
       Payout and withdrawal records are deliberately left in place. They are

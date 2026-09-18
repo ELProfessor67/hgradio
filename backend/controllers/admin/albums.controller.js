@@ -335,6 +335,23 @@ export const adminDeleteAlbum = async (req, res) => {
     }
 
     try {
+      const artistEmail = album.artist?.email;
+      if (artistEmail) {
+        await sendEmail({
+          to: artistEmail,
+          subject: `Your album was removed: ${title}`,
+          html: `Hello ${album.artist?.name || ""},<br><br>
+Your album <strong>${title}</strong> has been removed from HGCRadio by an administrator.<br><br>
+It is no longer listed on the site${buyerCount > 0 ? `, and it has been removed from the libraries of the ${buyerCount} listener${buyerCount === 1 ? "" : "s"} who bought it` : ""}.<br><br>
+If you have questions about this, please contact our support team at: support@hgcradio.org<br><br>
+The HG Radio Station Team`,
+        });
+      }
+    } catch (e) {
+      console.error("[adminDeleteAlbum] removal email failed:", e?.message || e);
+    }
+
+    try {
       await resolveAdminNotifications(albumId, "Album");
     } catch (e) {
       console.error("[adminDeleteAlbum] notification cleanup failed:", e?.message || e);

@@ -1,9 +1,10 @@
 import User from "../../models/user.model.js";
 import Album from "../../models/album.model.js";
 import { generateToken } from "./auth.controller.js";
-import { notifyAdmin } from "../../utils/notify.js";
+import { notifyAdmin, notifyUser } from "../../utils/notify.js";
 import { checkUsernameAvailable } from "../../utils/username.js";
 import { syncAlbumToHGDJ, deleteSongFromHGDJ } from "../../utils/hgdjSync.js";
+import { sendEmail } from "../../utils/util.js";
 import crypto from "crypto";
 import pkg from "authorizenet";
 
@@ -805,6 +806,66 @@ export const purchaseAlbum = async (req, res) => {
     } catch (e) {
       // Payment + unlock succeeded; metrics failing shouldn't block the user
       console.error("Failed to update sales/earnings metrics:", e);
+    }
+
+    /*
+      Receipt to the buyer, sale notice to the artist. Fail-safe on purpose: the
+      card is already charged and the album is already unlocked, so a mail
+      failure must not turn a completed purchase into a 500.
+
+      The artist is told the sale amount, not an earnings figure. What an artist
+      is actually paid is decided per payout by the station, so quoting a share
+      here would set an expectation the payout may not match.
+    */
+    const price = `$${Number(amount || 0).toFixed(2)}`;
+
+    await notifyUser({
+      userId: album.artist,
+      type: "album_sold",
+      title: `Album sold: ${album.title}`,
+      message: `${user.name || "A listener"} bought "${album.title}" for ${price}.`,
+      refId: album._id,
+      refModel: "Album",
+      actorName: user.name || "",
+      actorEmail: user.email || "",
+    });
+
+    try {
+      const purchaseDate = new Date().toLocaleDateString();
+      const siteUrl = process.env.FRONTEND_URL || "https://hgcradio.org";
+      const artist = await User.findById(album.artist).select("name email");
+
+      if (user.email) {
+        await sendEmail({
+          to: user.email,
+          subject: `Your HG Radio purchase: ${album.title}`,
+          html: `Hello ${user.name || ""},<br><br>
+Thank you for your purchase.<br><br>
+Album: ${album.title}<br>
+${artist?.name ? `Artist: ${artist.name}<br>` : ""}
+Amount: ${price}<br>
+Transaction ID: ${payment.transactionId}<br>
+Date: ${purchaseDate}<br><br>
+The album is unlocked in your library: ${siteUrl}/dashboard/${user._id}<br><br>
+The HG Radio Station Team`,
+        });
+      }
+
+      if (artist?.email) {
+        await sendEmail({
+          to: artist.email,
+          subject: `You made a sale: ${album.title}`,
+          html: `Hello ${artist.name || ""},<br><br>
+Someone just bought your album.<br><br>
+Album: ${album.title}<br>
+Sale amount: ${price}<br>
+Date: ${purchaseDate}<br><br>
+You can see this in your dashboard: ${siteUrl}/dashboard/${artist._id}<br><br>
+The HG Radio Station Team`,
+        });
+      }
+    } catch (e) {
+      console.error("Album purchase email failed:", e?.message || e);
     }
 
     return res.status(200).send({

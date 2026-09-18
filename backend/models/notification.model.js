@@ -10,6 +10,7 @@ const notificationSchema = new mongoose.Schema(
         "seller_resubmitted",
         "testimonial_submitted",
         "prayer_request_submitted",
+        "withdraw_requested",
         "love_gift_received",
         "album_approved",
         "album_rejected",
@@ -20,6 +21,7 @@ const notificationSchema = new mongoose.Schema(
         "contract_rejected",
         // Addressed to an artist rather than the admin
         "gift_received_artist",
+        "album_sold",
         "payout_created",
         "payout_paid",
         "withdraw_processing",

@@ -1,5 +1,5 @@
 import React from "react";
-import { FaBell, FaBullhorn, FaCheckCircle, FaFileContract, FaGift, FaTimesCircle, FaUserPlus } from "react-icons/fa";
+import { FaBell, FaBullhorn, FaCheckCircle, FaFileContract, FaGift, FaMoneyBillWave, FaTimesCircle, FaUserPlus } from "react-icons/fa";
 import { MdOutlineLibraryMusic } from "react-icons/md";
 
 /* Shared notification presentation used by the admin TopBar bell and the
@@ -11,6 +11,8 @@ export type NotifType =
   | "seller_submitted"
   | "seller_resubmitted"
   | "testimonial_submitted"
+  // Inbound — an artist is waiting on money going out
+  | "withdraw_requested"
   // Inbound — money arrived, informational
   | "love_gift_received"
   // Outbound — record of an admin decision
@@ -31,7 +33,7 @@ export interface AdminNotification {
   requiresAction?: boolean;
   resolvedAt?: string | null;
   refId?: string | null;
-  refModel?: "Album" | "User" | "LoveGift" | "Testimonial" | null;
+  refModel?: "Album" | "User" | "LoveGift" | "Testimonial" | "WithdrawRequest" | null;
   actorName?: string;
   actorEmail?: string;
   createdAt: string;
@@ -52,6 +54,7 @@ const TYPE_TONE: Record<NotifType, Tone> = {
   seller_submitted: "pending",
   seller_resubmitted: "pending",
   testimonial_submitted: "pending",
+  withdraw_requested: "pending",
   love_gift_received: "money",
   album_approved: "approved",
   seller_approved: "approved",
@@ -75,6 +78,8 @@ export const notifIcon = (type: NotifType, size = 14): React.ReactNode => {
       return <FaUserPlus size={size} />;
     case "testimonial_submitted":
       return <FaBullhorn size={size} />;
+    case "withdraw_requested":
+      return <FaMoneyBillWave size={size} />;
     case "love_gift_received":
       return <FaGift size={size} />;
     case "seller_approved":
@@ -109,6 +114,9 @@ export const reviewLink = (n: AdminNotification, adminId?: string): string | nul
       return `${base}/love-gifts?focus=${n.refId}`;
     case "Testimonial":
       return `${base}/testimonials`;
+    /* No ?focus= here: the withdrawals page has no per-row modal to open. */
+    case "WithdrawRequest":
+      return `${base}/widthraw-requests`;
     default:
       return null;
   }
