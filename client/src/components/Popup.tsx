@@ -1,70 +1,34 @@
 'use client'
 import React, { useEffect, useState } from 'react'
+import {
+    DAYS as WEEK_DAYS,
+    buildLocalSchedule,
+    canConvertTimeZones,
+    formatOccurrenceTime,
+    formatRawTime,
+    getCurrentAndUpcoming,
+    viewerTimezone,
+    type ScheduleData,
+    type ShowOccurrence,
+} from '@/utils/localSchedule'
 
-interface ScheduleEntry {
-    name: string;
-    profilePicUrl: string | null;
-    startTime: string; // "HH:MM" UTC
-    endTime: string;   // "HH:MM" UTC
-    timezone: string;
-    days: string[];
-    eventName?: string;
-}
+/**
+ * ⚠️ This popup used to be doubly wrong about time.
+ *
+ * It read the feed's "HH:MM" as UTC (it is not — see utils/localSchedule.ts),
+ * and then "converted UTC to Pacific" for display, shifting already-Pacific
+ * digits by another 7 hours. It also captioned every show "LOS ANGELES, CA"
+ * while the feed carries four different zones.
+ *
+ * It now runs the same resolution as the schedule page and the app: real
+ * instants, rendered on the viewer's own clock.
+ */
 
-type ScheduleData = Record<string, ScheduleEntry[]>;
-
-/** Convert "HH:MM" UTC to a Date object for today */
-function utcTimeToDate(timeStr: string): Date {
-    const [h, m] = timeStr.split(':').map(Number);
-    const d = new Date();
-    d.setUTCHours(h, m, 0, 0);
-    return d;
-}
-
-/** Format "HH:MM" UTC => US Pacific Time "H:MM AM/PM" */
-function utcToPacificAmPm(timeStr: string): string {
-    if (!timeStr) return '';
-    const [h, m] = timeStr.split(':').map(Number);
-    const utcDate = new Date(Date.UTC(2025, 0, 1, h, m));
-    return utcDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'America/Los_Angeles' });
-}
-
-type LiveStatus = 'live' | 'upcoming' | 'none';
+type LiveStatus = 'live' | 'upcoming';
 
 interface CurrentShow {
     status: LiveStatus;
-    show: ScheduleEntry;
-}
-
-/** Find currently live or next upcoming show from today's schedule */
-function getCurrentShow(shows: ScheduleEntry[]): CurrentShow | null {
-    const nowUTC = new Date();
-
-    let upcoming: ScheduleEntry | null = null;
-    let minDiff = Infinity;
-
-    for (const show of shows) {
-        if (!show.startTime || !show.endTime) continue;
-
-        const start = utcTimeToDate(show.startTime);
-        const end = utcTimeToDate(show.endTime);
-
-        // Handle overnight shows
-        if (end < start) end.setUTCDate(end.getUTCDate() + 1);
-
-        if (nowUTC >= start && nowUTC <= end) {
-            return { status: 'live', show };
-        } else if (start > nowUTC) {
-            const diff = start.getTime() - nowUTC.getTime();
-            if (diff < minDiff) {
-                minDiff = diff;
-                upcoming = show;
-            }
-        }
-    }
-
-    if (upcoming) return { status: 'upcoming', show: upcoming };
-    return null;
+    occurrence: ShowOccurrence;
 }
 
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -72,6 +36,7 @@ const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 
 const Popup = () => {
     const [hide, setHide] = useState(true);
     const [current, setCurrent] = useState<CurrentShow | null>(null);
+    const [schedule, setSchedule] = useState<ReturnType<typeof buildLocalSchedule> | null>(null);
 
     useEffect(() => {
         const fetchAndSet = async () => {
@@ -80,13 +45,20 @@ const Popup = () => {
                 if (!res.ok) return;
                 const data: ScheduleData = await res.json();
 
-                const todayName = DAYS[new Date().getDay()];
-                const todayShows: ScheduleEntry[] = data[todayName] || [];
-
-                const result = getCurrentShow(todayShows);
-                if (!result) return; // No show right now or upcoming — don't show popup
+                // Resolved to real instants and re-bucketed onto the viewer's
+                // clock before anything is picked — "what is on now" is a
+                // question about moments, not about digits.
+                const schedule = buildLocalSchedule(data);
+                const { current: live, upcoming } = getCurrentAndUpcoming(schedule, 1);
+                const result: CurrentShow | null = live
+                    ? { status: 'live', occurrence: live }
+                    : upcoming[0]
+                        ? { status: 'upcoming', occurrence: upcoming[0] }
+                        : null;
+                if (!result) return; // Nothing on now or next — don't show popup
 
                 setCurrent(result);
+                setSchedule(schedule);
 
                 // Show popup after 10s, hide after 60s
                 const t1 = setTimeout(() => {
@@ -105,7 +77,10 @@ const Popup = () => {
 
     if (!current) return null;
 
-    const { status, show } = current;
+    const { status, occurrence } = current;
+    const show = occurrence.show;
+    const canConvert = canConvertTimeZones();
+    const viewerZone = viewerTimezone();
 
     const getDaysInitials = (daysList: string[]) => {
         if (!daysList || daysList.length === 0) {
@@ -117,7 +92,24 @@ const Popup = () => {
         return daysList.map(d => mapping[d] || d.charAt(0)).slice(0, 4);
     }
 
-    const displayDays = (show.days && show.days.length > 0) ? getDaysInitials(show.days) : [DAYS[new Date().getDay()].charAt(0)];
+    /**
+     * The days this show lands on FOR THE VIEWER, taken from the re-bucketed
+     * schedule. `show.days` is the panel's station-local list and would
+     * contradict the converted time printed right below it.
+     */
+    const localDays = schedule
+        ? WEEK_DAYS.filter((day) =>
+              (schedule[day] ?? []).some(
+                  (o) =>
+                      o.show.name === show.name &&
+                      o.show.eventName === show.eventName &&
+                      o.show.startTime === show.startTime
+              )
+          )
+        : [];
+    const displayDays = localDays.length > 0
+        ? getDaysInitials(localDays)
+        : [DAYS[new Date().getDay()].charAt(0)];
 
     return (
         <div
@@ -169,11 +161,20 @@ const Popup = () => {
                             ))}
                         </div>
                         <div className="text-white font-sans font-bold text-lg md:text-xl whitespace-nowrap mb-1 tracking-wide uppercase">
-                            {utcToPacificAmPm(show.startTime)} – {utcToPacificAmPm(show.endTime)}
+                            {canConvert
+                                ? `${formatOccurrenceTime(occurrence.start)} – ${formatOccurrenceTime(occurrence.end)}`
+                                : `${formatRawTime(show.startTime)} – ${formatRawTime(show.endTime)}`}
                         </div>
 
+                        {/* Was hardcoded "LOS ANGELES, CA" — wrong for the
+                            three other zones in the feed, and wrong now that
+                            the time above is the viewer's own. */}
                         <div className="text-white font-sans font-semibold text-xs md:text-sm tracking-widest uppercase">
-                            LOS ANGELES, CA
+                            {canConvert
+                                ? viewerZone
+                                    ? viewerZone.replace(/_/g, ' ')
+                                    : 'YOUR LOCAL TIME'
+                                : show.timezone.replace(/_/g, ' ')}
                         </div>
                     </div>
                 </div>
