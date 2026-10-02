@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 
 /**
  * YouTube-style buffer bar for live DJ streams.
- * Live WebRTC has no real buffered-bytes %, so we animate on song change
- * and react to browser audio "waiting" events during playback gaps.
+ * Live WebRTC has no real buffered-bytes %. The bar shows on first connect
+ * and when a LiveKit audio element actually stalls.
  */
 export default function LiveBufferBar({ isLive, isPlay, roomActive, currentSong }) {
 	const [progress, setProgress] = useState(0);
@@ -12,6 +12,7 @@ export default function LiveBufferBar({ isLive, isPlay, roomActive, currentSong 
 
 	const animRef = useRef(null);
 	const hideRef = useRef(null);
+	const waitingRef = useRef(null);
 	const songKeyRef = useRef('');
 	const progressRef = useRef(0);
 	const initialLoadDoneRef = useRef(false);
@@ -24,6 +25,10 @@ export default function LiveBufferBar({ isLive, isPlay, roomActive, currentSong 
 		if (hideRef.current) {
 			clearTimeout(hideRef.current);
 			hideRef.current = null;
+		}
+		if (waitingRef.current) {
+			clearTimeout(waitingRef.current);
+			waitingRef.current = null;
 		}
 	};
 
@@ -50,15 +55,14 @@ export default function LiveBufferBar({ isLive, isPlay, roomActive, currentSong 
 		animRef.current = setInterval(() => {
 			setProgress((prev) => {
 				let next = prev;
-				if (prev < 55) next = prev + 6 + Math.random() * 4;
-				else if (prev < 82) next = prev + 2.5 + Math.random() * 2;
-				else if (prev < 96) next = prev + 0.6 + Math.random() * 0.8;
-				else next = Math.min(prev + 0.15, 98);
+				if (prev < 70) next = prev + 12;
+				else if (prev < 90) next = prev + 5;
+				else next = Math.min(prev + 1.5, 98);
 
 				progressRef.current = next;
 				return next;
 			});
-		}, 180);
+		}, 120);
 	};
 
 	// Initial connect when DJ goes live
@@ -86,8 +90,10 @@ export default function LiveBufferBar({ isLive, isPlay, roomActive, currentSong 
 		if (songKeyRef.current === songKey) return;
 		songKeyRef.current = songKey;
 
-		startDummyLoad('Loading next song...');
-	}, [isLive, currentSong?._id, currentSong?.title]);
+		// The LiveKit track stays up across song changes, so a metadata update
+		// is not a stall. Only show the bar when playback has not started yet.
+		if (!isPlay) startDummyLoad('Loading next song...');
+	}, [isLive, isPlay, currentSong?._id, currentSong?.title]);
 
 	// Complete when audio actually plays
 	useEffect(() => {
@@ -100,17 +106,27 @@ export default function LiveBufferBar({ isLive, isPlay, roomActive, currentSong 
 	useEffect(() => {
 		if (!isLive) return;
 
-		const onWaiting = () => {
-			if (!visible) {
+		const onWaiting = (event) => {
+			const el = event.target;
+			if (!(el instanceof HTMLMediaElement) || !el.srcObject) return;
+			if (waitingRef.current) return;
+			// Ignore sub-second blips. Only a real gap should show Buffering.
+			waitingRef.current = setTimeout(() => {
+				waitingRef.current = null;
+				if (el.readyState >= 3 && !el.paused) return;
 				setVisible(true);
 				setLabel('Buffering...');
 				setProgress((prev) => Math.max(prev, 35));
-			} else {
-				setLabel('Buffering...');
-			}
+			}, 600);
 		};
 
-		const onPlaying = () => {
+		const onPlaying = (event) => {
+			const el = event.target;
+			if (!(el instanceof HTMLMediaElement) || !el.srcObject) return;
+			if (waitingRef.current) {
+				clearTimeout(waitingRef.current);
+				waitingRef.current = null;
+			}
 			if (isPlay) finishBar();
 		};
 

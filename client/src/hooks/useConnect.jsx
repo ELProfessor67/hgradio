@@ -6,7 +6,11 @@ import { getToken } from "../service/httpService";
 const useConnect = () => {
     const socketRef = useRef();
     const [isConnected, setIsConnected] = useState(false);
-    const roomRef = useRef(new Room());
+    const roomRef = useRef(new Room({
+        // Keep each track on its own <audio> element. Mixing through Web Audio
+        // adds a second buffer and makes the live stream fall behind.
+        webAudioMix: false,
+    }));
 
     const connect = async (roomName) => {
         try {

@@ -10,6 +10,39 @@ const SONG_HD_TRACK = 'song-hd';
 const SONG_LO_TRACK = 'song-lo';
 const isSongTrackName = (n) => n === SONG_HD_TRACK || n === SONG_LO_TRACK;
 
+// Keep the browser jitter buffer small. Left alone it grows on every song
+// cut and the listener ends up seconds behind the studio.
+const JITTER_TARGET_MS = 120;
+const FLUSH_DELAY_SEC = 1;
+
+function pinTrackLatency(track) {
+    try {
+        track.setPlayoutDelay?.(0);
+    } catch (e) { /* unsupported */ }
+    const receiver = track?.receiver;
+    if (receiver && 'jitterBufferTarget' in receiver) {
+        try {
+            receiver.jitterBufferTarget = JITTER_TARGET_MS;
+        } catch (e) { /* browser rejected the target */ }
+    }
+}
+
+async function readJitterStats(track) {
+    try {
+        const report = await track.getRTCStatsReport?.();
+        if (!report) return null;
+        let found = null;
+        report.forEach((stat) => {
+            if (stat.type === 'inbound-rtp' && stat.kind === 'audio' && stat.jitterBufferEmittedCount) {
+                found = stat;
+            }
+        });
+        return found;
+    } catch (e) {
+        return null;
+    }
+}
+
 
 export const LiveProvider = ({ children }) => {
     const { isConnected, roomRef, connect } = useConnect();
@@ -26,6 +59,9 @@ export const LiveProvider = ({ children }) => {
     const desiredQualityRef = useRef('hd');
     const songPublicationsRef = useRef(new Map());
     const qualityDebounceRef = useRef(null);
+    const liveTracksRef = useRef(new Map());
+    const lastFlushRef = useRef(new Map());
+    const prevJitterRef = useRef(new Map());
 
     useEffect(() => {
         isPlayRef.current = isPlay;
@@ -73,7 +109,7 @@ export const LiveProvider = ({ children }) => {
 
             if (participant.identity === 'tone-player-bot') {
                 setIsTonePlayingMessage("Tone Is Playing...");
-                handleTrackSubscribed(track, () => {
+                handleTrackSubscribed(track, publication, () => {
                     setIsPlay(true);
                 });
             }
@@ -84,7 +120,7 @@ export const LiveProvider = ({ children }) => {
                 const audioRef = document.getElementById('auto-dj');
                 audioRef.pause();
                 audioRef.volume = 0;
-                handleTrackSubscribed(track, () => {
+                handleTrackSubscribed(track, publication, () => {
                     setIsPlay(true);
                 });
             }
@@ -102,15 +138,20 @@ export const LiveProvider = ({ children }) => {
                     }
                 }
 
-                handleTrackSubscribed(track, () => {
+                handleTrackSubscribed(track, publication, () => {
                     setIsPlay(true);
                 });
             }
 
             if (participant.identity.includes('call')) {
+                pinTrackLatency(track);
+                liveTracksRef.current.set(track, publication);
                 const audioElement = document.createElement('audio');
+                audioElement.preload = 'none';
+                audioElement.playsInline = true;
                 track.attach(audioElement);
                 document.body.appendChild(audioElement);
+                pinTrackLatency(track);
                 if (isPlayRef.current) {
                     audioElement.play();
                 }
@@ -132,8 +173,45 @@ export const LiveProvider = ({ children }) => {
                 audioRef.volume = 1;
             }
 
+            liveTracksRef.current.delete(track);
             track.detach();
         });
+
+        // Re-pin the jitter target so delay cannot drift up over a long show.
+        // Delta (not lifetime average) of jitterBufferDelay is the current lag.
+        // Past 1s, resubscribe once — that builds a fresh receiver buffer.
+        const latencyTimer = setInterval(() => {
+            liveTracksRef.current.forEach((publication, track) => {
+                pinTrackLatency(track);
+                readJitterStats(track).then((stat) => {
+                    if (!stat || !liveTracksRef.current.has(track)) return;
+                    const sid = track.sid || track.mediaStreamTrack?.id;
+                    const prev = prevJitterRef.current.get(sid);
+                    prevJitterRef.current.set(sid, {
+                        delay: stat.jitterBufferDelay,
+                        count: stat.jitterBufferEmittedCount,
+                    });
+                    if (!prev) return;
+                    const dCount = stat.jitterBufferEmittedCount - prev.count;
+                    const dDelay = stat.jitterBufferDelay - prev.delay;
+                    if (dCount <= 0) return;
+                    const instant = dDelay / dCount;
+                    if (instant < FLUSH_DELAY_SEC) return;
+                    // Resubscribing the mic track looks like the DJ left and
+                    // flips the listener back to Auto DJ. Leave that track up.
+                    if (track.source === Track.Source.Microphone) return;
+                    const last = lastFlushRef.current.get(sid) || 0;
+                    if (Date.now() - last < 30000) return;
+                    lastFlushRef.current.set(sid, Date.now());
+                    try {
+                        publication.setSubscribed(false);
+                        setTimeout(() => {
+                            try { publication.setSubscribed(true); } catch (e) { /* gone */ }
+                        }, 200);
+                    } catch (e) { /* publication already ended */ }
+                });
+            });
+        }, 3000);
 
 
         // Auto-select audio quality based on THIS listener's network quality.
@@ -161,16 +239,22 @@ export const LiveProvider = ({ children }) => {
 
         return () => {
             if (qualityDebounceRef.current) clearTimeout(qualityDebounceRef.current);
+            clearInterval(latencyTimer);
         };
     }, [roomRef.current]);
 
 
-    function handleTrackSubscribed(track, cb) {
+    function handleTrackSubscribed(track, publication, cb) {
+        pinTrackLatency(track);
+        liveTracksRef.current.set(track, publication);
         const audioElement = document.createElement('audio');
         audioElement.autoplay = isPlayRef.current;
+        audioElement.preload = 'none';
+        audioElement.playsInline = true;
         audioElement.addEventListener('play', cb);
         track.attach(audioElement);
         document.body.appendChild(audioElement);
+        pinTrackLatency(track);
         // If the listener was already playing (e.g. quality switch mid-song),
         // resume immediately on the newly attached track.
         if (isPlayRef.current) {
