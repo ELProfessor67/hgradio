@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { useCurrentYear } from "@/hooks/useTimeline";
 import { FaFacebookF, FaInstagram, FaLinkedinIn } from "react-icons/fa";
 import { FaLocationDot, FaXTwitter } from "react-icons/fa6";
 import { IoMdMail } from "react-icons/io";
@@ -14,6 +15,8 @@ import { usePathname } from "next/navigation";
 
 export const Footer = () => {
   const pathname = usePathname();
+  // Above the early return — hooks can't sit behind a conditional.
+  const year = useCurrentYear();
   if (pathname?.startsWith("/admin-panel")) {
     return null;
   }
@@ -132,7 +135,7 @@ export const Footer = () => {
 
       <div className=" text-center border-t border-[#302f50] py-[1.5rem] ">
         <p>
-          © Copyright 2026 All Rights Reserved By - Hallelujah Gospel Globally
+          © Copyright {year} All Rights Reserved By - Hallelujah Gospel Globally
         </p>
       </div>
     </footer>

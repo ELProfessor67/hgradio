@@ -9,7 +9,15 @@ import s7 from "@/assets/s33.jpg";
 
 const images = [s1, s2, s3, s4, s5, s6, s7];
 
-// Function to format time like "09:00-10:00 AM"
+/**
+ * Formats "HH:MM|HH:MM" for the shows grid.
+ *
+ * ⚠️ These digits are UTC, and are printed unconverted — so this string is
+ * wrong for every viewer who is not on UTC.
+ * The schedule page and the popup both read `/schedule-public` instead, which
+ * shows the viewer's own time. Anywhere this string is still displayed should
+ * move to that feed too — it is the last unconverted time label left.
+ */
 function formatTime(rawTime:any) {
   const [start, end] = rawTime.split('|');
   
@@ -84,38 +92,54 @@ export function convertToShowsData(data:any) {
 }
 
 
-export function getCurrentOrNextDJ(djs:any) {
-  const now = new Date(); // current time in local
-  const nowUTC = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), now.getUTCHours(), now.getUTCMinutes())
-  );
+/**
+ * Which DJ is on air, or on next.
+ *
+ * ⚠️ `djStartTime` / `djEndTime` are UTC — confirmed by the panel developer.
+ * The original code was right about that much; what it got wrong was pairing a
+ * UTC calculation with labels elsewhere that printed the same digits as if
+ * they were local. Everything user-facing now converts, so this and the
+ * schedule finally agree.
+ *
+ * Kept on `Date.UTC` rather than the shared resolver because `/all-djs`
+ * returns a different shape from `/schedule-public` (numeric `djDays`, no
+ * per-entry zone). Anything user-facing should prefer the schedule feed, which
+ * is what the schedule page and the popup read now.
+ */
+export function getCurrentOrNextDJ(djs: any) {
+  const now = Date.now();
 
-  // Helper: convert "HH:mm" to Date (UTC)
-  const getUTCDate = (timeStr:any) => {
-    const [hours, minutes] = timeStr.split(":").map(Number);
+  /** "HH:MM" UTC, on today's UTC date, as a real instant. */
+  const todayAtUTC = (timeStr: string): Date | null => {
+    const [h, m] = timeStr.split(":").map(Number);
+    if (Number.isNaN(h) || Number.isNaN(m)) return null;
     const d = new Date();
-    d.setUTCHours(hours, minutes, 0, 0);
-    return d;
+    return new Date(
+      Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h, m)
+    );
   };
 
   let currentDJ = null;
   let upcomingDJ = null;
   let minDiff = Infinity;
 
-  for (const dj of djs) {
+  for (const dj of djs ?? []) {
     if (!dj.djStartTime || !dj.djEndTime) continue;
 
-    const start = getUTCDate(dj.djStartTime);
-    const end = getUTCDate(dj.djEndTime);
+    const start = todayAtUTC(dj.djStartTime);
+    let end = todayAtUTC(dj.djEndTime);
+    if (!start || !end) continue;
 
-    // Handle end before start (spanning midnight)
-    if (end < start) end.setUTCDate(end.getUTCDate() + 1);
+    // Ends "before" it starts → it runs past midnight.
+    if (end.getTime() <= start.getTime()) {
+      end = new Date(end.getTime() + 86_400_000);
+    }
 
-    if (nowUTC >= start && nowUTC <= end) {
+    if (now >= start.getTime() && now <= end.getTime()) {
       currentDJ = dj;
       break;
-    } else if (start > nowUTC) {
-      const diff = (start as any) - (nowUTC as any);
+    } else if (start.getTime() > now) {
+      const diff = start.getTime() - now;
       if (diff < minDiff) {
         minDiff = diff;
         upcomingDJ = dj;
@@ -127,9 +151,3 @@ export function getCurrentOrNextDJ(djs:any) {
   if (upcomingDJ) return { status: "upcoming", dj: upcomingDJ };
   return { status: "none", dj: null };
 }
-
-
-
-
-
-

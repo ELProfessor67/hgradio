@@ -1,6 +1,7 @@
 import User from "../../models/user.model.js";
 import WithdrawRequest from "../../models/withdrawRequest.model.js";
-import { notifyUser } from "../../utils/notify.js";
+import { notifyUser, resolveAdminNotifications } from "../../utils/notify.js";
+import { sendEmail } from "../../utils/util.js";
 
 const money = (n) => `$${Number(n || 0).toFixed(2)}`;
 
@@ -130,6 +131,9 @@ export const adminUpdateWithdrawStatus = async (req, res) => {
       the same status does not send a duplicate.
     */
     if (status !== prevStatus) {
+      const artistEmail = populated?.user?.email || "";
+      const artistName = populated?.user?.name || "";
+
       if (status === "processing") {
         await notifyUser({
           userId: request.user,
@@ -139,6 +143,23 @@ export const adminUpdateWithdrawStatus = async (req, res) => {
           refId: request._id,
           refModel: "WithdrawRequest",
         });
+
+        try {
+          if (artistEmail) {
+            await sendEmail({
+              to: artistEmail,
+              subject: `Your withdrawal is being processed: ${money(request.amount)}`,
+              html: `Hello ${artistName},<br><br>
+Your withdrawal is being processed.<br><br>
+Amount: ${money(request.amount)}<br>
+Date: ${new Date().toLocaleDateString()}<br><br>
+This usually takes 1 to 2 days. We will email you once it has been sent.<br><br>
+The HG Radio Station Team`,
+            });
+          }
+        } catch (e) {
+          console.error("Withdraw processing email failed:", e?.message || e);
+        }
       } else if (status === "completed") {
         await notifyUser({
           userId: request.user,
@@ -148,6 +169,30 @@ export const adminUpdateWithdrawStatus = async (req, res) => {
           refId: request._id,
           refModel: "WithdrawRequest",
         });
+
+        /*
+          Resolved on completion rather than on "processing": until the money
+          has actually been sent the request is still outstanding work, and the
+          pending badge is what stops it being forgotten halfway through.
+        */
+        await resolveAdminNotifications(request._id, "WithdrawRequest");
+
+        try {
+          if (artistEmail) {
+            await sendEmail({
+              to: artistEmail,
+              subject: `Withdrawal sent: ${money(request.amount)}`,
+              html: `Hello ${artistName},<br><br>
+Your withdrawal has been completed.<br><br>
+Amount: ${money(request.amount)}<br>
+Date: ${new Date().toLocaleDateString()}<br><br>
+You can see this in your dashboard.<br><br>
+The HG Radio Station Team`,
+            });
+          }
+        } catch (e) {
+          console.error("Withdraw completed email failed:", e?.message || e);
+        }
       }
     }
 

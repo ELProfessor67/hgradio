@@ -1,4 +1,5 @@
 import Album from "../../models/album.model.js";
+import User from "../../models/user.model.js";
 import Notification from "../../models/notification.model.js";
 import { sendEmail } from "../../utils/util.js";
 import { syncAlbumToHGDJ } from "../../utils/hgdjSync.js";
@@ -274,6 +275,98 @@ export const adminRejectAlbum = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to reject album",
+      error: error.message,
+    });
+  }
+};
+
+/*
+  DELETE /api/admin/albums/:albumId — the admin's own take-down.
+
+  Unlike the artist route this can remove a sold album, but never by accident:
+  when buyers exist the first call comes back 409 with the buyer count so the
+  UI can say who loses access, and only a repeat call with ?force=true goes
+  through. That is the "are you sure" the client asked for, enforced on the
+  server rather than trusted to a dialog in the browser.
+*/
+export const adminDeleteAlbum = async (req, res) => {
+  try {
+    const { albumId } = req.params;
+    const force = String(req.query.force || "") === "true";
+
+    const album = await Album.findById(albumId).populate("artist", "name email");
+    if (!album) {
+      return res.status(404).json({ success: false, message: "Album not found" });
+    }
+
+    const buyerCount = await User.countDocuments({ "purchasedAlbums.album": album._id });
+    if (buyerCount > 0 && !force) {
+      return res.status(409).json({
+        success: false,
+        requiresForce: true,
+        buyerCount,
+        message: `${buyerCount} listener${buyerCount === 1 ? " has" : "s have"} purchased "${album.title}". Deleting it removes their access.`,
+      });
+    }
+
+    const title = album.title;
+    const artistId = album.artist?._id || album.artist;
+    await album.deleteOne();
+
+    // The buyers' library entries point at an album that no longer exists;
+    // drop those rows so nothing renders a dead card.
+    if (buyerCount > 0) {
+      await User.updateMany(
+        { "purchasedAlbums.album": albumId },
+        { $pull: { purchasedAlbums: { album: albumId } } }
+      );
+    }
+
+    try {
+      await notifyUser({
+        userId: artistId,
+        type: "album_removed",
+        title: "An album was removed",
+        message: `"${title}" was removed from the site by an administrator.`,
+        refModel: "Album",
+      });
+    } catch (e) {
+      console.error("[adminDeleteAlbum] artist notify failed:", e?.message || e);
+    }
+
+    try {
+      const artistEmail = album.artist?.email;
+      if (artistEmail) {
+        await sendEmail({
+          to: artistEmail,
+          subject: `Your album was removed: ${title}`,
+          html: `Hello ${album.artist?.name || ""},<br><br>
+Your album <strong>${title}</strong> has been removed from HGCRadio by an administrator.<br><br>
+It is no longer listed on the site${buyerCount > 0 ? `, and it has been removed from the libraries of the ${buyerCount} listener${buyerCount === 1 ? "" : "s"} who bought it` : ""}.<br><br>
+If you have questions about this, please contact our support team at: support@hgcradio.org<br><br>
+The HG Radio Station Team`,
+        });
+      }
+    } catch (e) {
+      console.error("[adminDeleteAlbum] removal email failed:", e?.message || e);
+    }
+
+    try {
+      await resolveAdminNotifications(albumId, "Album");
+    } catch (e) {
+      console.error("[adminDeleteAlbum] notification cleanup failed:", e?.message || e);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `"${title}" was removed.`,
+      albumId: String(albumId),
+      buyersAffected: buyerCount,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to remove album",
       error: error.message,
     });
   }

@@ -71,8 +71,13 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
       path: `/admin-panel/${id}/widthraw-requests`,
     },
     {
-      name: "Users Approval",
+      name: "All Users",
       icon: <HiUsers />,
+      path: `/admin-panel/${id}/approved-users`,
+    },
+    {
+      name: "Users Approval",
+      icon: <PiStudentBold />,
       path: `/admin-panel/${id}/requested-users`,
     },
     {
@@ -120,13 +125,12 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
         }}
       >
         <div
-          className={`bg-[#071126] h-screen w-[300px] flex flex-col justify-between pb-8
+          className={`bg-[#071126] h-screen w-[300px] flex flex-col overflow-hidden
     transform transition-transform duration-300 ease-in-out ${!isOpenSidebar ? "translate-x-0" : "-translate-x-full"
             }`}
           onClick={(e) => e.stopPropagation()} // Prevent click close
         >
-          <div className="text-second">
-            <div className=" h-[70px] w-full border-b border-[#0c434d] px-4 lg:px-8 gap-2 flex items-center justify-between ">
+          <div className=" shrink-0 text-second h-[70px] w-full border-b border-[#0c434d] px-4 lg:px-8 gap-2 flex items-center justify-between ">
               <div className=" flex items-center gap-1 font-poppins ">
                 <div className=" text-second text-[1.8rem]  ">
                   <PiStudentBold />
@@ -142,7 +146,9 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
                     } transition-all duration-300 ease-in-out `}
                 />
               </div>
-            </div>
+          </div>
+
+          <div className=" text-second flex-1 min-h-0 overflow-y-auto pb-6 [scrollbar-width:thin] [scrollbar-color:#0c434d_transparent] ">
             <div className=" px-4 pt-8 space-y-3 ">
               <div className=" text-second px-4 ">Main Menu</div>
               <div className=" space-y-2 ">
@@ -190,7 +196,7 @@ const Sidebar = ({ id, isOpenSidebar, setIsOpenSidebar }: SidebarProps) => {
             </div>
           </div>
 
-          <div className=" px-7  ">
+          <div className=" shrink-0 border-t border-[#0c434d] px-7 py-5 ">
             <div onClick={() => {
               logout()
               toast.success("Logout Successfully!!", {

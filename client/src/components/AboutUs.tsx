@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useYearsOnAir } from "@/hooks/useTimeline";
 import HAbout1 from "@/assets/HAbout1.png";
 import HAbout2 from "@/assets/HAbout2.jpg";
 import HAbout3 from "@/assets/HAbout3.png";
@@ -122,6 +123,7 @@ import Stat1 from "@/assets/Stat1.png"
 import Stat2 from "@/assets/Stat2.png"
 
 export const Stats = () => {
+  const yearsOnAir = useYearsOnAir();
   return (
     <div className=" bg-[#1f2226] text-[#fff] py-[2rem] md:py-[3rem] relative ">
       <div className=" absolute left-0 bottom-0 ">
@@ -149,7 +151,8 @@ export const Stats = () => {
             <div className=" text-[1.4rem] ">Shows</div>
           </div>
           <div className=" text-[#fff] font-semibold bg-[#2f3237] text-center  py-[2.5rem] ">
-            <div className=" text-[1.2rem] text-second ">3+ years</div>
+            {/* Counts up on its own from ON_AIR_SINCE — see utils/timeline.ts. */}
+            <div className=" text-[1.2rem] text-second ">{yearsOnAir}</div>
             <div className=" text-[1.4rem] ">Experience</div>
           </div>
           <div className="  ">

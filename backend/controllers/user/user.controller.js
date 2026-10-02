@@ -1,9 +1,10 @@
 import User from "../../models/user.model.js";
 import Album from "../../models/album.model.js";
 import { generateToken } from "./auth.controller.js";
-import { notifyAdmin } from "../../utils/notify.js";
+import { notifyAdmin, notifyUser } from "../../utils/notify.js";
 import { checkUsernameAvailable } from "../../utils/username.js";
 import { syncAlbumToHGDJ, deleteSongFromHGDJ } from "../../utils/hgdjSync.js";
+import { sendEmail } from "../../utils/util.js";
 import crypto from "crypto";
 import pkg from "authorizenet";
 
@@ -157,7 +158,7 @@ export const updateUser = async (req, res) => {
     const user = await User.findById(userId);
 
     // console.log(req.user.id, userId);
-    
+
 
     if (!user)
       return res
@@ -602,7 +603,7 @@ export const verifyAlbumOtp = async (req, res) => {
 
 export const createAlbum = async (req, res) => {
   try {
-    const { 
+    const {
       title, releaseYear, price, description, coverImg, songs,
       genre, primaryLanguage, ownershipConfirmation, rightsAuthorizationDescription,
       confirmRights, confirmNoInfringement, confirmContributorsApproved, grantLicense,
@@ -665,22 +666,22 @@ export const createAlbum = async (req, res) => {
       coverImg,
       songs,
       artist: req.user.id,
-      genre, 
-      primaryLanguage, 
-      ownershipConfirmation, 
+      genre,
+      primaryLanguage,
+      ownershipConfirmation,
       rightsAuthorizationDescription,
-      confirmRights, 
-      confirmNoInfringement, 
-      confirmContributorsApproved, 
+      confirmRights,
+      confirmNoInfringement,
+      confirmContributorsApproved,
       grantLicense,
-      acceptResponsibility, 
-      understandRemovalPolicy, 
-      indemnifyHGC, 
+      acceptResponsibility,
+      understandRemovalPolicy,
+      indemnifyHGC,
       agreeGoverningLaw,
-      agreeLegalCosts, 
-      confirmReadUnderstood, 
-      signatureFullName, 
-      signatureTyped, 
+      agreeLegalCosts,
+      confirmReadUnderstood,
+      signatureFullName,
+      signatureTyped,
       signatureDate,
       approvalStatus: "pending",
       approvalReason: "",
@@ -805,6 +806,66 @@ export const purchaseAlbum = async (req, res) => {
     } catch (e) {
       // Payment + unlock succeeded; metrics failing shouldn't block the user
       console.error("Failed to update sales/earnings metrics:", e);
+    }
+
+    /*
+      Receipt to the buyer, sale notice to the artist. Fail-safe on purpose: the
+      card is already charged and the album is already unlocked, so a mail
+      failure must not turn a completed purchase into a 500.
+
+      The artist is told the sale amount, not an earnings figure. What an artist
+      is actually paid is decided per payout by the station, so quoting a share
+      here would set an expectation the payout may not match.
+    */
+    const price = `$${Number(amount || 0).toFixed(2)}`;
+
+    await notifyUser({
+      userId: album.artist,
+      type: "album_sold",
+      title: `Album sold: ${album.title}`,
+      message: `${user.name || "A listener"} bought "${album.title}" for ${price}.`,
+      refId: album._id,
+      refModel: "Album",
+      actorName: user.name || "",
+      actorEmail: user.email || "",
+    });
+
+    try {
+      const purchaseDate = new Date().toLocaleDateString();
+      const siteUrl = process.env.FRONTEND_URL || "https://hgcradio.org";
+      const artist = await User.findById(album.artist).select("name email");
+
+      if (user.email) {
+        await sendEmail({
+          to: user.email,
+          subject: `Your HG Radio purchase: ${album.title}`,
+          html: `Hello ${user.name || ""},<br><br>
+Thank you for your purchase.<br><br>
+Album: ${album.title}<br>
+${artist?.name ? `Artist: ${artist.name}<br>` : ""}
+Amount: ${price}<br>
+Transaction ID: ${payment.transactionId}<br>
+Date: ${purchaseDate}<br><br>
+The album is unlocked in your library: ${siteUrl}/dashboard/${user._id}<br><br>
+The HG Radio Station Team`,
+        });
+      }
+
+      if (artist?.email) {
+        await sendEmail({
+          to: artist.email,
+          subject: `You made a sale: ${album.title}`,
+          html: `Hello ${artist.name || ""},<br><br>
+Someone just bought your album.<br><br>
+Album: ${album.title}<br>
+Sale amount: ${price}<br>
+Date: ${purchaseDate}<br><br>
+You can see this in your dashboard: ${siteUrl}/dashboard/${artist._id}<br><br>
+The HG Radio Station Team`,
+        });
+      }
+    } catch (e) {
+      console.error("Album purchase email failed:", e?.message || e);
     }
 
     return res.status(200).send({
@@ -960,7 +1021,7 @@ export const updateOwnedAlbum = async (req, res) => {
   try {
     const artistId = req.user?.id;
     const { albumId } = req.params;
-    const { 
+    const {
       title, releaseYear, price, description, coverImg, songs,
       genre, primaryLanguage, ownershipConfirmation, rightsAuthorizationDescription,
       confirmRights, confirmNoInfringement, confirmContributorsApproved, grantLicense,
@@ -1163,6 +1224,52 @@ export const deleteAlbumSong = async (req, res) => {
   }
 };
 
+
+export const deleteOwnedAlbum = async (req, res) => {
+  try {
+    const artistId = req.user?.id;
+    const { albumId } = req.params;
+
+    if (!artistId) {
+      return res.status(401).send({ success: false, message: "Unauthorized" });
+    }
+
+    const album = await Album.findById(albumId);
+    if (!album) {
+      return res.status(404).send({ success: false, message: "Album not found" });
+    }
+    if (album.artist?.toString() !== artistId.toString()) {
+      return res.status(403).send({ success: false, message: "Forbidden" });
+    }
+
+    const buyerCount = await User.countDocuments({ "purchasedAlbums.album": album._id });
+    if (buyerCount > 0 || Number(album.salesCount || 0) > 0) {
+      return res.status(409).send({
+        success: false,
+        message:
+          "This album has already been purchased, so it can't be removed here. " +
+          "Please contact the admin to have it taken down.",
+        buyerCount,
+      });
+    }
+
+    const title = album.title;
+    await album.deleteOne();
+
+    return res.status(200).send({
+      success: true,
+      message: `"${title}" was removed.`,
+      albumId: String(album._id),
+    });
+  } catch (error) {
+    return res.status(500).send({
+      success: false,
+      message: "Failed to remove album",
+      error: error.message,
+    });
+  }
+};
+
 export const getAlbumsByArtist = async (req, res) => {
   try {
     const artistId = req.user.id;
@@ -1178,7 +1285,7 @@ export const getAlbumsByArtist = async (req, res) => {
     });
 
     // console.log(albums);
-    
+
 
     res.status(200).send({ success: true, albums });
   } catch (error) {

@@ -10,6 +10,7 @@ import adminWithdrawRoutes from "./routes/admin/withdraw.route.js";
 import adminSellerRequestsRoutes from "./routes/admin/sellerRequests.route.js";
 import adminAnalyticsRoutes from "./routes/admin/analytics.route.js";
 import adminAlbumRoutes from "./routes/admin/albums.route.js";
+import adminUserRoutes from "./routes/admin/users.route.js";
 import adminNotificationRoutes from "./routes/admin/notifications.route.js";
 import adminLoveGiftRoutes from "./routes/admin/loveGifts.route.js";
 import adminPayoutRoutes from "./routes/admin/payouts.route.js";
@@ -27,7 +28,15 @@ dotenv.config();
 
 dbConnect();
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://radio-station-ten.vercel.app", "https://hgcradio.org"],
+  // 3001 as well as 3000: Next falls back to the next free port whenever 3000
+  // is taken, and a dev server that silently can't reach the API is a
+  // confusing half-hour to debug.
+  origin: [
+    "http://localhost:3000",
+    "http://localhost:3001",
+    "https://radio-station-ten.vercel.app",
+    "https://hgcradio.org",
+  ],
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
@@ -57,6 +66,7 @@ app.use("/api/admin/withdraw", adminWithdrawRoutes);
 app.use("/api/admin/seller-requests", adminSellerRequestsRoutes);
 app.use("/api/admin/analytics", adminAnalyticsRoutes);
 app.use("/api/admin/albums", adminAlbumRoutes);
+app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin/notifications", adminNotificationRoutes);
 app.use("/api/admin/love-gifts", adminLoveGiftRoutes);
 app.use("/api/admin/payouts", adminPayoutRoutes);

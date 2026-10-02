@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FaCreditCard, FaLock, FaShieldAlt } from "react-icons/fa";
+import { FaCreditCard, FaLock } from "react-icons/fa";
 import { toast } from "sonner";
 import { useData } from "@/context/Context";
+import PaymentSecurityBadge from "@/components/PaymentSecurityBadge";
 
 interface AlbumType {
   _id: string;
@@ -135,7 +136,7 @@ const PaymentPage = () => {
             Complete Your Purchase
           </h1>
           <p className="text-gray-300">
-            Secure payment powered by HGC Radio
+            Secure checkout — card processing by Authorize.Net
           </p>
         </div>
 
@@ -149,6 +150,12 @@ const PaymentPage = () => {
               </h2>
 
               <div className="space-y-4">
+                {/* Above the inputs on purpose. The full badge further down
+                    was the only one on this page, which put the whole security
+                    story below the Pay button — a buyer had already typed their
+                    card and paid before anything told them it was safe. */}
+                <PaymentSecurityBadge compact />
+
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -223,20 +230,15 @@ const PaymentPage = () => {
               </div>
             </div>
 
-            {/* Security Notice */}
-            <div className="bg-[#0B1834] rounded-lg p-6">
-              <div className="flex items-start gap-3">
-                <FaShieldAlt className="text-[#66FCF1] text-xl mt-1" />
-                <div>
-                  <h3 className="font-semibold mb-2">Secure Payment</h3>
-                  <p className="text-gray-300 text-sm">
-                    Your payment information is encrypted and secure. We use industry-standard 
-                    SSL encryption to protect your data. This is a demo payment page for 
-                    demonstration purposes only.
-                  </p>
-                </div>
-              </div>
-            </div>
+            {/*
+              The shared trust block. This replaced a hand-written notice that
+              still described the page as "a demo payment page for
+              demonstration purposes only" — copy left over from before the
+              form was wired to Authorize.Net. It has charged real cards since;
+              telling a buyer their live purchase is a demo is the exact
+              opposite of the assurance this spot is for.
+            */}
+            <PaymentSecurityBadge />
           </div>
 
           {/* Order Summary */}

@@ -6,6 +6,7 @@ import { FetchLoading } from "@/utils/Loading";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { MdDeleteOutline } from "react-icons/md";
+import ConfirmRemoveDialog from "@/components/ConfirmRemoveDialog";
 
 /*
   PRAYER REQUESTS — the prayer team's inbox and the Prayer Wall's gate.
@@ -37,6 +38,8 @@ interface PrayerRequestItem {
 
 type View = "all" | "pending" | "private";
 
+const PAGE_SIZE = 25;
+
 const formatDate = (value?: string) => {
   if (!value) return "";
   try {
@@ -60,24 +63,37 @@ const Page = () => {
   const [loading, setLoading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  // Paging. The inbox used to ask for a flat 100 and show whatever came back,
+  // so anything older than the newest hundred was simply unreachable.
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Deletion is two-step, like everywhere else that removes something: the
+  // bin icon opens this, and the confirm inside it does the deleting.
+  const [pendingDelete, setPendingDelete] = useState<PrayerRequestItem | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
   const fetchRequests = useCallback(async () => {
     if (!userData?.token) return;
     try {
       setLoading(true);
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/prayer-requests?limit=100&view=${view}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/prayer-requests?view=${view}&page=${page}&limit=${PAGE_SIZE}`,
         { headers: { Authorization: `Bearer ${userData.token}` } }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to fetch");
       setRequests(data.requests || []);
       setPendingCount(data.pendingCount ?? 0);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
     } catch (err: any) {
       toast.error(err.message || "Failed to fetch prayer requests");
     } finally {
       setLoading(false);
     }
-  }, [userData?.token, view]);
+  }, [userData?.token, view, page]);
 
   useEffect(() => {
     fetchRequests();
@@ -108,28 +124,38 @@ const Page = () => {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("Delete this prayer request? This cannot be undone.")) return;
+  const confirmDelete = async () => {
+    if (!pendingDelete) return;
+    setDeleting(true);
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/prayer-requests/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/admin/prayer-requests/${pendingDelete._id}`,
         { method: "DELETE", headers: { Authorization: `Bearer ${userData?.token}` } }
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       toast.success("Deleted", { style: { background: "green", color: "white" } });
-      fetchRequests();
+      setPendingDelete(null);
+      // Deleting the only row on the last page would otherwise leave the
+      // admin staring at an empty list.
+      if (requests.length === 1 && page > 1) setPage((p) => p - 1);
+      else fetchRequests();
     } catch (err: any) {
       toast.error(err.message || "Failed to delete", {
         style: { background: "red", color: "white" },
       });
+    } finally {
+      setDeleting(false);
     }
   };
 
   const tab = (key: View, label: string, tone: string) => (
     <button
       key={key}
-      onClick={() => setView(key)}
+      onClick={() => {
+        setView(key);
+        setPage(1);
+      }}
       className={`px-3.5 py-1.5 text-sm font-medium border transition-all ${
         view === key ? tone : "bg-white/5 border-white/10 text-gray-400 hover:text-white"
       }`}
@@ -149,7 +175,12 @@ const Page = () => {
       </p>
 
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <h3 className="text-xl font-semibold text-second">All Requests</h3>
+        <h3 className="text-xl font-semibold text-second">
+          All Requests
+          {total > 0 && (
+            <span className="ml-2 text-sm font-normal text-gray-400">{total} total</span>
+          )}
+        </h3>
         <div className="flex gap-2">
           {tab("all", "All", "bg-second/15 border-second/40 text-second")}
           {tab(
@@ -226,7 +257,7 @@ const Page = () => {
                       ))}
 
                     <button
-                      onClick={() => handleDelete(r._id)}
+                      onClick={() => setPendingDelete(r)}
                       aria-label={`Delete the prayer request from ${r.name}`}
                       className="p-2 text-red-400 transition hover:text-red-300"
                     >
@@ -243,6 +274,47 @@ const Page = () => {
           })}
         </div>
       )}
+
+      {totalPages > 1 && (
+        <div className="mt-6 flex items-center justify-center gap-4">
+          <button
+            disabled={page <= 1 || loading}
+            onClick={() => setPage((p) => p - 1)}
+            className="border border-white/15 px-4 py-2 text-sm transition hover:bg-white/10 disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span className="text-sm text-gray-400">
+            Page {page} of {totalPages}
+          </span>
+          <button
+            disabled={page >= totalPages || loading}
+            onClick={() => setPage((p) => p + 1)}
+            className="border border-white/15 px-4 py-2 text-sm transition hover:bg-white/10 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
+
+      <ConfirmRemoveDialog
+        open={!!pendingDelete}
+        title="Delete this prayer request?"
+        itemName={pendingDelete ? `${pendingDelete.name}` : undefined}
+        body="It is removed from this inbox and, if it was published, from the Prayer Wall. This can't be undone."
+        warning={
+          pendingDelete?.visibility === "private"
+            ? "This one was sent to the prayer team only — nobody else has a copy of it."
+            : undefined
+        }
+        confirmLabel="Yes, delete it"
+        busy={deleting}
+        onCancel={() => {
+          setDeleting(false);
+          setPendingDelete(null);
+        }}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 };

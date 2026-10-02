@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import bglefttop from "@/assets/left-plus.png";
 import bgrighttop from "@/assets/about-circle2.png";
 import bgleftbottom from "@/assets/bottom-box-shape.png";
@@ -10,28 +10,23 @@ import { usePathname } from "next/navigation";
 import { IoIosArrowForward } from "react-icons/io";
 import { IoIosArrowBack } from "react-icons/io";
 import s7 from "@/assets/s33.jpg";
+import {
+  DAYS,
+  buildLocalSchedule,
+  canConvertTimeZones,
+  formatOccurrenceTime,
+  formatRawTime,
+  isOccurrenceLive,
+  viewerTimezone,
+  type ScheduleData,
+  type ShowOccurrence,
+} from "@/utils/localSchedule";
 
-const DAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-interface ScheduleEntry {
-  name: string;
-  profilePicUrl: string | null;
-  startTime: string;
-  endTime: string;
-  timezone: string;
-  days: string[];
-  eventName?: string;
-}
-
-type ScheduleData = Record<string, ScheduleEntry[]>;
+/**
+ * Days, types and the time maths all come from the shared module now — see
+ * utils/localSchedule.ts for why the feed's digits cannot be printed as they
+ * arrive. The app (hgradioApp) runs the identical algorithm.
+ */
 
 /** Generate initials (up to 2 chars) from a name */
 function getInitials(name: string): string {
@@ -62,14 +57,7 @@ function getAvatarColor(name: string): string {
 }
 
 /** Format "HH:MM" => "H:MM AM/PM" */
-function formatTime(t: string): string {
-  const [hStr, mStr] = t.split(":");
-  let h = parseInt(hStr, 10);
-  const m = mStr;
-  const ampm = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return `${h}:${m} ${ampm}`;
-}
+
 
 interface AvatarProps {
   name: string;
@@ -136,7 +124,17 @@ const Schedule = () => {
   }, []);
 
   const itemsPerPage = 6;
-  const shows: ScheduleEntry[] = scheduleData[selectedDay] || [];
+
+  /**
+   * The feed re-expressed on the VIEWER's clock — times converted and days
+   * re-bucketed together, so a card's time and the day column it sits in
+   * always describe the same moment. See utils/localSchedule.ts.
+   */
+  const localSchedule = useMemo(() => buildLocalSchedule(scheduleData), [scheduleData]);
+  const shows: ShowOccurrence[] = localSchedule[selectedDay] ?? [];
+
+  const canConvert = canConvertTimeZones();
+  const viewerZone = viewerTimezone();
 
   const [startIndex, setStartIndex] = useState(0);
 
@@ -188,6 +186,13 @@ const Schedule = () => {
         <h2 className="text-3xl md:text-5xl z-50 font-extrabold">
           Daily Programs Schedule
         </h2>
+        <p className="mt-3 text-sm text-gray-300">
+          {canConvert
+            ? viewerZone
+              ? `All times shown in your local time · ${viewerZone}`
+              : "All times shown in your local time"
+            : "All times shown in the station's local time"}
+        </p>
       </div>
       <div className="max-w-[1500px] mx-auto px-3 z-50">
         <div className="flex flex-col lg:flex-row gap-10">
@@ -225,7 +230,13 @@ const Schedule = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {currentShows.map((show, index) => (
+                  {currentShows.map((occurrence, index) => {
+                    const show = occurrence.show;
+                    const live = isOccurrenceLive(occurrence);
+                    const timeLabel = canConvert
+                      ? `${formatOccurrenceTime(occurrence.start)} – ${formatOccurrenceTime(occurrence.end)}`
+                      : `${formatRawTime(show.startTime)} – ${formatRawTime(show.endTime)}`;
+                    return (
                     <div
                       key={`${show.name}-${show.startTime}-${index}`}
                       className="relative w-full md:w-[350px] h-[260px] overflow-hidden group cursor-pointer"
@@ -238,10 +249,15 @@ const Schedule = () => {
                         className="object-cover w-full h-full transition-transform duration-300 ease-in-out group-hover:scale-110"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent transition-opacity duration-300 flex flex-col p-4">
-                        <div>
+                        <div className="flex items-center gap-2">
                           <h3 className="text-xl font-semibold drop-shadow-md">
-                            {formatTime(show.startTime)} – {formatTime(show.endTime)}
+                            {timeLabel}
                           </h3>
+                          {live && (
+                            <span className="rounded bg-red-600 px-2 py-0.5 text-xs font-bold tracking-wide">
+                              LIVE
+                            </span>
+                          )}
                         </div>
                         
                         <div className="flex-1 flex items-center justify-center z-10 px-2">
@@ -261,12 +277,17 @@ const Schedule = () => {
                           />
                           <div className="flex flex-col">
                             <h3 className="text-xl font-semibold">{show.name}</h3>
-                            <p className="text-sm text-gray-300">{show.timezone}</p>
+                            {/* Was `show.timezone` — the STATION's zone, which
+                                contradicted the converted time above it. */}
+                            <p className="text-sm text-gray-300">
+                              {show.eventName ? show.eventName : "HGC Radio"}
+                            </p>
                           </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {shows.length > itemsPerPage && (

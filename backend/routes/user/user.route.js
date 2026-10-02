@@ -10,6 +10,7 @@ import {
   updateOwnedAlbum,
   addAlbumSong,
   deleteAlbumSong,
+  deleteOwnedAlbum,
   purchaseAlbum,
   getAlbumPurchaseStatus,
   requestAlbumOtp,
@@ -47,6 +48,7 @@ router.get("/albums/:albumId/owner", protect, getOwnedAlbumById);
 router.patch("/albums/:albumId", protect, updateOwnedAlbum);
 router.post("/albums/:albumId/songs", protect, addAlbumSong);
 router.delete("/albums/:albumId/songs/:songId", protect, deleteAlbumSong);
+router.delete("/albums/:albumId", protect, deleteOwnedAlbum);
 router.post("/add-album", protect, createAlbum);
 router.get("/get-albums", protect, getAlbumsByArtist);
 router.patch("/seller-form/resubmit", protect, resubmitSellerForm);
