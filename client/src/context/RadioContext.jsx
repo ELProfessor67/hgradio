@@ -4,6 +4,7 @@ import { useSocketUser } from '@/hooks'
 import { REACT_PUBLIC_SOCKET_URL } from '@/constants';
 import { useState, useEffect, useRef } from 'react';
 import { useLive } from './LiveContext';
+import { isAutoDjSuppressed, isToneElement, setListenerVolume, stopOnDemand, toneVolume } from '@/utils/liveMix';
 
 import axios from 'axios';
 import { usePathname } from "next/navigation";
@@ -110,8 +111,12 @@ export const RadioProvider = ({ children }) => {
             });
             setIsPlay(false);
         } else {
+            // Radio play stops an album track first, so the two never overlap.
+            stopOnDemand();
             const audioElements = document.querySelectorAll('audio');
             audioElements.forEach(audio => {
+                // Auto DJ stays off while a tone or a live DJ is on air.
+                if (audio.id === 'auto-dj' && isAutoDjSuppressed()) return;
                 audio.play();
             });
             setIsPlay(true);
@@ -120,7 +125,8 @@ export const RadioProvider = ({ children }) => {
 
 
     useEffect(() => {
-        audioRef.current.volume = volume;
+        setListenerVolume(volume);
+        if (!isAutoDjSuppressed()) audioRef.current.volume = volume;
     }, [volume]);
 
 
@@ -225,7 +231,7 @@ export const RadioProvider = ({ children }) => {
             const url = audioRef.current.src
             audioRef.current.src = url;
             await sleep(3000)
-            audioRef.current.play();
+            if (!isAutoDjSuppressed()) audioRef.current.play();
         }
 
     }
@@ -277,7 +283,13 @@ export const RadioProvider = ({ children }) => {
     useEffect(() => {
         const audioElements = document.querySelectorAll('audio');
         audioElements.forEach(audio => {
-            audio.volume = volume;
+            if (isToneElement(audio)) {
+                audio.volume = toneVolume();
+            } else if (audio.id === 'auto-dj' && isAutoDjSuppressed()) {
+                // Leave it muted; resumeAutoDj restores the listener's volume.
+            } else {
+                audio.volume = volume;
+            }
         });
     }, [volume])
 

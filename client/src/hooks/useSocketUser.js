@@ -2,6 +2,7 @@ import { io } from 'socket.io-client';
 import { useRef, useEffect, useState } from 'react';
 import { REACT_PUBLIC_SOCKET_URL, REACT_PUBLIC_HLS_SERVER_HOST, NEXT_PUBLIC_ICE_CAST_SERVER } from '../constants';
 import { useLive } from '../context/LiveContext';
+import { isAutoDjSuppressed, resumeAutoDj, setToneActive, suppressAutoDj } from '../utils/liveMix';
 
 const sleep = ms => new Promise(r => window.setTimeout(r, ms))
 
@@ -171,12 +172,16 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 		// 	audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
 		// }
 
+		// Auto DJ keeps announcing songs during a welcome tone. Switch the
+		// source if needed, but do not start it while the tone is on air.
+		const mayPlay = !isAutoDjSuppressed();
+
 		if (audioRef.current.srcObject && !isSchedulePlaying) {
 			audioRef.current.srcObject = null;
 
 			audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
 			audioRef.current.load();
-			audioRef.current.play();
+			if (mayPlay) audioRef.current.play();
 
 		};
 
@@ -184,7 +189,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
 			audioRef.current.load();
 
-			if (playRef.current == true) {
+			if (playRef.current == true && mayPlay) {
 				audioRef.current.play();
 			}
 		}
@@ -193,7 +198,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
 			audioRef.current.load();
 
-			if (playRef.current == true) {
+			if (playRef.current == true && mayPlay) {
 				audioRef.current.play();
 			}
 		}
@@ -504,8 +509,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			console.log("Audio started playing");
 			setIsTonePlayingMessage("Tone Is Playing...");
 
-			audioRef.current.pause();
-			audioRef.current.volume = 0;
+			setToneActive(true);
+			suppressAutoDj();
 
 
 			const song = new Audio(`${REACT_PUBLIC_SOCKET_URL}${data?.welcomeTone}`);
@@ -533,9 +538,9 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			setTimeout(() => {
 				setDisabledPlayBtn(false);
 				setIsTonePlayingMessage(null);
+				setToneActive(false);
 				if(!isLiveRef.current){
-					audioRef.current.play();
-					audioRef.current.volume = 1;
+					resumeAutoDj(true);
 				}
 			}, 3000);
 		});
@@ -583,9 +588,9 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
         socketRef.current.on('play-ending-tone', (data) => {
 		
 			console.log('ending tone started')
+			setToneActive(true);
 			if (!isLiveRef.current) {
-				audioRef.current.pause();
-				audioRef.current.volume = 0;
+				suppressAutoDj();
 			}
 
 			setDisabledPlayBtn(true)
@@ -602,8 +607,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 
 		socketRef.current.on('room-unactive', async (data) => {
-			audioRef.current.play();
-			audioRef.current.volume = 1;
+			// No DJ in the room, but a tone may still be on air.
+			resumeAutoDj(true);
 			if (data?.butScheduleActive) {
 				console.log('schedule-active but');
 				await connectedWithScheduleStream();

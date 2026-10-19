@@ -17,6 +17,7 @@ import { PageLoading } from "@/utils/Loading";
 import { useData } from "@/context/Context";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { endOnDemand, startOnDemand } from "@/utils/liveMix";
 
 const videoAds = [
   { videoSrc: "/vid1.mp4", link: "/contact" },
@@ -526,11 +527,17 @@ const SongPlayerRow: React.FC<SongPlayerRowProps> = ({
       });
 
       audio.addEventListener("play", () => {
+        // The listener's chosen track outranks the radio: pause Auto DJ and live audio.
+        startOnDemand(audio);
         setIsPlaying(true);
         incrementSongView(); // Increment view when song starts playing
       });
-      audio.addEventListener("pause", () => setIsPlaying(false));
+      audio.addEventListener("pause", () => {
+        endOnDemand(audio);
+        setIsPlaying(false);
+      });
       audio.addEventListener("ended", () => {
+        endOnDemand(audio);
         setIsPlaying(false);
         setProgress(0);
       });
