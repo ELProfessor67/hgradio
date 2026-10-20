@@ -193,23 +193,29 @@ export const incrementSongView = async (req, res) => {
   try {
     const { albumId, songId } = req.params;
 
-    const album = await Album.findById(albumId);
+    // An atomic $inc, not album.save(): save() re-validates the whole album, and
+    // albums uploaded before the legal-agreement fields became required failed that
+    // check, so their plays were never counted. It also stops concurrent plays from
+    // overwriting each other's increments. A view is not an edit, so leave updatedAt.
+    const album = await Album.findOneAndUpdate(
+      { _id: albumId, "songs._id": songId },
+      { $inc: { "songs.$.views": 1 } },
+      // $elemMatch, not "songs.$": Mongo rejects a positional projection with new: true.
+      { new: true, projection: { songs: { $elemMatch: { _id: songId } } }, timestamps: false }
+    );
+
     if (!album) {
-      return res.status(404).json({ success: false, message: "Album not found" });
+      const albumExists = await Album.exists({ _id: albumId });
+      return res.status(404).json({
+        success: false,
+        message: albumExists ? "Song not found" : "Album not found",
+      });
     }
-
-    const song = album.songs.id(songId);
-    if (!song) {
-      return res.status(404).json({ success: false, message: "Song not found" });
-    }
-
-    song.views = (song.views || 0) + 1;
-    await album.save();
 
     return res.status(200).json({
       success: true,
       message: "Song view incremented",
-      views: song.views,
+      views: album.songs[0]?.views ?? 0,
     });
   } catch (error) {
     console.error("Error incrementing song view:", error);
