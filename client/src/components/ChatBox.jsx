@@ -49,6 +49,15 @@ export default function ChatBox({
 }) {
     const [tempName, setTempName] = useState("")
 
+    // Lock the page behind the chat while it is open: on phones the modal was
+    // taller than the screen and a swipe scrolled the page, not the messages.
+    useEffect(() => {
+        if (!open) return
+        const prev = document.body.style.overflow
+        document.body.style.overflow = 'hidden'
+        return () => { document.body.style.overflow = prev }
+    }, [open])
+
     // ✅ Load name from localStorage (only once)
     // useEffect(() => {
     //     const savedName = localStorage.getItem("chat_name")
@@ -65,24 +74,26 @@ export default function ChatBox({
     if (!open) return null
 
     return (
-        <div className="top-0 left-0 right-0 bottom-0 z-[100000] bg-black/5 fixed">
-            <div className="max-w-[40rem] mx-auto mt-20 min-h-[35rem] bg-white shadow-md p-3 rounded-md flex flex-col text-black">
+        <div className="top-0 left-0 right-0 bottom-0 z-[100000] bg-black/5 fixed flex flex-col items-center p-3 sm:pt-20 overscroll-contain">
+            {/* Sized to the viewport (dvh: phone address bar) so the message list
+                scrolls inside the box instead of the box running off-screen. */}
+            <div className="w-full max-w-[40rem] h-[calc(100dvh-1.5rem)] sm:h-[35rem] sm:max-h-[calc(100dvh-6rem)] bg-white shadow-md p-3 rounded-md flex flex-col text-black">
 
                 {/* HEADER */}
-                <div className="flex justify-between items-center border-b pb-2 mb-2 text-black">
+                <div className="flex justify-between items-center border-b pb-2 mb-2 text-black shrink-0">
                     <h5 className="text-lg font-semibold">Chat with Radio Broadcaster</h5>
                     <button onClick={onClose} className='text-black'>X</button>
                 </div>
 
                 {/* BODY */}
-                <div className="flex-1 overflow-auto h-[28rem]">
+                <div className="flex-1 min-h-0 overflow-auto overscroll-contain">
                     <ScrollToBottom className="w-full h-full space-y-2">
                         {children}
                     </ScrollToBottom>
                 </div>
 
                 {/* FOOTER */}
-                <div className="border-t pt-2">
+                <div className="border-t pt-2 shrink-0">
 
                     {/* 👉 Ask Name Only Once */}
                     {!name ? (

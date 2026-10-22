@@ -85,9 +85,9 @@ const peerConfig = {
 const socketInit = () => {
 	const options = {
 		'force new connection': true,
-		reconnectionAttempt: 'Infinity',
+		reconnectionAttempts: Infinity,
 		timeout: 10000,
-		transform: ['polling','websocket']
+		transports: ['polling','websocket']
 	}
 
 	return io(REACT_PUBLIC_SOCKET_URL, options);
@@ -409,7 +409,18 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 	useEffect(() => {
 		socketRef.current = socketInit();
-		userJoin();
+		// Join on EVERY connect, not once: the server only puts a socket in the
+		// station room inside 'user-join' and answers with the current state.
+		// Phones drop the socket in the background; the reconnected socket was
+		// never re-joined, so song/live updates stopped until a full reload.
+		socketRef.current.on('connect', userJoin);
+		// Coming back to the tab: don't wait out socket.io's backoff.
+		const handleVisible = () => {
+			if (document.visibilityState === 'visible' && socketRef.current && !socketRef.current.connected) {
+				socketRef.current.connect();
+			}
+		};
+		document.addEventListener('visibilitychange', handleVisible);
 		socketRef.current.on('room-active', (data) => {
 			console.log('owner', data?.user)
 			setOwner(data?.user);
@@ -718,6 +729,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 		}))
 
 		return () => {
+			document.removeEventListener('visibilitychange', handleVisible);
+			socketRef.current.off('connect', userJoin);
 			socketRef.current.off('room-active');
 			socketRef.current.off('room-unactive');
 			socketRef.current.off('room-active-now');
