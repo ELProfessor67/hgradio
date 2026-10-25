@@ -1,0 +1,32 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: synthetic-listener
+    static_configs:
+      - targets: ["listener:9101"]
+
+  # Enable once ops/backend-patches is deployed: the backend then exposes
+  # /ops/metrics (restarts, live state, listeners, reconciler counters).
+  # Put the OPS_TOKEN value in ../monitoring/backend-ops-token (git-ignored)
+  # and mount it in docker-compose.yml:
+  #   - ../monitoring/backend-ops-token:/etc/prometheus/backend-ops-token:ro
+  #
+  # - job_name: backend
+  #   metrics_path: /ops/metrics
+  #   scheme: https
+  #   authorization:
+  #     type: Bearer
+  #     credentials_file: /etc/prometheus/backend-ops-token
+  #   static_configs:
+  #     - targets: ["backend.hgdjlive.com"]
+
+  # LiveKit server exposes Prometheus metrics when livekit.yaml has
+  # prometheus_port: 6789. Only if the LiveKit box firewall allows this host.
+  # - job_name: livekit
+  #   static_configs:
+  #     - targets: ["144.126.215.246:6789"]

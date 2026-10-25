@@ -1,0 +1,43 @@
+# Prometheus alert rules mirroring the probe's own conditions, so Grafana
+# alerting / Alertmanager can page too. The probe alerts directly as well;
+# this is the second, independent path.
+groups:
+  - name: hgradio-synthetic
+    rules:
+      - alert: SyntheticListenerRed
+        expr: synthetic_listener_green == 0
+        for: 20s
+        labels: { severity: critical }
+        annotations: { summary: "Synthetic listener RED ({{ $labels.probe }})", description: "A listener cannot hear the right audio. See /state on the probe." }
+      - alert: SyntheticListenerAbsent
+        expr: absent(synthetic_listener_green)
+        for: 2m
+        labels: { severity: critical }
+        annotations: { summary: "Synthetic listener not reporting", description: "The probe itself is down; the platform is unobserved." }
+      - alert: DeadAirSocketLiveNoPublisher
+        expr: condition_open{condition="DEAD_AIR_SOCKET_LIVE_NO_PUBLISHER"} == 1
+        labels: { severity: critical }
+        annotations: { summary: "Backend says live, LiveKit has no admin mic" }
+      - alert: DuplicateAdmin
+        expr: livekit_duplicate_admins > 1
+        labels: { severity: warning }
+        annotations: { summary: "Two Go Live sessions in the station room" }
+      - alert: AutoDjMetadataStale
+        expr: condition_open{condition="AUTODJ_METADATA_STALE"} == 1
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: "Song title shown to listeners is stale" }
+      - alert: SocketOnPolling
+        expr: socket_transport_polling == 1
+        for: 5m
+        labels: { severity: warning }
+        annotations: { summary: "socket.io stuck on long-polling (nginx WebSocket upgrade?)" }
+      - alert: BackendRestarted
+        expr: resets(backend_process_start_time_seconds[10m]) > 0 or changes(backend_process_start_time_seconds[10m]) > 0
+        labels: { severity: warning }
+        annotations: { summary: "Socket backend restarted (in-memory live state was lost unless Redis restore ran)" }
+      - alert: TimeToAudioSlow
+        expr: histogram_quantile(0.95, sum(rate(time_to_correct_audio_seconds_bucket[1h])) by (le)) > 10
+        for: 10m
+        labels: { severity: warning }
+        annotations: { summary: "p95 time from state change to correct audio exceeds 10 s" }

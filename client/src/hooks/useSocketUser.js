@@ -424,8 +424,12 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 		socketRef.current.on('room-active', (data) => {
 			console.log('owner', data?.user)
 			setOwner(data?.user);
-			audioRef.current.pause();
-			audioRef.current.volume = 0;
+			// Do NOT silence Auto DJ here. room-active is the backend's opinion;
+			// the audio a listener can hear comes from LiveKit. Twice in Oct 2026
+			// the backend said live while LiveKit had no admin publishing, and
+			// pausing here turned that into dead air. LiveContext.jsx pauses Auto
+			// DJ the moment the admin mic (or tone bot) track is subscribed, so
+			// the hand-over now follows real audio and overlaps by ~1 s at most.
 			if (data.nextSong) {
 				setNextSong(data.nextSong)
 			}

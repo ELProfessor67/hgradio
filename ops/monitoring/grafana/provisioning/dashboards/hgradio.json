@@ -1,0 +1,86 @@
+{
+  "uid": "hgradio-platform",
+  "title": "HGC Radio — Platform Health",
+  "tags": ["hgradio"],
+  "timezone": "utc",
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" },
+  "templating": { "list": [] },
+  "panels": [
+    { "id": 1, "type": "stat", "title": "Listener verdict", "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "refId": "A", "expr": "synthetic_listener_green" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "RED", "color": "red" }, "1": { "text": "GREEN", "color": "green" } } }], "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } },
+      "options": { "colorMode": "background", "graphMode": "none", "textMode": "value" } },
+    { "id": 2, "type": "stat", "title": "Mode", "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "refId": "A", "expr": "synthetic_listener_mode == 1", "legendFormat": "{{mode}}" }],
+      "options": { "colorMode": "none", "graphMode": "none", "textMode": "name", "reduceOptions": { "calcs": ["lastNotNull"] } } },
+    { "id": 3, "type": "stat", "title": "Backend says live", "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "refId": "A", "expr": "socket_live" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "Auto DJ" }, "1": { "text": "LIVE" } } }], "color": { "mode": "fixed", "fixedColor": "blue" } } },
+      "options": { "colorMode": "value", "graphMode": "none" } },
+    { "id": 4, "type": "stat", "title": "LiveKit admin mic (server truth)", "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "refId": "A", "expr": "livekit_server_admin_mic" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "none" }, "1": { "text": "publishing" } } }], "color": { "mode": "fixed", "fixedColor": "purple" } } },
+      "options": { "colorMode": "value", "graphMode": "none" } },
+    { "id": 5, "type": "stat", "title": "Probe hears DJ", "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "refId": "A", "expr": "listener_hearing_admin" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "no" }, "1": { "text": "yes" } } }] } },
+      "options": { "colorMode": "value", "graphMode": "none" } },
+    { "id": 6, "type": "stat", "title": "Scheduled show now", "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+      "targets": [{ "refId": "A", "expr": "scheduled_show_now" }],
+      "fieldConfig": { "defaults": { "mappings": [{ "type": "value", "options": { "0": { "text": "no" }, "1": { "text": "yes" } } }] } },
+      "options": { "colorMode": "value", "graphMode": "none" } },
+
+    { "id": 10, "type": "state-timeline", "title": "Live state over time (S = backend, L = LiveKit admin mic, A = audio heard)", "gridPos": { "x": 0, "y": 4, "w": 24, "h": 6 },
+      "targets": [
+        { "refId": "S", "expr": "socket_live", "legendFormat": "S backend live" },
+        { "refId": "L", "expr": "livekit_server_admin_mic", "legendFormat": "L admin mic" },
+        { "refId": "A", "expr": "listener_hearing_admin", "legendFormat": "A heard" },
+        { "refId": "G", "expr": "synthetic_listener_green", "legendFormat": "GREEN" }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "transparent", "value": null }, { "color": "green", "value": 1 }] } } },
+      "options": { "mergeValues": true, "showValue": "never", "rowHeight": 0.8 } },
+
+    { "id": 11, "type": "state-timeline", "title": "Open conditions", "gridPos": { "x": 0, "y": 10, "w": 24, "h": 7 },
+      "targets": [{ "refId": "A", "expr": "condition_open == 1", "legendFormat": "{{condition}}" }],
+      "fieldConfig": { "defaults": { "color": { "mode": "fixed", "fixedColor": "red" } } },
+      "options": { "mergeValues": true, "showValue": "never" } },
+
+    { "id": 20, "type": "timeseries", "title": "Audience: LiveKit participants / publishers, Icecast listeners", "gridPos": { "x": 0, "y": 17, "w": 12, "h": 8 },
+      "targets": [
+        { "refId": "A", "expr": "livekit_server_participants", "legendFormat": "LiveKit participants" },
+        { "refId": "B", "expr": "livekit_server_publishers", "legendFormat": "LiveKit publishers" },
+        { "refId": "C", "expr": "icecast_listeners", "legendFormat": "Icecast listeners" }
+      ] },
+    { "id": 21, "type": "timeseries", "title": "Time from state change to correct audio (s)", "gridPos": { "x": 12, "y": 17, "w": 12, "h": 8 },
+      "targets": [
+        { "refId": "A", "expr": "histogram_quantile(0.5, sum(rate(time_to_correct_audio_seconds_bucket[1h])) by (le))", "legendFormat": "p50" },
+        { "refId": "B", "expr": "histogram_quantile(0.95, sum(rate(time_to_correct_audio_seconds_bucket[1h])) by (le))", "legendFormat": "p95" }
+      ],
+      "fieldConfig": { "defaults": { "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 10 }] }, "custom": { "thresholdsStyle": { "mode": "line" } } } } },
+
+    { "id": 30, "type": "timeseries", "title": "Audio level of subscribed tracks (dBFS, 3 s peak)", "gridPos": { "x": 0, "y": 25, "w": 12, "h": 7 },
+      "targets": [{ "refId": "A", "expr": "listener_audio_dbfs", "legendFormat": "{{track}}" }],
+      "fieldConfig": { "defaults": { "min": -90, "max": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": -50 }] }, "custom": { "thresholdsStyle": { "mode": "line" } } } } },
+    { "id": 31, "type": "timeseries", "title": "Endpoint latency (ms) and token route", "gridPos": { "x": 12, "y": 25, "w": 12, "h": 7 },
+      "targets": [
+        { "refId": "A", "expr": "endpoint_ms", "legendFormat": "{{endpoint}}" },
+        { "refId": "B", "expr": "livekit_token_route_ms", "legendFormat": "token route" }
+      ] },
+
+    { "id": 40, "type": "timeseries", "title": "Reconnects (probe's socket / LiveKit) and transport", "gridPos": { "x": 0, "y": 32, "w": 12, "h": 6 },
+      "targets": [
+        { "refId": "A", "expr": "socket_reconnects_total_gauge", "legendFormat": "socket reconnects" },
+        { "refId": "B", "expr": "socket_transport_polling", "legendFormat": "on long-polling" }
+      ] },
+    { "id": 41, "type": "timeseries", "title": "Backend restarts / live state (needs ops/backend-patches)", "gridPos": { "x": 12, "y": 32, "w": 12, "h": 6 },
+      "targets": [
+        { "refId": "A", "expr": "backend_restarts_total", "legendFormat": "restarts (lifetime)" },
+        { "refId": "B", "expr": "backend_live", "legendFormat": "backend live" },
+        { "refId": "C", "expr": "backend_listeners", "legendFormat": "socket listeners" },
+        { "refId": "D", "expr": "sum(backend_reconcile_divergences_total)", "legendFormat": "reconciler divergences" }
+      ] }
+  ]
+}

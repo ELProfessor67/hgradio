@@ -1,0 +1,7 @@
+node_modules/
+logs/
+*.jsonl
+.env
+synthetic-listener/.env
+monitoring/backend-ops-token
+soak-*.jsonl
