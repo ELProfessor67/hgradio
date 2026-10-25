@@ -222,8 +222,12 @@ export function buildLocalSchedule(
         const start = resolveInstant(y, m, d, s.h, s.m, zone);
         let end = resolveInstant(y, m, d, e.h, e.m, zone);
         if (!start || !end) continue;
-        // Ends "before" it starts → it runs past midnight.
-        if (end.getTime() <= start.getTime()) {
+        // Same start and end is a data-entry slip in the panel (no show lasts
+        // 0 min). Read as "past midnight" it became a 24-hour show that kept the
+        // home-page card on "live" all day, so it is skipped instead.
+        if (end.getTime() === start.getTime()) continue;
+        // Ends before it starts: it runs past midnight.
+        if (end.getTime() < start.getTime()) {
           end = new Date(end.getTime() + 86_400_000);
         }
 

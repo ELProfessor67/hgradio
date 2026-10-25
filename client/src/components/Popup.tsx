@@ -11,6 +11,7 @@ import {
     type ScheduleData,
     type ShowOccurrence,
 } from '@/utils/localSchedule'
+import { useLive } from '@/context/LiveContext'
 
 /**
  * ⚠️ This popup used to be doubly wrong about time.
@@ -24,7 +25,9 @@ import {
  * instants, rendered on the viewer's own clock.
  */
 
-type LiveStatus = 'live' | 'upcoming';
+// "scheduled" = the slot is running on the clock. Whether the DJ is really on
+// air comes from LiveContext (isLive), never from the schedule.
+type LiveStatus = 'scheduled' | 'upcoming';
 
 interface CurrentShow {
     status: LiveStatus;
@@ -37,6 +40,8 @@ const Popup = () => {
     const [hide, setHide] = useState(true);
     const [current, setCurrent] = useState<CurrentShow | null>(null);
     const [schedule, setSchedule] = useState<ReturnType<typeof buildLocalSchedule> | null>(null);
+    // True only while a DJ's audio is actually reaching this listener.
+    const { isLive } = useLive();
 
     useEffect(() => {
         const fetchAndSet = async () => {
@@ -51,7 +56,7 @@ const Popup = () => {
                 const schedule = buildLocalSchedule(data);
                 const { current: live, upcoming } = getCurrentAndUpcoming(schedule, 1);
                 const result: CurrentShow | null = live
-                    ? { status: 'live', occurrence: live }
+                    ? { status: 'scheduled', occurrence: live }
                     : upcoming[0]
                         ? { status: 'upcoming', occurrence: upcoming[0] }
                         : null;
@@ -150,7 +155,11 @@ const Popup = () => {
                 {/* Center Section */}
                 <div className="bg-gradient-to-b from-[#E2C37E]/30 to-[#B08632]/30 backdrop-blur-xl md:backdrop-blur-none md:w-[260px] flex flex-col items-center justify-center p-4 md:p-6 relative z-10 border-l border-r border-white/20 shadow-[0_8px_32px_rgba(226,195,126,0.2)]">
                     <div className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-serif font-extrabold text-xl md:text-2xl mb-2 md:mb-3 tracking-wider uppercase">
-                        {status === 'live' ? 'LIVE NOW!' : 'JOIN US!'}
+                        {status === 'scheduled' && isLive
+                            ? 'LIVE NOW!'
+                            : status === 'scheduled'
+                                ? 'SCHEDULED NOW'
+                                : 'JOIN US!'}
                     </div>
                     <div className="bg-[#070D18]/60 backdrop-blur-md md:backdrop-blur-none w-full rounded-lg p-3 md:p-4 border border-white/10 flex flex-col items-center shadow-inner">
                         <div className="flex gap-1.5 md:gap-2 mb-2 md:mb-3">
