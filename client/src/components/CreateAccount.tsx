@@ -46,7 +46,7 @@ type AppStage =
 
 // ─── Cloudinary upload helper ─────────────────────────────────────────────────
 
-const CLOUD_NAME = "ddlwhkn3b";
+const CLOUD_NAME = "dclbdddu7";
 const UPLOAD_PRESET = "images_preset";
 
 async function uploadDataUrlToCloudinary(dataUrl: string): Promise<string | null> {

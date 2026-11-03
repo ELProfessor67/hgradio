@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const cloudName = "ddlwhkn3b";
+const cloudName = "dclbdddu7";
 const api = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
 export const uploadFile = async (file: File): Promise<string | null> => {
