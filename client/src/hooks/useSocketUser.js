@@ -2,6 +2,7 @@ import { io } from 'socket.io-client';
 import { useRef, useEffect, useState } from 'react';
 import { REACT_PUBLIC_SOCKET_URL, REACT_PUBLIC_HLS_SERVER_HOST, NEXT_PUBLIC_ICE_CAST_SERVER } from '../constants';
 import { useLive } from '../context/LiveContext';
+import { isAutoDjSuppressed, resumeAutoDj, setToneActive, suppressAutoDj } from '../utils/liveMix';
 
 const sleep = ms => new Promise(r => window.setTimeout(r, ms))
 
@@ -84,9 +85,9 @@ const peerConfig = {
 const socketInit = () => {
 	const options = {
 		'force new connection': true,
-		reconnectionAttempt: 'Infinity',
+		reconnectionAttempts: Infinity,
 		timeout: 10000,
-		transform: ['polling','websocket']
+		transports: ['polling','websocket']
 	}
 
 	return io(REACT_PUBLIC_SOCKET_URL, options);
@@ -171,12 +172,16 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 		// 	audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
 		// }
 
+		// Auto DJ keeps announcing songs during a welcome tone. Switch the
+		// source if needed, but do not start it while the tone is on air.
+		const mayPlay = !isAutoDjSuppressed();
+
 		if (audioRef.current.srcObject && !isSchedulePlaying) {
 			audioRef.current.srcObject = null;
 
 			audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
 			audioRef.current.load();
-			audioRef.current.play();
+			if (mayPlay) audioRef.current.play();
 
 		};
 
@@ -184,7 +189,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}`;
 			audioRef.current.load();
 
-			if (playRef.current == true) {
+			if (playRef.current == true && mayPlay) {
 				audioRef.current.play();
 			}
 		}
@@ -193,7 +198,7 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			audioRef.current.src = `${NEXT_PUBLIC_ICE_CAST_SERVER}/${streamId}_schulded`;
 			audioRef.current.load();
 
-			if (playRef.current == true) {
+			if (playRef.current == true && mayPlay) {
 				audioRef.current.play();
 			}
 		}
@@ -404,12 +409,27 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 	useEffect(() => {
 		socketRef.current = socketInit();
-		userJoin();
+		// Join on EVERY connect, not once: the server only puts a socket in the
+		// station room inside 'user-join' and answers with the current state.
+		// Phones drop the socket in the background; the reconnected socket was
+		// never re-joined, so song/live updates stopped until a full reload.
+		socketRef.current.on('connect', userJoin);
+		// Coming back to the tab: don't wait out socket.io's backoff.
+		const handleVisible = () => {
+			if (document.visibilityState === 'visible' && socketRef.current && !socketRef.current.connected) {
+				socketRef.current.connect();
+			}
+		};
+		document.addEventListener('visibilitychange', handleVisible);
 		socketRef.current.on('room-active', (data) => {
 			console.log('owner', data?.user)
 			setOwner(data?.user);
-			audioRef.current.pause();
-			audioRef.current.volume = 0;
+			// Do NOT silence Auto DJ here. room-active is the backend's opinion;
+			// the audio a listener can hear comes from LiveKit. Twice in Oct 2026
+			// the backend said live while LiveKit had no admin publishing, and
+			// pausing here turned that into dead air. LiveContext.jsx pauses Auto
+			// DJ the moment the admin mic (or tone bot) track is subscribed, so
+			// the hand-over now follows real audio and overlaps by ~1 s at most.
 			if (data.nextSong) {
 				setNextSong(data.nextSong)
 			}
@@ -504,8 +524,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			console.log("Audio started playing");
 			setIsTonePlayingMessage("Tone Is Playing...");
 
-			audioRef.current.pause();
-			audioRef.current.volume = 0;
+			setToneActive(true);
+			suppressAutoDj();
 
 
 			const song = new Audio(`${REACT_PUBLIC_SOCKET_URL}${data?.welcomeTone}`);
@@ -533,9 +553,9 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 			setTimeout(() => {
 				setDisabledPlayBtn(false);
 				setIsTonePlayingMessage(null);
+				setToneActive(false);
 				if(!isLiveRef.current){
-					audioRef.current.play();
-					audioRef.current.volume = 1;
+					resumeAutoDj(true);
 				}
 			}, 3000);
 		});
@@ -583,9 +603,9 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
         socketRef.current.on('play-ending-tone', (data) => {
 		
 			console.log('ending tone started')
+			setToneActive(true);
 			if (!isLiveRef.current) {
-				audioRef.current.pause();
-				audioRef.current.volume = 0;
+				suppressAutoDj();
 			}
 
 			setDisabledPlayBtn(true)
@@ -602,8 +622,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 
 
 		socketRef.current.on('room-unactive', async (data) => {
-			audioRef.current.play();
-			audioRef.current.volume = 1;
+			// No DJ in the room, but a tone may still be on air.
+			resumeAutoDj(true);
 			if (data?.butScheduleActive) {
 				console.log('schedule-active but');
 				await connectedWithScheduleStream();
@@ -713,6 +733,8 @@ const useSocket = (streamId, audioRef, name, isPlay, setIsPlay, message, setMess
 		}))
 
 		return () => {
+			document.removeEventListener('visibilitychange', handleVisible);
+			socketRef.current.off('connect', userJoin);
 			socketRef.current.off('room-active');
 			socketRef.current.off('room-unactive');
 			socketRef.current.off('room-active-now');

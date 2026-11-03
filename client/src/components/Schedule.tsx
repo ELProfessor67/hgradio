@@ -8,7 +8,7 @@ import bgrightbottom from "@/assets/bottom-line.png";
 
 import { usePathname } from "next/navigation";
 import { IoIosArrowForward } from "react-icons/io";
-import { IoIosArrowBack } from "react-icons/io";
+import { IoIosArrowBack, IoIosArrowDown, IoIosArrowUp } from "react-icons/io";
 import s7 from "@/assets/s33.jpg";
 import {
   DAYS,
@@ -16,6 +16,7 @@ import {
   canConvertTimeZones,
   formatOccurrenceTime,
   formatRawTime,
+  hasOccurrenceEnded,
   isOccurrenceLive,
   viewerTimezone,
   type ScheduleData,
@@ -131,19 +132,56 @@ const Schedule = () => {
    * always describe the same moment. See utils/localSchedule.ts.
    */
   const localSchedule = useMemo(() => buildLocalSchedule(scheduleData), [scheduleData]);
-  const shows: ShowOccurrence[] = localSchedule[selectedDay] ?? [];
+  const shows: ShowOccurrence[] = useMemo(
+    () => localSchedule[selectedDay] ?? [],
+    [localSchedule, selectedDay]
+  );
 
   const canConvert = canConvertTimeZones();
   const viewerZone = viewerTimezone();
+
+  /**
+   * Ticks so finished shows drop off and LIVE moves on while the page stays
+   * open, instead of only when the listener reloads.
+   */
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
+  /** Whether today's finished shows have been pulled back into view. */
+  const [showEarlier, setShowEarlier] = useState(false);
+  const isToday = selectedDay === DAYS[new Date(now).getDay()];
+
+  /**
+   * Same rule as the app's schedule tab: on the current day, finished shows
+   * collapse behind an "Earlier today" control so LIVE and the next show sit
+   * at the top. Other days list in full.
+   */
+  const { earlier, current } = useMemo(() => {
+    if (!isToday) return { earlier: [] as ShowOccurrence[], current: shows };
+    return {
+      earlier: shows.filter((o) => hasOccurrenceEnded(o, now)),
+      current: shows.filter((o) => !hasOccurrenceEnded(o, now)),
+    };
+  }, [shows, isToday, now]);
+
+  const visible = showEarlier ? [...earlier, ...current] : current;
 
   const [startIndex, setStartIndex] = useState(0);
 
   useEffect(() => {
     setStartIndex(0);
+    setShowEarlier(false);
   }, [selectedDay]);
 
-  const len = shows.length;
-  const currentShows = shows.slice(startIndex, startIndex + itemsPerPage);
+  useEffect(() => {
+    setStartIndex(0);
+  }, [showEarlier]);
+
+  const len = visible.length;
+  const currentShows = visible.slice(startIndex, startIndex + itemsPerPage);
 
   const handlePrev = () => {
     setStartIndex((prev) => (prev === 0 ? Math.max(0, len - itemsPerPage) : prev - 1));
@@ -229,10 +267,26 @@ const Schedule = () => {
               </div>
             ) : (
               <>
+                {earlier.length > 0 && (
+                  <button
+                    onClick={() => setShowEarlier((v) => !v)}
+                    className="mb-5 flex items-center gap-2 text-second font-semibold hover:underline"
+                  >
+                    {showEarlier ? <IoIosArrowUp size={18} /> : <IoIosArrowDown size={18} />}
+                    {showEarlier ? "Hide earlier today" : `Earlier today (${earlier.length})`}
+                  </button>
+                )}
+
+                {visible.length === 0 && (
+                  <div className="flex items-center justify-center h-48 text-gray-400">
+                    <p>That&apos;s all for today — check tomorrow&apos;s line-up.</p>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {currentShows.map((occurrence, index) => {
                     const show = occurrence.show;
-                    const live = isOccurrenceLive(occurrence);
+                    const live = isOccurrenceLive(occurrence, now);
                     const timeLabel = canConvert
                       ? `${formatOccurrenceTime(occurrence.start)} – ${formatOccurrenceTime(occurrence.end)}`
                       : `${formatRawTime(show.startTime)} – ${formatRawTime(show.endTime)}`;
@@ -290,7 +344,7 @@ const Schedule = () => {
                   })}
                 </div>
 
-                {shows.length > itemsPerPage && (
+                {visible.length > itemsPerPage && (
                   <div className="flex justify-center gap-4 mt-6">
                     <button
                       onClick={handlePrev}

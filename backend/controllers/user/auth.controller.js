@@ -23,16 +23,39 @@ const hashRegisterOtp = ({ email, otp }) => {
     .digest("hex");
 };
 
+/*
+  mail.hgdjlive.com is a separate server. When the connection to it dropped, fetch threw
+  a bare "fetch failed" and the request failed outright, with the real reason hidden in
+  err.cause. Time out instead of hanging, retry once to ride out a brief blip, and log
+  the underlying network error.
+*/
+const postToMailer = async (payload) => {
+  let lastError;
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      return await fetch("https://mail.hgdjlive.com/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(15000),
+      });
+    } catch (err) {
+      lastError = err;
+      console.error(
+        `Mailer attempt ${attempt} failed:`,
+        err?.cause?.code || err?.cause?.message || err?.name || err?.message
+      );
+    }
+  }
+  throw lastError;
+};
+
 const sendOtpEmailViaMailer = async ({ email, otp }) => {
   // Keep consistent with existing album-otp mailer approach
-  const resp = await fetch("https://mail.hgdjlive.com/send-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      email,
-      subject: "Verify OTP",
-      message: `Your OTP is> ${otp}`,
-    }),
+  const resp = await postToMailer({
+    email,
+    subject: "Verify OTP",
+    message: `Your OTP is> ${otp}`,
   });
 
   if (!resp.ok) {
@@ -48,10 +71,10 @@ const sendOtpEmailViaMailer = async ({ email, otp }) => {
 
 
 const sendResetPasswordEmailViaMailer = async ({ email, resetUrl }) => {
-  const resp = await fetch("https://mail.hgdjlive.com/send-email", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, subject: "Reset Your Password", message: `Click ${resetUrl} to reset your password.` }),
+  const resp = await postToMailer({
+    email,
+    subject: "Reset Your Password",
+    message: `Click ${resetUrl} to reset your password.`,
   });
 
   if (!resp.ok) {
@@ -61,7 +84,7 @@ const sendResetPasswordEmailViaMailer = async ({ email, resetUrl }) => {
     } catch {
       // ignore
     }
-    throw new Error(`Failed to send OTP email. ${details}`);
+    throw new Error(`Failed to send reset password email. ${details}`);
   }
 };
 

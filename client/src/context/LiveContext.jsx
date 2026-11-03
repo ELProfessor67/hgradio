@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import useConnect from "@/hooks/useConnect";
 import { params } from "./RadioContext";
 import { RoomEvent, Track, ConnectionQuality } from "livekit-client";
+import { registerToneElement, unregisterToneElement, setDjSpeaking, setToneActive, setLiveMic, suppressAutoDj, resumeAutoDj } from "@/utils/liveMix";
 const LiveContext = createContext();
 
 // Adaptive music track names (must match broadcaster's publish names).
@@ -109,17 +110,25 @@ export const LiveProvider = ({ children }) => {
 
             if (participant.identity === 'tone-player-bot') {
                 setIsTonePlayingMessage("Tone Is Playing...");
-                handleTrackSubscribed(track, publication, () => {
+                // The tone is on air: Auto DJ must stop here, not only when the
+                // socket's play-welcome-tone event happens to arrive.
+                // Pause Auto DJ BEFORE attaching: its 'pause' event sets isPlay
+                // false, and the new track's 'play' event must land after it.
+                setToneActive(true);
+                suppressAutoDj();
+                const toneElement = handleTrackSubscribed(track, publication, () => {
                     setIsPlay(true);
                 });
+                registerToneElement(toneElement);
+                return;
             }
 
             if (participant.identity === 'admin' && track.source == Track.Source.Microphone) {
                 setIsLive(true);
                 setRoomActive(true);
-                const audioRef = document.getElementById('auto-dj');
-                audioRef.pause();
-                audioRef.volume = 0;
+                setLiveMic(true);
+                // Pause first, then attach (see the tone branch above).
+                suppressAutoDj();
                 handleTrackSubscribed(track, publication, () => {
                     setIsPlay(true);
                 });
@@ -161,20 +170,31 @@ export const LiveProvider = ({ children }) => {
         roomRef.current.on(RoomEvent.TrackUnsubscribed, (track, publication, participant) => {
             console.log('Track unsubscribed:', track.kind, participant.identity);
 
+            liveTracksRef.current.delete(track);
+            track.detach().forEach((el) => {
+                unregisterToneElement(el);
+                el.remove();
+            });
+
             if (participant.identity === 'tone-player-bot') {
                 setIsTonePlayingMessage(null);
+                setToneActive(false);
+                // Welcome tone before the DJ is on: back to Auto DJ.
+                // If the DJ is live, resumeAutoDj does nothing.
+                resumeAutoDj(isPlayRef.current);
             }
 
             if (participant.identity === 'admin' && track.source == Track.Source.Microphone) {
                 setIsLive(false);
                 setRoomActive(false);
-                const audioRef = document.getElementById('auto-dj');
-                audioRef.play();
-                audioRef.volume = 1;
+                setLiveMic(false);
+                resumeAutoDj(true);
             }
+        });
 
-            liveTracksRef.current.delete(track);
-            track.detach();
+        // LiveKit tells every listener who is talking. Duck the tone under the DJ.
+        roomRef.current.on(RoomEvent.ActiveSpeakersChanged, (speakers) => {
+            setDjSpeaking(speakers.some((p) => p.identity === 'admin'));
         });
 
         // Re-pin the jitter target so delay cannot drift up over a long show.
@@ -260,6 +280,7 @@ export const LiveProvider = ({ children }) => {
         if (isPlayRef.current) {
             audioElement.play().catch(() => { /* autoplay guard */ });
         }
+        return audioElement;
     }
 
     useEffect(() => {

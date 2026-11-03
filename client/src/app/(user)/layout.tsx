@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { ScrollToTopButton } from "@/utils/Util";
 import Popup from "@/components/Popup";
+import NetworkWarning from "@/components/NetworkWarning";
 import { RadioProvider } from "@/context/RadioContext";
 import { LiveProvider } from "@/context/LiveContext";
 
@@ -28,6 +29,7 @@ export default function RootLayout({
           {children}
           <Footer />
           <Popup />
+          <NetworkWarning />
           <ScrollToTopButton />
         </RadioProvider>
       </LiveProvider>

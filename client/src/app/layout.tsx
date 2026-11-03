@@ -3,7 +3,6 @@ import "./globals.css";
 import { FormProvider } from "@/context/Context";
 import { Toaster } from "sonner";
 import { ScrollToTopButton } from "@/utils/Util";
-import DevNotice from "@/components/DevNotice";
 
 export const metadata: Metadata = {
   title: "FM LAND - Online Radio HTML Template",
@@ -35,7 +34,6 @@ export default function RootLayout({
             theme="light" 
           />
           <ScrollToTopButton />
-          <DevNotice />
         </FormProvider>
       </body>
     </html>
