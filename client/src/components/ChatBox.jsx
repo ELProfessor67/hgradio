@@ -86,8 +86,17 @@ export default function ChatBox({
                 </div>
 
                 {/* BODY */}
-                <div className="flex-1 min-h-0 overflow-auto overscroll-contain">
-                    <ScrollToBottom className="w-full h-full space-y-2">
+                {/* overflow-hidden + fixed height so ScrollToBottom owns the scroll.
+                    If this box grows with the messages, it stops following after
+                    the list is taller than the modal (~10 messages). */}
+                <div className="flex-1 min-h-0 overflow-hidden">
+                    <ScrollToBottom
+                        className="w-full h-full"
+                        mode="bottom"
+                        initialScrollBehavior="auto"
+                        scroller={() => Infinity}
+                        followButtonClassName="hidden"
+                    >
                         {children}
                     </ScrollToBottom>
                 </div>

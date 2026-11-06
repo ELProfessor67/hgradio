@@ -140,7 +140,7 @@ const Header = () => {
                     href="/albums"
                     className="block px-4 py-3 text-[1.1rem] hover:bg-[#090e1b] hover:text-second transition-all duration-300 ease-in-out "
                   >
-                    Albums
+                    Buy Album
                   </Link>
                   <Link
                     href="/albums/sell-album"
@@ -277,7 +277,7 @@ const Header = () => {
             >
               <div className="flex flex-col pl-3 gap-2 pt-1 pb-3 text-gray-300 text-[1.2rem] ">
                 <Link href="/albums" onClick={() => setIsOpenSidebar(false)} className=" py-2 ">
-                  Albums
+                  Buy Album
                 </Link>
                 <Link href="/albums/sell-album" onClick={() => setIsOpenSidebar(false)} className=" py-2 ">
                   Sell Album
