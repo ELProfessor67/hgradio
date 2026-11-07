@@ -150,7 +150,7 @@ export const updateUser = async (req, res) => {
     req.body;
 
   // const defaultProfileImg =
-  //   "https://res.cloudinary.com/ddlwhkn3b/image/upload/v1748289152/SIDESONE/blank-profile-picture-973460_960_720-removebg-preview_nzqjpg.png";
+  //   "https://res.cloudinary.com/dclbdddu7/image/upload/v1748289152/SIDESONE/blank-profile-picture-973460_960_720-removebg-preview_nzqjpg.png";
 
   // console.log(onlyFansInfo);
 
